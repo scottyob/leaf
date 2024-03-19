@@ -30,7 +30,7 @@ char timerIndex_500ms = 0;      // keep track of how many half-second triggers h
 void IRAM_ATTR Timer0_ISR() {
   //do stuff every alarm cycle (default 10ms)
     //Pressure Update 
-    PressureUpdate(pressureUpdateIndex++);
+    //PressureUpdate(pressureUpdateIndex++);
     if(pressureUpdateIndex >=3) pressureUpdateIndex = 0;
 
     //Poll Buttons
@@ -39,7 +39,7 @@ void IRAM_ATTR Timer0_ISR() {
     //Index the main timer
     timerIndex_10ms++;    
     if(timerIndex_10ms >= 5) {
-      timerIndex_10ms = 0
+      timerIndex_10ms = 0;
 
       //do stuff every 5 alarm cycles (every 0.5 seconds)
       //displayUpdate();
