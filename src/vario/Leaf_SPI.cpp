@@ -5,36 +5,47 @@
 #define VSPI_MISO MISO        // 13-default ESP32
 #define VSPI_MOSI MOSI        // 11-default ESP32
 #define VSPI_SCLK SCK         // 12-default ESP32
-#define PRESSURE_VSPI_SS  47  // Pressure chip select
-#define LCD_VSPI_SS   SS      // 10-default ESP32 (LCD chip select)
+#define BARO_VSPI_SS  47  // Baro chip select
+//#define LCD_VSPI_SS   SS      // 10-default ESP32 (LCD chip select)
 //#define LCD_RS    46          // RS pin for data or instruction
+//#define GLCD_RS   9           // RS pin for data or instruction
+//#define GLCD_SS   14          // RS pin for data or instruction
 
 
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
 #define VSPI FSPI
 #endif
 
-static const int spiClk = 1000000; // 1 MHz
+static const int spiClk = 40000000; // 1 MHz
 
 //uninitalised pointers to SPI objects
-SPIClass * lcd_vspi = NULL;
-SPIClass * pressure_vspi = NULL;
+//SPIClass * lcd_vspi = NULL;
+//SPIClass * glcd_vspi = NULL;
+SPIClass * baro_vspi = NULL;
 
 
 void setup_Leaf_SPI(void) {
 
 // Start SPI bus for peripheral devices
-pressure_vspi = new SPIClass(VSPI);
-pressure_vspi->begin(VSPI_SCLK, VSPI_MISO, VSPI_MOSI, PRESSURE_VSPI_SS);
-pinMode(pressure_vspi->pinSS(), OUTPUT);
+baro_vspi = new SPIClass(VSPI);
+baro_vspi->begin(VSPI_SCLK, VSPI_MISO, VSPI_MOSI, BARO_VSPI_SS);
+pinMode(baro_vspi->pinSS(), OUTPUT);
 
+/*
 lcd_vspi = new SPIClass(VSPI);
 lcd_vspi->begin(VSPI_SCLK, VSPI_MISO, VSPI_MOSI, LCD_VSPI_SS); //SCLK, MISO, MOSI, SS
 pinMode(lcd_vspi->pinSS(), OUTPUT); //VSPI SS
 //pinMode(LCD_RS, OUTPUT);
 
+glcd_vspi = new SPIClass(VSPI);
+glcd_vspi->begin(VSPI_SCLK, VSPI_MISO, VSPI_MOSI, GLCD_SS); //SCLK, MISO, MOSI, SS
+pinMode(glcd_vspi->pinSS(), OUTPUT); //VSPI SS
+//pinMode(GLCD_RS, OUTPUT);
+*/
+
 }
 
+/*
 void LCD_spiCommand(byte data) {
 
   SPIClass *spi = lcd_vspi;
@@ -48,9 +59,23 @@ void LCD_spiCommand(byte data) {
   spi->endTransaction();
 }
 
-uint32_t PRESSURE_spiCommand(byte data) {
+void GLCD_spiCommand(byte data) {
 
-  SPIClass *spi = pressure_vspi;
+  SPIClass *spi = glcd_vspi;
+
+  //use it as you would the regular arduino SPI API
+  spi->beginTransaction(SPISettings(spiClk, MSBFIRST, SPI_MODE0));
+  digitalWrite(spi->pinSS(), LOW); //pull SS slow to prep other end for transfer
+    spi->transfer(data);
+  //Serial.println(data);
+  digitalWrite(spi->pinSS(), HIGH); //pull ss high to signify end of data transfer
+  spi->endTransaction();
+}
+*/
+
+uint32_t baro_spiCommand(byte data) {
+
+  SPIClass *spi = baro_vspi;
   uint32_t val = 0;
 
   //use it as you would the regular arduino SPI API
@@ -65,10 +90,10 @@ uint32_t PRESSURE_spiCommand(byte data) {
 }
 
 // Read in sensor-specific calibration value at specified address (1-6)
-uint16_t SPI_pressure_readCalibration(unsigned char PROMaddress)
+uint16_t SPI_baro_readCalibration(unsigned char PROMaddress)
 {
 
-  SPIClass *spi = pressure_vspi;
+  SPIClass *spi = baro_vspi;
 
 	uint16_t value = 0;				// This will be the final 16-bit output from the ADC
 	unsigned char command = 0b10100000;	// This is the command to read from the specified address
@@ -99,10 +124,10 @@ uint16_t SPI_pressure_readCalibration(unsigned char PROMaddress)
 
 
 // Read the pre-converted Digital value (either pressure or temperature, depending what 'convert' command was most recently called)
-uint32_t SPI_pressure_readADC(void)
+uint32_t SPI_baro_readADC(void)
 {
 
-  SPIClass *spi = pressure_vspi;
+  SPIClass *spi = baro_vspi;
 
 	uint32_t valueL = 0;					// This will be the final 24-bit output from the ADC
   

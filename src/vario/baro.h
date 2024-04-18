@@ -1,13 +1,10 @@
 /*
- * pressure.h
- *
- *  Created on: May 5, 2012
- *      Author: oxothnk
+ * baro.h
+ * 
  */
 
-#ifndef pressure_h
-#define pressure_h
-
+#ifndef baro_h
+#define baro_h
 
 /*
 #include <stdint.h>
@@ -46,26 +43,24 @@ extern int16_t CLIMB_RATE;							// GLOBAL
 extern int16_t CLIMB_RATEfiltered;					// GLOBAL
 extern int32_t VARIO_RATEfiltered;					// GLOBAL
 
-void pressure_reset(void);
-void pressure_update1(void);
-void pressure_update2(void);
+void baro_reset(void);
+char baro_update(char process_step);
 
-void pressure_write(unsigned char hexwrite);
-void pressure_init(void);
-uint32_t pressure_readADC(void);
-
-
-void pressure_convertPressure(unsigned char cmd);
-void pressure_convertTemperature(unsigned char cmd);
+void baro_write(unsigned char hexwrite);
+void baro_init(void);
+uint32_t baro_readADC(void);
 
 
-void pressure_update3(void);
-void pressure_update4(void);
-int32_t pressure_calculateAlt(void);
+void baro_convertPressure(unsigned char cmd);
+void baro_convertTemperature(unsigned char cmd);
 
-void pressure_updateClimb(void);
+int32_t baro_calculateAlt(void);
 
-void pressure_filterALT(void);
-void pressure_filterVARIO(void);
+void baro_updateClimb(void);
 
-#endif /* PRESSURE_H_ */
+void baro_filterALT(void);
+void baro_filterVARIO(void);
+
+void baro_flightLog(void);  
+
+#endif

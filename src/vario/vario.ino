@@ -1,94 +1,195 @@
 #include <Arduino.h>
-#include <NMEAGPS.h>
-#include "pressure.h"
-#include "Leaf_SPI.h"
-
 #include <HardwareSerial.h>
-HardwareSerial gpsSerial(1); // define a Serial for UART1
-const int gpsSerialRX = 44;
-const int gpsSerialTX = 43;
 
-// RGB LED STUFF
-#define LED_PIN 48
-#define NUM_LEDS 1
-#define BRIGHTNESS 10
-#define LED_TYPE WS2812
-#define FASTLED_ALLOW_INTERRUPTS 0
-#include "FastLED.h"
-CRGB leds[NUM_LEDS];
+#include "baro.h"
+#include "Leaf_SPI.h"
+#include "speaker.h"
+#include "display.h"
+#include "gps.h"
+
 
 //should move to SPI file later
-#define LCD_RS    46          // RS pin for data or instruction
+//#define LCD_RS    46          // RS pin for data or instruction
+//#define GLCD_RS    9          // RS pin for data or instruction
+//#define GLCD_RESET 7          // Reset pin
+//#define LED_PIN    6
+
+
+
+// Main Loop & Task Manager
+/*
+The main loop perioritizes processesing any data in the serial buffer so as not to miss any NMEA GPS characters.  
+The main loop will continue looping & processing serial data until all NMEA sentences have been captured.
+Then, if there is no more serial data, any other remaining tasks will be processed.
+Once all tasks are done, and if the serial UART is quiet, then the processor will go to sleep.
+
+Every 10ms, driven by an interrupt timer, the system will wake up, set flags for which tasks are needed, and then run the main loop (i.e., pick up in the loop where it left off when it went to sleep)
+
+TODO: In addition to the timer-driven interrupt, we may consider also setting wake-up interrupts for the pushbuttons, the GPS 1PPS signal, and perhaps others.
+*/
+
+// Trackers for Task Manager Queue.  Default to tasks being needed, so they execute upon startup
+char taskman_buttons = 1;   // poll & process buttons
+char taskman_baro = 1;      // (1) Process on-chip ADC pressure, (2) read pressure and process on-chip ADC temperature, (3) calculate, filter, and store values
+char taskman_imu = 1;       // read sensors and update values
+char taskman_gps = 1;       // process any NMEA strings and update values
+char taskman_lcd = 1;       // update display
+char taskman_power = 1;     // check battery, check auto-turn-off, etc
+char taskman_logging = 1;   // check auto-start, increment timers, update log file, etc
+char taskman_setTasks = 1;  // the task of setting tasks -- usually set by timer-driven interrupt
+
+// Counters for system task timer
+char counter_10ms_block = 0;
+char counter_100ms_block = 0;
+
+
+
+
+/////////////////////////////////////////////////
+// Main Loop for Processing Tasks ///////////////
+/////////////////////////////////////////////////
+void main_timer_loop() {    
+  if (taskman_setTasks) {   // if we're running through this loop for the first time in 10ms (since the last timer driven interrupt)
+    setTasks();             // then set necessary tasks
+    taskman_setTasks = 0;   // we don't need to do this again until the next 10ms timer interrupt
+  }
+
+  //if (serial is available) uart_is_quiet = process_serial_stuff(); // serial is high priority so we don't overflow the buffer, first check this if available
+  //else { taskManager(); }                                          // otherwise do other remaining tasks
+  //if (uart_is_quiet) goToSleep();                 
+  // else, run this loop again and keep processing the serial buffer until we're done with all the NMEA sentences this cycle
+}
+
+
+void setTasks(void) {  
+  // increment time counters
+  if(++counter_10ms_block = 10) {
+    counter_10ms_block = 0;           // every 10 periods of 10ms, go back to 0 (100ms total)
+    if (++counter_100ms_block = 10) {
+      counter_100ms_block = 0;        // every 10 periods of 100ms, go back to 0 (1sec total)
+    }
+  }
+
+  // TODO: check buttons here (every 10ms)
+
+  // set additional tasks to complete, broken down into 10ms block cycles.  (embedded if() statements allow for tasks every second)
+  switch (counter_10ms_block) {
+    case 0:
+      taskman_baro = 1;  // update baro every 50ms on the 0th and 5th blocks
+
+      // cycle through tasks needed less often (every 500ms - 1000ms)
+      if (counter_100ms_block == 0) taskman_gps = 1;                              // every second: gps
+      if (counter_100ms_block == 1) taskman_power = 1;                            // every second: power checks      
+      if (counter_100ms_block == 2) taskman_logging = 1;                          // every second: logging
+      if (counter_100ms_block == 3 || counter_100ms_block == 8) taskman_lcd = 1;  // every half-second LCD
+      break;
+    case 1:
+      // FYI: baro step 2 will update here
+      break;
+    case 2:
+      // FYI: baro step 3 will update here
+      break;
+    case 3:
+      // FYI: baro step 4 will update here
+      break;
+    case 4:
+      taskman_imu = 1;  // update accel every 100ms during the 4th block
+      break;
+    case 5:
+      taskman_baro = 1;  // update baro every 50ms on the 0th and 5th blocks
+      break;
+    case 6:
+      // FYI: baro step 2 will update here
+      break;
+    case 7:
+      // FYI: baro step 3 will update here
+      break;
+    case 8:
+      // FYI: baro step 4 will update here
+      break;
+    case 9:
+      break;      
+  }
+}
+
+char process_serial_stuff() {
+  char finished_sending = 0;
+  //grab_stuff_from_serial_buffer();
+  //process_serial_GPS_NMEA_strings();
+  //if (GPS_is_done_with_its_strings) finished_sending = 1;
+  return finished_sending;
+}
+
+// execute necessary tasks while we're awake and have things to do
+void taskManager(void) {
+  /*
+  if (taskman_buttons) buttons_update();
+  if (taskman_baro) taskman_baro = baro_update(taskman_baro);    // do bare update if needed, and prep for next step in the update process
+  if (taskman_imu) imu_update();
+  if (taskman_gps) gps_update();
+  if (taskman_lcd) lcd_update();
+  if (taskman_power) power_update();
+  if (taskman_logging) logging_update();
+  */
+}
+
+
 
 
 // Main Timer Setup and interrupt event
 hw_timer_t *Timer0_Cfg = NULL;
-char pressureUpdateIndex = 0;   // keep track of which pressure udpate we're doing (it takes 3+ timed calls to the pressure sensore to get a full cycle data)
-char timerIndex_10ms = 0;       // keep track of how many timer-alarm-events we've processed (each count should be 10ms)
-char timerIndex_500ms = 0;      // keep track of how many half-second triggers have passed
+
 
 void IRAM_ATTR Timer0_ISR() {
   //do stuff every alarm cycle (default 10ms)
-    //Pressure Update 
-    //PressureUpdate(pressureUpdateIndex++);
-    if(pressureUpdateIndex >=3) pressureUpdateIndex = 0;
-
-    //Poll Buttons
-    //pollButtons();
-
-    //Index the main timer
-    timerIndex_10ms++;    
-    if(timerIndex_10ms >= 5) {
-      timerIndex_10ms = 0;
-
-      //do stuff every 5 alarm cycles (every 0.5 seconds)
-      //displayUpdate();
-    }
-
-
+  taskman_setTasks = 1; // next time through main loop, set tasks to do!
+  // wakeup();  // go back to main loop and keep processing stuff that needs doing!
 }
 
 
 void setup()
 {
 
+// Start USB Serial Debugging Port
+Serial.begin(115200);
+Serial.println("Starting Setup");
+
+/*
 //Start Main System Timer for Interrupt Events
   Timer0_Cfg = timerBegin(0, 80, true);                 // Prescaler of 80, so 80Mhz drops to 1Mhz
   timerAttachInterrupt(Timer0_Cfg, &Timer0_ISR, true);  // Attach interrupt to handle alarm events
   timerAlarmWrite(Timer0_Cfg, 100000, true);            // Set alarm to go every 100,000 ticks (every 0.1 seconds)
   timerAlarmEnable(Timer0_Cfg);                         // Enable alarm & timer
+*/
 
-// should move to SPI later
-pinMode(LCD_RS, OUTPUT);
-
-// Start USB Serial Debugging Port
-Serial.begin(115200);
-delay(1000);
-Serial.println("Starting");
-
-// Start GPS UART port
-gpsSerial.begin(4800, SERIAL_8N1, gpsSerialRX, gpsSerialTX);
-
-setup_Leaf_SPI();
-
-// LED setup for dev kit board addressible RGB led
-FastLED.addLeds<WS2812, LED_PIN, RGB>(leds, NUM_LEDS);
-FastLED.setBrightness(BRIGHTNESS );
 
 //Initialize devices
-pressure_init();
-LCD_init();
-GPS_init();
-
+setup_Leaf_SPI();
+Serial.println("Finished SPI");
+baro_init();
+Serial.println("Finished Baro");
+display_init();
+Serial.println("Finished display");
+gps_init();
+Serial.println("Finished GPS");
+speaker_init();
+Serial.println("Finished Speaker");
+Serial.println("Finished Setup");
 
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void loop() {
+//display_test();
+  gps_test_sats();
 
+  //speaker_TEST();
+
+
+/*
 pressure_update1();
 delay(15);
 pressure_update2();
@@ -110,168 +211,9 @@ Serial.print(P_ALT);
 Serial.print("  Alt_filt: ");
 Serial.print(P_ALTfiltered);
 Serial.println(" ");
-
-
 delay(450);
-
-
-// Rebroadcast GPS serial data to debugger port
-/*
-while (gpsSerial.available() > 0) {
-//Serial.print(char(gpsSerial.read()));
-//Serial.print("_");
-}
-*/
-
-//Serial.println("waiting");
-//delay(500);
-
-// Blink RGB light
-/*
-Serial.println("Red");
-leds[0] = CRGB::Red;
-FastLED.show(); // << failes here; have also tried FastLED.delay(100); as well as following FastLED.show(); with yield();
-delay(1000);
-
-Serial.println("Green");
-leds[0] = CRGB::Green;
-FastLED.show();
-delay(1000);
-
-Serial.println("Blue");
-leds[0] = CRGB::Blue;
-FastLED.show();
-delay(1000);
 */
 
 }
 
-// Initialize the LCD
-void LCD_init(void)
-{
-	delay(20);
-	LCD_inst(0b00111001); //8 bit data, 2 line (ram), instr. table 1  //was 0x39 / 0b00111001
-	delay(20);
-	LCD_inst(0x15); // 0x14 for 2-line, 0x15 for 3-line
-	delay(20);
-	LCD_inst(0b01010101); // icon/boost/contrast 0101 Icon Boost C5 C4  // was 0x51 / 0b01010001 icon off, booster off, c5/c4 off
-	delay(20);
-	LCD_inst(0b01101101); // voltage follower on / 0110 Fon Rab2 Rab1 Rab0 / (+ ratio/gain) // *1101 for 2-line, *1110 for 3-line
-	delay(20);
-	//LCD_contrast(CONTRAST); // contrast set 0111 C3 C2 C1 C0   // ds suggests: 0b01110010
-	//_delay_ms(10); // was 100
-  //	LCD_inst(0b00111001); 				//8 bit data, 2 line (ram), instr. table 1  //was 0x39 / 0b00111001
-	//delay(20);
-	LCD_inst(0b01111011);   				// contrast set 0111 C3 C2 C1 C0
-	delay(100);
-	LCD_inst(0b00111000); //8 bit data, 2 line (ram), instr. table 0  //was 0x38 / 0b00111000
-	delay(100); // was 500
-	LCD_inst(0x0F); // disp. on, cursor on, blink
-	delay(20);
-	LCD_inst(0x01); // CLEAR DISPLAY cursor home
-	delay(20);
-	LCD_inst(0x06); // cursor direction + shift (0)
-	delay(20);
-}
 
-// Send data to LCD
-void LCD_data(unsigned char d)
-{
-	digitalWrite(LCD_RS, HIGH);	// Pull RS high to indicate data
-	//LCD_write(d);
-  LCD_spiCommand(d);
-}
-
-// Send instruction to LCD
-void LCD_inst(unsigned char i)
-{
-	digitalWrite(LCD_RS, LOW);	// Pull RS low to indicate command instruction
-	//LCD_write(i);
-  LCD_spiCommand(i);
-}
-
-
-void GPS_sendCommand(char* string) {
-  unsigned char c;
-	c = *string++;
-
-	while ( c != '\0' )	{
-		gpsSerial.print(c);
-    Serial.print((char)c);
-		c = *string++;
-	}
-
-	//carriage return and line feed required to end NMEA sentence
-  gpsSerial.print('\r');
-  Serial.print('\r');
-	gpsSerial.print('\n');
-  Serial.print('\n');
-}
-
-void GPS_init()
-{
-
-// turn off unneeded NMEA messages
-Serial.println("Setting GPS messages");
-	delay(1000);
-GPS_sendCommand("$PSRF103,00,00,01,01*25");	//turn on GGA at 1 sec (1st message by default)
-GPS_sendCommand("$PSRF103,01,00,00,01*25");	//turn off GLL
-GPS_sendCommand("$PSRF103,02,00,00,01*26");	//turn off GSA (2nd message by default)
-GPS_sendCommand("$PSRF103,03,00,00,00*26");	//turn off GSV at 4 sec (3rd message by default, up to 3 sentences)  //was 00,01*23"
-GPS_sendCommand("$PSRF103,04,00,01,01*21");	//turn on RMC at 1 sec (4th message by default)
-GPS_sendCommand("$PSRF103,05,00,00,01*21");	//turn off VTG
-
-Serial.println("Completed");
-
-  /*
-	// set ON_OFF pin as an output, default low.  And nWAKEUP pin as an input
-	GPS_DDR |= GPS_ON_OFF;
-	GPS_PORT &= ~GPS_ON_OFF;
-	GPS_DDR &= ~GPS_nWAKEUP;
-
-	// set up GPS reset pin, and default to high (to reset, pull pin low)
-	GPS_RESET_DDR |= GPS_nRST;
-	GPS_RESET_PORT |= GPS_nRST;
-
-	// Get GPS turned on to configure (if user setting has GPS set to OFF, we'll turn it off once we're done here)
-	gps_enable();
-
-	// set UART baudrate to the GPS default baudrate
-	uart_setBaud(BAUD_DEFAULT_PRESCALE);
-
-	// configure GPS to use max baudrate, NMEA mode
-	_delay_ms(1000);
-	gps_txStringChecksum("$PSRF100,1,38400,8,1,0*00");
-	_delay_ms(50);
-
-	// now configure uart to use max baudrate too
-	uart_setBaud(BAUD_MAX_PRESCALE);
-
-	// turn off unneeded NMEA messages
-	gps_txStringChecksum("$PSRF103,05,00,00,01*00");	//turn off VTG
-	gps_txStringChecksum("$PSRF103,02,00,00,01*00");	//turn off GSA
-	gps_txStringChecksum("$PSRF103,01,00,00,01*00");	//turn off GLL
-
-	//turn on desired messages
-	gps_txStringChecksum("$PSRF103,00,00,01,01*00");	//turn on GGA at 1 sec
-	gps_txStringChecksum("$PSRF103,04,00,01,01*00");	//turn on RMC at 1 sec
-	gps_txStringChecksum("$PSRF103,03,00,04,01*00");	//turn on GSV at 4 sec
-
-    // Initialize the GPS sentence string position to 0
-    gpsstrpos = 0;
-
-    // Initialize GPSdata track_string struct
-    gps_init_ts(&GPSdata);
-
-    // Initialize GPSsat satellite_string struct and showSatSearch[8] string
-    gps_init_ss(&GPSsat);
-
-    // Set status default
-    gps_status = gps_searching;
-
-
-    // Now that GPS is initialized, put it to sleep if user has it set to OFF.
-    if (GPS_USER_SETTING == 0)
-    	gps_disable();
-*/
-}

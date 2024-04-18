@@ -7,10 +7,8 @@
 
 void setup_Leaf_SPI(void);
 
-void LCD_spiCommand(byte data);
-
-uint32_t PRESSURE_spiCommand(byte data);
-uint16_t SPI_pressure_readCalibration(unsigned char PROMaddress);
-uint32_t SPI_pressure_readADC(void);
+uint32_t baro_spiCommand(byte data);
+uint16_t SPI_baro_readCalibration(unsigned char PROMaddress);
+uint32_t SPI_baro_readADC(void);
 
 #endif
