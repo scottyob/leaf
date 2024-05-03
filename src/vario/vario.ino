@@ -6,7 +6,10 @@
 #include "speaker.h"
 #include "display.h"
 #include "gps.h"
+#include "buttons.h"
+#include "IMU.h"
 
+uint8_t display_page = 0;
 
 //should move to SPI file later
 //#define LCD_RS    46          // RS pin for data or instruction
@@ -166,8 +169,14 @@ Serial.println("Starting Setup");
 //Initialize devices
 setup_Leaf_SPI();
 Serial.println("Finished SPI");
+GLCD_init();
+Serial.println("Finished GLCD");
+buttons_init();
+Serial.println("Finished buttons");
 baro_init();
 Serial.println("Finished Baro");
+imu_init();
+Serial.println("Finished IMU");
 display_init();
 Serial.println("Finished display");
 gps_init();
@@ -176,6 +185,7 @@ speaker_init();
 Serial.println("Finished Speaker");
 Serial.println("Finished Setup");
 
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -183,10 +193,45 @@ Serial.println("Finished Setup");
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void loop() {
-//display_test();
-  gps_test_sats();
+  
+  uint8_t button = buttons_check();
+  uint8_t button_state = buttons_get_state();
 
-  //speaker_TEST();
+  if (button_state == PRESSED) {
+    if (button == LEFT) {      
+      if (display_page > 0) display_page--;
+    } else if (button == RIGHT) {
+      display_page++;
+      if (display_page > 5) display_page = 5;
+    }
+    Serial.print("Going to page: ");
+    Serial.println(display_page);
+  }
+
+  switch (display_page) {
+    case 0:
+      gps_test_sats();
+      break;
+    case 1:
+      display_test();
+      break;
+    case 2:
+      speaker_TEST();
+      break;
+    case 3:
+      imu_test();
+      break;
+    case 4:
+      display_test_big(1);
+      break;
+    case 5:
+      display_test_big(2);
+      break;
+  }
+  //
+  //
+
+  //
 
 
 /*

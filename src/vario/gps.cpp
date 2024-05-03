@@ -18,7 +18,7 @@ const char disableVTG [] PROGMEM = "$PAIR062,5,0";  // disable message
 // Setup GPS
 #define gpsPort Serial0         // This is the hardware communication port (UART0) for GPS Rx and Tx lines.  We use the default ESP32S3 pins so no need to set them specifically
 #define GPSBaud 115200
-//#define GPSSerialBufferSize 2048
+#define GPSSerialBufferSize 2048
 TinyGPSPlus gps;                // The TinyGPSPlus object (this is the software class that stores all the GPS info and functions)
 
 // Satellite tracking

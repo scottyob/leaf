@@ -6,6 +6,10 @@
 #include <Arduino.h>
 #include "display.h"
 
+#define LCD_VSPI_SS 14
+#define GLCD_RS      9           // RS pin for data or instruction
+#define GLCD_RESET  7
+
 // Display Testing Temp Vars
 float wind_angle = 0;
 char seconds = 0;
@@ -19,22 +23,24 @@ char string_gpsLng[] = "0000000000";
 
 
 
-U8G2_ST7539_192X64_F_4W_HW_SPI u8g2(U8G2_R3, /* cs=*/ 14, /* dc=*/ 9, /* reset=*/ 7);
+U8G2_ST7539_192X64_F_4W_HW_SPI u8g2(U8G2_R3, /* cs=*/ LCD_VSPI_SS, /* dc=*/ 9, /* reset=*/ 7);
 
 
 
 void display_init(void) {
+  digitalWrite(LCD_VSPI_SS, HIGH);
   u8g2.setBusClock(20000000);
   u8g2.begin();
   u8g2.setContrast(80);
 }
 
 
-/*
+
 
 // Initialize the GRAPHIC LCD
 void GLCD_init(void)
 {
+  pinMode(GLCD_RS, OUTPUT);
 	digitalWrite(GLCD_RESET, LOW);
   delay(500);
   digitalWrite(GLCD_RESET, HIGH);
@@ -51,17 +57,16 @@ void GLCD_init(void)
   GLCD_inst(0b00010000);  //Column address MSB ->0
   delay(20);
   GLCD_inst(0b10110000);  //Page address ->0
-delay(20);
+  delay(20);
   GLCD_inst(0b10100110);  //Set inverse display->NO
-delay(20);
+  delay(20);
 
   for (int i=0; i<1536; i++){
     GLCD_data(0b00000000);    //clear LCD
-   }
-	
+  }
 }
 
-*/
+
 
 // draw satellite constellation starting in upper left x, y and box size (width = height)
 void display_satellites(uint16_t x, uint16_t y, uint16_t size) {
@@ -126,6 +131,9 @@ void display_satellites(uint16_t x, uint16_t y, uint16_t size) {
       }
      
     }
+    
+    u8g2.drawStr(0, 10, "Hi Craig!");
+    
     //draw other GPS stuff just for testing purposes
     u8g2.drawStr(0, size + y + 10, "Lat: ");
     u8g2.drawStr(20, size + y + 10, itoa(gps.location.lat(), string_gpsLat, 10));
@@ -143,8 +151,8 @@ void display_satellites(uint16_t x, uint16_t y, uint16_t size) {
 }
 
 
-void display_test(void) {
-  Serial.println("entering display_test");
+void display_test(void) {  
+  delay(100);
   u8g2.firstPage();
   do {
     u8g2.setFont(u8g2_font_tinyunicode_tf);
@@ -292,12 +300,11 @@ void display_test(void) {
     u8g2.drawFrame(64-width, 144, width, 48);
     u8g2.drawBox(64-width, 144-v, width, v);
     */
-  } while ( u8g2.nextPage() );
-  Serial.println("exiting display_test");
+  } while ( u8g2.nextPage() );  
 }
 
 
-void display_test_big(void) {
+void display_test_big(uint8_t page) {
   
 char s[] = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x80\xc0"
 "\x60\x30\x10\x18\x08\x0c\x04\x04\x06\x06\x06\x06\x02\x06\x06\x06\x06\x04\x04"
@@ -476,9 +483,8 @@ GLCD_data(0b10100100);
 delay(500);
 */
 
-/* BIG LCD TEST
 
-Serial.println("LCD go home");
+
 
   //GO HOME GLCD
   GLCD_inst(0b00000000);  //Column address LSB ->0
@@ -489,81 +495,32 @@ Serial.println("LCD go home");
   delay(20);
 
 
-Serial.println("Display Page 1");
+  if (page = 1) {
 
-for (int page=0; page<8; page++) {
-  for (int d=0; d<192; d++) {
-    GLCD_data(s[d+page*192]);  
+    for (int page=0; page<8; page++) {
+      for (int d=0; d<192; d++) {
+        GLCD_data(s[d+page*192]);  
+      }
+    }    
+  } else if (page = 2) {
+    for (int page=0; page<8; page++) {
+      for (int d=0; d<192; d++) {
+        GLCD_data(t[d+page*192]);  
+      }
+    }    
   }
-}
-delay(5000);
-
-  //GO HOME GLCD
-  GLCD_inst(0b00000000);  //Column address LSB ->0
-  delay(20);
-  GLCD_inst(0b00010000);  //Column address MSB ->0
-  delay(20);
-  GLCD_inst(0b10110000);  //Page address ->0
-  delay(20);
-
-Serial.println("Display Page 2");
-
-for (int page=0; page<8; page++) {
-  for (int d=0; d<192; d++) {
-    GLCD_data(t[d+page*192]);  
-  }
-}
-delay(5000);
-
-//BIG LCD TEST */
+  delay(200);
+//BIG LCD TEST 
 }
 
 
-/*
-// Initialize the LCD
-void LCD_init(void)
-{
-	delay(20);
-	LCD_inst(0b00111001); //8 bit data, 2 line (ram), instr. table 1  //was 0x39 / 0b00111001
-	delay(20);
-	LCD_inst(0x15); // 0x14 for 2-line, 0x15 for 3-line
-	delay(20);
-	LCD_inst(0b01010101); // icon/boost/contrast 0101 Icon Boost C5 C4  // was 0x51 / 0b01010001 icon off, booster off, c5/c4 off
-	delay(20);
-	LCD_inst(0b01101101); // voltage follower on / 0110 Fon Rab2 Rab1 Rab0 / (+ ratio/gain) // *1101 for 2-line, *1110 for 3-line
-	delay(20);
-	//LCD_contrast(CONTRAST); // contrast set 0111 C3 C2 C1 C0   // ds suggests: 0b01110010
-	//_delay_ms(10); // was 100
-  //	LCD_inst(0b00111001); 				//8 bit data, 2 line (ram), instr. table 1  //was 0x39 / 0b00111001
-	//delay(20);
-	LCD_inst(0b01111011);   				// contrast set 0111 C3 C2 C1 C0
-	delay(100);
-	LCD_inst(0b00111000); //8 bit data, 2 line (ram), instr. table 0  //was 0x38 / 0b00111000
-	delay(100); // was 500
-	LCD_inst(0x0F); // disp. on, cursor on, blink
-	delay(20);
-	LCD_inst(0x01); // CLEAR DISPLAY cursor home
-	delay(20);
-	LCD_inst(0x06); // cursor direction + shift (0)
-	delay(20);
+void GLCD_inst(byte data) {
+  digitalWrite(GLCD_RS, LOW);
+  GLCD_spiCommand(data);
 }
 
-
-
-// Send data to LCD
-void LCD_data(unsigned char d)
-{
-	digitalWrite(LCD_RS, HIGH);	// Pull RS high to indicate data
-	//LCD_write(d);
-  LCD_spiCommand(d);
+void GLCD_data(byte data) {
+  digitalWrite(GLCD_RS, HIGH);
+  GLCD_spiCommand(data);
 }
 
-// Send instruction to LCD
-void LCD_inst(unsigned char i)
-{
-	digitalWrite(LCD_RS, LOW);	// Pull RS low to indicate command instruction
-	//LCD_write(i);
-  LCD_spiCommand(i);
-}
-
-*/

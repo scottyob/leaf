@@ -343,7 +343,7 @@ void speaker_TEST(void) {
   //Serial.println('0');
   
   //Explore sounds
-  //speaker_playPiano();  
+  speaker_playPiano();  
   
 
   //Test sound fx
@@ -367,7 +367,7 @@ void speaker_TEST(void) {
   */
 }
 
-void spearker_playPiano(void) {
+void speaker_playPiano(void) {
 if (Serial.available() > 0) {
     char letter = char(Serial.read());
     while (Serial.available() > 0) {

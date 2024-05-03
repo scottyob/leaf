@@ -70,6 +70,7 @@ void speaker_playsound_down(void);
 void onSpeakerTimer(void);
 
 void speaker_TEST(void);
+void speaker_playPiano(void);
 
 enum sound_tones {
   fx_silence,

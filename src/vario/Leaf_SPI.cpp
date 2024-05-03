@@ -2,76 +2,96 @@
 
 
 // SPI STUFF
-#define VSPI_MISO MISO        // 13-default ESP32
-#define VSPI_MOSI MOSI        // 11-default ESP32
-#define VSPI_SCLK SCK         // 12-default ESP32
-#define BARO_VSPI_SS  47  // Baro chip select
+#define VSPI_MISO MISO        // 13-default ESP32S3
+#define VSPI_MOSI MOSI        // 11-default ESP32S3
+#define VSPI_SCK  SCK         // 12-default ESP32S3
+#define BARO_VSPI_SS  47      // Baro chip select
+#define IMU_VSPI_SS  21       // IMU chip select
+
 //#define LCD_VSPI_SS   SS      // 10-default ESP32 (LCD chip select)
 //#define LCD_RS    46          // RS pin for data or instruction
-//#define GLCD_RS   9           // RS pin for data or instruction
-//#define GLCD_SS   14          // RS pin for data or instruction
+#define GLCD_SS   14          // RS pin for data or instruction
 
 
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
 #define VSPI FSPI
 #endif
 
-static const int spiClk = 40000000; // 1 MHz
+static const int spiClk = 1000000; 
 
 //uninitalised pointers to SPI objects
 //SPIClass * lcd_vspi = NULL;
 //SPIClass * glcd_vspi = NULL;
 SPIClass * baro_vspi = NULL;
+SPIClass * imu_vspi = NULL;
+SPIClass * glcd_vspi = NULL;
 
 
 void setup_Leaf_SPI(void) {
 
-// Start SPI bus for peripheral devices
-baro_vspi = new SPIClass(VSPI);
-baro_vspi->begin(VSPI_SCLK, VSPI_MISO, VSPI_MOSI, BARO_VSPI_SS);
-pinMode(baro_vspi->pinSS(), OUTPUT);
+  // Start SPI bus for peripheral devices
+  baro_vspi = new SPIClass(VSPI);
+  baro_vspi->begin(VSPI_SCK, VSPI_MISO, VSPI_MOSI, BARO_VSPI_SS);
+  pinMode(baro_vspi->pinSS(), OUTPUT);
+  digitalWrite(baro_vspi->pinSS(), HIGH);
 
-/*
-lcd_vspi = new SPIClass(VSPI);
-lcd_vspi->begin(VSPI_SCLK, VSPI_MISO, VSPI_MOSI, LCD_VSPI_SS); //SCLK, MISO, MOSI, SS
-pinMode(lcd_vspi->pinSS(), OUTPUT); //VSPI SS
-//pinMode(LCD_RS, OUTPUT);
+  imu_vspi = new SPIClass(VSPI);
+  imu_vspi->begin(VSPI_SCK, VSPI_MISO, VSPI_MOSI, IMU_VSPI_SS);
+  pinMode(imu_vspi->pinSS(), OUTPUT);
+  digitalWrite(imu_vspi->pinSS(), HIGH);
 
-glcd_vspi = new SPIClass(VSPI);
-glcd_vspi->begin(VSPI_SCLK, VSPI_MISO, VSPI_MOSI, GLCD_SS); //SCLK, MISO, MOSI, SS
-pinMode(glcd_vspi->pinSS(), OUTPUT); //VSPI SS
-//pinMode(GLCD_RS, OUTPUT);
-*/
-
+  glcd_vspi = new SPIClass(VSPI);
+  glcd_vspi->begin(VSPI_SCK, VSPI_MISO, VSPI_MOSI, GLCD_SS); //SCLK, MISO, MOSI, SS
+  pinMode(glcd_vspi->pinSS(), OUTPUT);
+  digitalWrite(glcd_vspi->pinSS(), HIGH);
+  
 }
 
-/*
-void LCD_spiCommand(byte data) {
 
-  SPIClass *spi = lcd_vspi;
-
-  //use it as you would the regular arduino SPI API
-  spi->beginTransaction(SPISettings(spiClk, MSBFIRST, SPI_MODE0));
-  digitalWrite(spi->pinSS(), LOW); //pull SS slow to prep other end for transfer
-  spi->transfer(data);
-  //Serial.println(data);
-  digitalWrite(spi->pinSS(), HIGH); //pull ss high to signify end of data transfer
-  spi->endTransaction();
-}
 
 void GLCD_spiCommand(byte data) {
 
-  SPIClass *spi = glcd_vspi;
+  SPIClass *spi = glcd_vspi;                                       
 
-  //use it as you would the regular arduino SPI API
+  spi->beginTransaction(SPISettings(spiClk, MSBFIRST, SPI_MODE0));    
+  digitalWrite(spi->pinSS(), LOW);                                    
+  spi->transfer(data);                                                     
+  digitalWrite(spi->pinSS(), HIGH);                                    
+  spi->endTransaction();                                                
+}
+
+
+
+uint8_t imu_spiRead(byte address) {
+
+  SPIClass *spi = imu_vspi;
+  uint8_t val = 0;
+  address |= 0x80;    // set MSB to '1' for read command
+  
   spi->beginTransaction(SPISettings(spiClk, MSBFIRST, SPI_MODE0));
   digitalWrite(spi->pinSS(), LOW); //pull SS slow to prep other end for transfer
-    spi->transfer(data);
-  //Serial.println(data);
+  spi->transfer(address);
+  // delayMicroseconds(5);
+  val = spi->transfer(0x00);  
+  digitalWrite(spi->pinSS(), HIGH); //pull ss high to signify end of data transfer
+  spi->endTransaction();
+
+  return val;
+}
+
+void imu_spiWrite(byte address, byte data) {
+
+  SPIClass *spi = imu_vspi;  
+    
+  spi->beginTransaction(SPISettings(spiClk, MSBFIRST, SPI_MODE0));
+  digitalWrite(spi->pinSS(), LOW); //pull SS slow to prep other end for transfer
+  spi->transfer(address);
+  // delayMicroseconds(5);
+  spi->transfer(data);  
   digitalWrite(spi->pinSS(), HIGH); //pull ss high to signify end of data transfer
   spi->endTransaction();
 }
-*/
+
 
 uint32_t baro_spiCommand(byte data) {
 
@@ -147,7 +167,7 @@ uint32_t SPI_baro_readADC(void)
  // Serial.print(valueL);
  // Serial.print("  ");
 
-return valueL;
+  return valueL;
 }
 
 
