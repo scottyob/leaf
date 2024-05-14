@@ -11,20 +11,10 @@
 #include "IMU.h"
 #include "speaker.h"
 
-
-
-
-
-
-
 // Pinout for ESP32
 #define AVAIL_GPIO_0       0  // unused, broken out to header
 #define AVAIL_GPIO_21     21  // unused, broken out to header (also can be used as LCD backlight if desired)
 #define AVAIL_GPIO_41     41  // unused, broken out to header
-
-
-
-
 
 
 uint8_t display_page = 0;

@@ -1,15 +1,6 @@
 #include "power.h"
 
 
-
-
-//Pinout for Leaf V3.2.0
-#define POWER_CHARGE_I1   39
-#define POWER_CHARGE_I2   40
-#define POWER_LATCH       48  
-#define POWER_CHARGE_GOOD 47  // INPUT
-#define BATT_SENSE         1  // INPUT ADC
-
 uint8_t power_init(void) {
 
   // Set output / input pins to control battery charge and power supply  

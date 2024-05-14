@@ -32,3 +32,5 @@
 *.app
 
 desktop.ini
+**/desktop.ini
+

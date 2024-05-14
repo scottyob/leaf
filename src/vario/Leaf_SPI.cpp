@@ -1,12 +1,6 @@
 #include "Leaf_SPI.h"
 
 
-// SPI STUFF
-#define VSPI_MISO MISO        // 13-default ESP32S3
-#define VSPI_MOSI MOSI        // 11-default ESP32S3
-#define VSPI_SCK  SCK         // 12-default ESP32S3
-#define BARO_VSPI_SS  47      // Baro chip select
-#define IMU_VSPI_SS  21       // IMU chip select
 
 //#define LCD_VSPI_SS   SS      // 10-default ESP32 (LCD chip select)
 //#define LCD_RS    46          // RS pin for data or instruction
@@ -31,17 +25,17 @@ void setup_Leaf_SPI(void) {
 
   // Start SPI bus for peripheral devices
   baro_vspi = new SPIClass(VSPI);
-  baro_vspi->begin(VSPI_SCK, VSPI_MISO, VSPI_MOSI, BARO_VSPI_SS);
+  baro_vspi->begin(SPI_SCK, SPI_MISO, SPI_MOSI, SPI_SS_BARO);
   pinMode(baro_vspi->pinSS(), OUTPUT);
   digitalWrite(baro_vspi->pinSS(), HIGH);
 
   imu_vspi = new SPIClass(VSPI);
-  imu_vspi->begin(VSPI_SCK, VSPI_MISO, VSPI_MOSI, IMU_VSPI_SS);
+  imu_vspi->begin(SPI_SCK, SPI_MISO, SPI_MOSI, SPI_SS_IMU);
   pinMode(imu_vspi->pinSS(), OUTPUT);
   digitalWrite(imu_vspi->pinSS(), HIGH);
 
   glcd_vspi = new SPIClass(VSPI);
-  glcd_vspi->begin(VSPI_SCK, VSPI_MISO, VSPI_MOSI, GLCD_SS); //SCLK, MISO, MOSI, SS
+  glcd_vspi->begin(SPI_SCK, SPI_MISO, SPI_MOSI, GLCD_SS); //SCLK, MISO, MOSI, SS
   pinMode(glcd_vspi->pinSS(), OUTPUT);
   digitalWrite(glcd_vspi->pinSS(), HIGH);
   
