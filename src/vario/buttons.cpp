@@ -46,9 +46,10 @@ uint8_t buttons_get_hold_count(void) {
 }
 
 
+// the recurring call to see if user is pressing buttons.  Handles debounce and button state changes
 uint8_t buttons_check(void) {
 
-  uint8_t button = buttons_debounce();  // first check if button press is in a stable state
+  uint8_t button = buttons_debounce(buttons_inspectPins());  // check if we have a button press in a stable state
   
   //Serial.print("debounced: ");
   //Serial.println(button);
@@ -158,17 +159,19 @@ Serial.println(button_hold_counter);
   return button;
 }
 
-// check for a minimal stable time before asserting that a button has been pressed or released
-uint8_t buttons_debounce(void) {
-
-  // check the state of the hardware buttons
-  int button = NONE;
+// check the state of the button hardware pins (this is pulled out as a separate function so we can use this for a one-time check at startup)
+uint8_t buttons_inspectPins(void) {
+  char button = NONE;
   if (digitalRead(BUTTON_PIN_UP) == HIGH) button = UP;
   if (digitalRead(BUTTON_PIN_DOWN) == HIGH) button = DOWN;
   if (digitalRead(BUTTON_PIN_LEFT) == HIGH) button = LEFT;
   if (digitalRead(BUTTON_PIN_RIGHT) == HIGH) button = RIGHT;
   if (digitalRead(BUTTON_PIN_CENTER) == HIGH) button = CENTER;  
-  
+  return button;
+}
+
+// check for a minimal stable time before asserting that a button has been pressed or released
+uint8_t buttons_debounce(uint8_t button) {  
   if (button != button_debounce_last) {                   // if this is a new button state
     button_time_initial = millis();                       // capture the initial start time
     button_time_elapsed = 0;                              // and reset the elapsed time

@@ -13,6 +13,8 @@
 //#include "fonts.h"
 
 
+#define LCD_BACKLIGHT     21  // can be used for backlight if desired (also broken out to header)
+
 
 void GLCD_inst(byte data);
 void GLCD_data(byte data);

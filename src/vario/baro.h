@@ -1,6 +1,8 @@
 /*
  * baro.h
  * 
+ * Barometric Pressure Sensor MS5611-01BA03
+ * SPI max 20MHz
  */
 
 #ifndef baro_h

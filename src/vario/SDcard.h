@@ -1,0 +1,31 @@
+#ifndef SDcard_h
+#define SDcard_h
+
+#include <Arduino.h>
+#include <SD_MMC.h>
+#include <FS.h>
+
+
+//Pinout for Leaf V3.2.0
+//These should be default pins for ESP32S3, so technically no need to use these and set them.  But here for completeness
+#define SDIO_DETECT       22  // INPUT
+#define SDIO_D2           33
+#define SDIO_D3           34
+#define SDIO_CMD          35
+#define SDIO_CLK          36
+#define SDIO_D0           37
+#define SDIO_D1           38
+
+void listDir(fs::FS &fs, const char * dirname, uint8_t levels);
+void createDir(fs::FS &fs, const char * path);
+void removeDir(fs::FS &fs, const char * path);
+void readFile(fs::FS &fs, const char * path);
+void writeFile(fs::FS &fs, const char * path, const char * message);
+void appendFile(fs::FS &fs, const char * path, const char * message);
+void renameFile(fs::FS &fs, const char * path1, const char * path2);
+void deleteFile(fs::FS &fs, const char * path);
+void testFileIO(fs::FS &fs, const char * path);
+void SDcard_init(void);
+
+
+#endif

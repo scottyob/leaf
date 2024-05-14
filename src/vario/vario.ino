@@ -1,22 +1,44 @@
 #include <Arduino.h>
 #include <HardwareSerial.h>
 
-#include "baro.h"
+#include "buttons.h"
+#include "power.h"
 #include "Leaf_SPI.h"
-#include "speaker.h"
+#include "SDcard.h"
 #include "display.h"
 #include "gps.h"
-#include "buttons.h"
+#include "baro.h"
 #include "IMU.h"
+#include "speaker.h"
+
+
+
+
+
+
+
+// Pinout for ESP32
+#define AVAIL_GPIO_0       0  // unused, broken out to header
+#define AVAIL_GPIO_21     21  // unused, broken out to header (also can be used as LCD backlight if desired)
+#define AVAIL_GPIO_41     41  // unused, broken out to header
+
+
+
+
+
 
 uint8_t display_page = 0;
+
+// keep track of what turned us on (usb plug or user power button), so we know what to initialize and display
+uint8_t bootUpState;
+
+
 
 //should move to SPI file later
 //#define LCD_RS    46          // RS pin for data or instruction
 //#define GLCD_RS    9          // RS pin for data or instruction
 //#define GLCD_RESET 7          // Reset pin
 //#define LED_PIN    6
-
 
 
 // Main Loop & Task Manager
@@ -127,7 +149,7 @@ char process_serial_stuff() {
 void taskManager(void) {
   /*
   if (taskman_buttons) buttons_update();
-  if (taskman_baro) taskman_baro = baro_update(taskman_baro);    // do bare update if needed, and prep for next step in the update process
+  if (taskman_baro) taskman_baro = baro_update(taskman_baro);    // update baro, using the appropriate step number
   if (taskman_imu) imu_update();
   if (taskman_gps) gps_update();
   if (taskman_lcd) lcd_update();
@@ -150,6 +172,9 @@ void IRAM_ATTR Timer0_ISR() {
 }
 
 
+/*****************************
+**          SETUP           **
+*****************************/
 void setup()
 {
 
@@ -165,15 +190,20 @@ Serial.println("Starting Setup");
   timerAlarmEnable(Timer0_Cfg);                         // Enable alarm & timer
 */
 
+// Initialize buttons and power first so we can check what state we're powering up in
+buttons_init();
+bootUpState = power_init();
+
+
 
 //Initialize devices
 setup_Leaf_SPI();
 Serial.println("Finished SPI");
-GLCD_init();
+//GLCD_init();
 Serial.println("Finished GLCD");
-buttons_init();
+//buttons_init();
 Serial.println("Finished buttons");
-baro_init();
+//baro_init();
 Serial.println("Finished Baro");
 imu_init();
 Serial.println("Finished IMU");

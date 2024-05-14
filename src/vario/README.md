@@ -1,9 +1,8 @@
 ## Required libraries
 
-* FastLED: 3.6.0
-* TinyGPSPlus-ESP32
+* TinyGPSPlus-ESP32 0.0.2
 * U8g2 LCD: 2.34.22
-
+* SparkFun 9DoF IMU Breakout - ICM 20948 - Arduino Library: 1.2.12
 
 
 
@@ -15,4 +14,6 @@ tried but not going to use:
           #define DEBUG_PORT Serial
     -> enable PARSE_GSV string and PARSE_SATELLITES and PARSE_SATELLITE_INFO
     -> enable NMEAGPS_INTERRUPT_PROCESSING
+* ICM20948_WE
+* AdaFruit ICM20948 (and associated dependencies)
 

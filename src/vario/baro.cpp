@@ -1,9 +1,6 @@
 /*
  * baro.cpp
  *
- * Barometric Pressure Sensor MS5611-01BA03
- * SPI max 20MHz
- *
  */
 #include <Arduino.h>
 #include "baro.h"
@@ -83,14 +80,13 @@ void baro_init(void)
 	C_TEMPSENS = SPI_baro_readCalibration(6);
 
 	// after initialization, get first baro sensor reading to populate values
-	delay(500);
 	baro_update(1);  
-	delay(100);					// wait for baro sensor to process
+	delay(10);					// wait for baro sensor to process
 	baro_update(2);  
-	delay(100);					// wait for baro sensor to process
+	delay(10);					// wait for baro sensor to process
 	baro_update(3);  
 	P_ALTfiltered = P_ALT;			// filtered value should start with first reading
-	lastAlt = P_ALTfiltered;		// assume we're stationary to start (zero out climb rate)
+	lastAlt = P_ALTfiltered;		// assume we're stationary to start (previous Alt = Current ALt, so climb rate is zero)
 	P_ALTinitial = P_ALTfiltered;	// also save first value to use as starting point
 	baro_update(4);  
 }
@@ -100,6 +96,7 @@ void baro_reset(void) {
   baro_spiCommand(command);
 	delay(3);						                // delay time required before sensor is ready
 }
+
 
 char baro_update(char process_step) {
   // the baro senor requires ~9ms between the command to prep the ADC and actually reading the value.
@@ -121,10 +118,10 @@ char baro_update(char process_step) {
     case 4:
       baro_filterALT();							          // filter pressure value
 	    baro_updateClimb();							        // update and filter climb rate
-      baro_flightLog();                       // store any values in FlightLog as needed
+      baro_flightLog();                       // store any values in FlightLog as needed.  TODO: should this be every second or somewhere else?
       break;   
   }
-  if(++process_step > 4) process_step = 0;  // prep for the next step in the process (if we just did step 4, we're done so set to 0.  Interrupt timer will set to 1 again eventually)  
+  if(++process_step > 4) process_step = 0;  // prep for the next step in the process (if we just did step 4, we're done so set to 0.  Elsewhere, Interrupt timer will set to 1 again eventually)  
   return process_step;
 }
 
@@ -179,17 +176,19 @@ int32_t baro_calculateAlt(void)
       OFF2  = 5*pow((TEMP - 2000),2) / 2;
       SENS2 = 5*pow((TEMP - 2000),2) / 4; 
     }
+
     // very low temperature compensation adjustments
     if (TEMP < -1500) {          
       OFF2  = OFF2 + 7 * pow((TEMP + 1500),2);
       SENS2 = SENS2 + 11 * pow((TEMP +1500),2) / 2; 
     }
+
     TEMP = TEMP - TEMP2;
     OFF = OFF - OFF2;
     SENS = SENS - SENS2;
 
 	//Filter Temp if necessary due to noise in values
-    TEMPfiltered = TEMP;
+    TEMPfiltered = TEMP;    //TODO: actually filter if needed
 		
   // calculate temperature compensated pressure (in 100ths of mbars)
 	OFF  = (int64_t)C_OFF*pow(2,16) + (((int64_t)C_TCO) * dT)/pow(2,7);
