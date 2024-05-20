@@ -98,7 +98,7 @@ void speaker_init(void)
 
 	//speaker_updateClimbToneParameters();
  
-  
+  speaker_setVolume(1);  
 
 }
 
@@ -131,6 +131,8 @@ void speaker_setVolume(unsigned char volume) {
       digitalWrite(SPEAKER_VOLB, 1);
 			break;
 	}
+  Serial.print("speaker_volume: ");
+  Serial.println(volume);
 }
 
 
@@ -408,6 +410,11 @@ if (Serial.available() > 0) {
       case 'p': fx = NOTE_C6; break;      
       case '[': fx = NOTE_D6; break;      
       case ']': fx = NOTE_E6; break;      
+      case '0': speaker_setVolume(0); break;      
+      case '1': speaker_setVolume(1); break;      
+      case '2': speaker_setVolume(2); break;      
+      case '3': speaker_setVolume(3); break;      
+      
     }
     Serial.println("playing sound now");
     speaker_playNote(fx);

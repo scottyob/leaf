@@ -7,8 +7,8 @@ Preferences preferences;
 
 
 void userSettings_init(void) {
-  userSettings_createDefaults();
-  userSettings_populate();
+  //userSettings_createDefaults();
+  //userSettings_populate();
 }
 
 

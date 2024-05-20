@@ -26,13 +26,13 @@
 void imu_init(void) {
 
   delay(100);
-  //imu_spiWrite(address_REG_BANK_SEL, select_bank_0);
+  imu_spiWrite(address_REG_BANK_SEL, select_bank_0);
   delay(20);
-  //imu_spiWrite(address_USER_CTRL, default_USER_CTRL);
+  imu_spiWrite(address_USER_CTRL, default_USER_CTRL);
   delay(20);
-  //imu_spiWrite(address_PWR_MGMT_1, default_PWR_MGMT_1);
+  imu_spiWrite(address_PWR_MGMT_1, default_PWR_MGMT_1);
   delay(20);
-  //imu_spiWrite(address_PWR_MGMT_2, default_PWR_MGMT_2);
+  imu_spiWrite(address_PWR_MGMT_2, default_PWR_MGMT_2);
   delay(20);
 
   Serial.print("who am I: ");

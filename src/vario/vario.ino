@@ -1,26 +1,27 @@
-#include <Arduino.h>
-#include <HardwareSerial.h>
+//#include <Arduino.h>
+//#include <HardwareSerial.h>
 
-#include "buttons.h"
-#include "power.h"
-#include "Leaf_SPI.h"
-#include "SDcard.h"
-#include "display.h"
-#include "gps.h"
-#include "baro.h"
-#include "IMU.h"
-#include "speaker.h"
+//#include "buttons.h"
+//#include "power.h"
+//#include "Leaf_SPI.h"
+//#include "SDcard.h"
+//#include "display.h"
+//#include "gps.h"
+//#include "baro.h"
+//#include "IMU.h"
+//#include "speaker.h"
 
+/*
 // Pinout for ESP32
 #define AVAIL_GPIO_0       0  // unused, broken out to header
 #define AVAIL_GPIO_21     21  // unused, broken out to header (also can be used as LCD backlight if desired)
 #define AVAIL_GPIO_41     41  // unused, broken out to header
+*/
 
-
-uint8_t display_page = 0;
+//uint8_t display_page = 0;
 
 // keep track of what turned us on (usb plug or user power button), so we know what to initialize and display
-uint8_t bootUpState;
+//uint8_t bootUpState;
 
 
 
@@ -43,6 +44,7 @@ Every 10ms, driven by an interrupt timer, the system will wake up, set flags for
 TODO: In addition to the timer-driven interrupt, we may consider also setting wake-up interrupts for the pushbuttons, the GPS 1PPS signal, and perhaps others.
 */
 
+/*
 // Trackers for Task Manager Queue.  Default to tasks being needed, so they execute upon startup
 char taskman_buttons = 1;   // poll & process buttons
 char taskman_baro = 1;      // (1) Process on-chip ADC pressure, (2) read pressure and process on-chip ADC temperature, (3) calculate, filter, and store values
@@ -56,13 +58,14 @@ char taskman_setTasks = 1;  // the task of setting tasks -- usually set by timer
 // Counters for system task timer
 char counter_10ms_block = 0;
 char counter_100ms_block = 0;
-
+*/
 
 
 
 /////////////////////////////////////////////////
 // Main Loop for Processing Tasks ///////////////
 /////////////////////////////////////////////////
+/*
 void main_timer_loop() {    
   if (taskman_setTasks) {   // if we're running through this loop for the first time in 10ms (since the last timer driven interrupt)
     setTasks();             // then set necessary tasks
@@ -126,7 +129,9 @@ void setTasks(void) {
       break;      
   }
 }
+*/
 
+/*
 char process_serial_stuff() {
   char finished_sending = 0;
   //grab_stuff_from_serial_buffer();
@@ -134,10 +139,12 @@ char process_serial_stuff() {
   //if (GPS_is_done_with_its_strings) finished_sending = 1;
   return finished_sending;
 }
+*/
 
+/*
 // execute necessary tasks while we're awake and have things to do
 void taskManager(void) {
-  /*
+  
   if (taskman_buttons) buttons_update();
   if (taskman_baro) taskman_baro = baro_update(taskman_baro);    // update baro, using the appropriate step number
   if (taskman_imu) imu_update();
@@ -145,22 +152,43 @@ void taskManager(void) {
   if (taskman_lcd) lcd_update();
   if (taskman_power) power_update();
   if (taskman_logging) logging_update();
-  */
+  
 }
+*/  
 
 
-
-
+/*
 // Main Timer Setup and interrupt event
 hw_timer_t *Timer0_Cfg = NULL;
+*/
 
 
+/*
 void IRAM_ATTR Timer0_ISR() {
   //do stuff every alarm cycle (default 10ms)
   taskman_setTasks = 1; // next time through main loop, set tasks to do!
   // wakeup();  // go back to main loop and keep processing stuff that needs doing!
 }
+*/
 
+
+//Pinout for Leaf V3.2.0
+#define POWER_CHARGE_I1   39
+#define POWER_CHARGE_I2   40
+#define POWER_LATCH       48  
+#define POWER_CHARGE_GOOD 47  // INPUT
+#define BATT_SENSE         1  // INPUT ADC
+
+#define BATT_FULL_MV     4150  // mV full battery on which to base % full (100%)
+#define BATT_EMPTY_MV    3250  // mV empty battery on which to base % full (0%)
+#define BATT_SHUTDOWN_MV 3175  // mV at which to shutdown the system to prevent battery over-discharge 
+
+//Pinout for Breadboard
+#define BUTTON_PIN_UP     40  
+#define BUTTON_PIN_DOWN   38
+#define BUTTON_PIN_LEFT   39
+#define BUTTON_PIN_RIGHT  42
+#define BUTTON_PIN_CENTER 41
 
 /*****************************
 **          SETUP           **
@@ -168,9 +196,34 @@ void IRAM_ATTR Timer0_ISR() {
 void setup()
 {
 
+  // Set output / input pins to control battery charge and power supply  
+  pinMode(POWER_LATCH, OUTPUT);
+  pinMode(POWER_CHARGE_I1, OUTPUT);
+  pinMode(POWER_CHARGE_I2, OUTPUT);  
+  pinMode(POWER_CHARGE_GOOD, INPUT);
+  //pinMode(BATT_SENSE, INPUT);
+
+  digitalWrite(POWER_LATCH, HIGH);
+
+  digitalWrite(POWER_CHARGE_I1, HIGH);
+  digitalWrite(POWER_CHARGE_I2, LOW);
+  
+  //configure pins
+  pinMode(BUTTON_PIN_UP, INPUT_PULLDOWN);
+  pinMode(BUTTON_PIN_DOWN, INPUT_PULLDOWN);
+  pinMode(BUTTON_PIN_LEFT, INPUT_PULLDOWN);
+  pinMode(BUTTON_PIN_RIGHT, INPUT_PULLDOWN);
+  pinMode(BUTTON_PIN_CENTER, INPUT_PULLDOWN);
+
 // Start USB Serial Debugging Port
 Serial.begin(115200);
-Serial.println("Starting Setup");
+//Serial.println("Starting Setup");
+
+delay(1000);
+Serial.print("reading ADC ");  
+Serial.println(analogRead(1));
+delay(1000);
+
 
 /*
 //Start Main System Timer for Interrupt Events
@@ -181,29 +234,17 @@ Serial.println("Starting Setup");
 */
 
 // Initialize buttons and power first so we can check what state we're powering up in
-buttons_init();
-bootUpState = power_init();
+//buttons_init();  Serial.println("Finished buttons");
+//bootUpState = power_init(); Serial.println("Finished Power");
+//setup_Leaf_SPI();  Serial.println("Finished SPI");
+//GLCD_init();  Serial.println("Finished GLCD");
+//baro_init();  Serial.println("Finished Baro");
+//imu_init();  Serial.println("Finished IMU");
+//display_init();  Serial.println("Finished display");
+//gps_init();  Serial.println("Finished GPS");
+//speaker_init();  Serial.println("Finished Speaker");
 
-
-
-//Initialize devices
-setup_Leaf_SPI();
-Serial.println("Finished SPI");
-//GLCD_init();
-Serial.println("Finished GLCD");
-//buttons_init();
-Serial.println("Finished buttons");
-//baro_init();
-Serial.println("Finished Baro");
-imu_init();
-Serial.println("Finished IMU");
-display_init();
-Serial.println("Finished display");
-gps_init();
-Serial.println("Finished GPS");
-speaker_init();
-Serial.println("Finished Speaker");
-Serial.println("Finished Setup");
+//Serial.println("Finished Setup");
 
 
 }
@@ -213,16 +254,43 @@ Serial.println("Finished Setup");
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void loop() {
+
+  // put your main code here, to run repeatedly:
+
+  uint32_t ADC_read = analogRead(BATT_SENSE);
+  uint32_t batt_level_mv = analogRead(BATT_SENSE) * 5554 / 4095;  //    (3300mV ADC range / .5942 V_divider) = 5554.  Then divide by 4095 steps of resolution
+  uint32_t batt_level_pct;
+  if (batt_level_mv < BATT_EMPTY_MV) {
+    batt_level_pct = 0;
+    Serial.println("we're at zero");
+  } else if (batt_level_mv > BATT_FULL_MV) {
+    batt_level_pct = 100;
+    Serial.println("we're at 100");
+  } else {
+    batt_level_pct = 100 * (batt_level_mv - BATT_EMPTY_MV) / (BATT_FULL_MV - BATT_EMPTY_MV);
+  }  
   
+  Serial.print(ADC_read);
+  Serial.print(", ");
+  Serial.print(batt_level_mv);
+  Serial.print(", ");
+  Serial.print(batt_level_pct);
+  Serial.println("%");
+
+  delay(50);
+
+
+
+  /*
   uint8_t button = buttons_check();
   uint8_t button_state = buttons_get_state();
 
   if (button_state == PRESSED) {
-    if (button == LEFT) {      
+    if (button == LEFT || button == UP) {      
       if (display_page > 0) display_page--;
-    } else if (button == RIGHT) {
+    } else if (button == RIGHT || button == CENTER || button == DOWN) {
       display_page++;
-      if (display_page > 5) display_page = 5;
+      if (display_page > 6) display_page = 6;
     }
     Serial.print("Going to page: ");
     Serial.println(display_page);
@@ -230,22 +298,27 @@ void loop() {
 
   switch (display_page) {
     case 0:
-      gps_test_sats();
+      //gps_test_sats();
+      //gps_test();
       break;
     case 1:
-      display_test();
+      //display_test();      
+      power_test();
       break;
     case 2:
-      speaker_TEST();
+      //speaker_TEST();
       break;
-    case 3:
-      imu_test();
+    case 3:      
+      //baro_test();
       break;
     case 4:
-      display_test_big(1);
+      //imu_test();
       break;
-    case 5:
-      display_test_big(2);
+    case 5:      
+      //display_test_big(1);
+      break;
+    case 6:
+      //display_test_big(2);      
       break;
   }
   //

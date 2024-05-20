@@ -25,17 +25,17 @@ void setup_Leaf_SPI(void) {
 
   // Start SPI bus for peripheral devices
   baro_vspi = new SPIClass(VSPI);
-  baro_vspi->begin(SPI_SCK, SPI_MISO, SPI_MOSI, SPI_SS_BARO);
+  baro_vspi->begin(SPI_CLK, SPI_MISO, SPI_MOSI, SPI_SS_BARO);
   pinMode(baro_vspi->pinSS(), OUTPUT);
   digitalWrite(baro_vspi->pinSS(), HIGH);
 
   imu_vspi = new SPIClass(VSPI);
-  imu_vspi->begin(SPI_SCK, SPI_MISO, SPI_MOSI, SPI_SS_IMU);
+  imu_vspi->begin(SPI_CLK, SPI_MISO, SPI_MOSI, SPI_SS_IMU);
   pinMode(imu_vspi->pinSS(), OUTPUT);
   digitalWrite(imu_vspi->pinSS(), HIGH);
 
   glcd_vspi = new SPIClass(VSPI);
-  glcd_vspi->begin(SPI_SCK, SPI_MISO, SPI_MOSI, GLCD_SS); //SCLK, MISO, MOSI, SS
+  glcd_vspi->begin(SPI_CLK, SPI_MISO, SPI_MOSI, SPI_SS_LCD); //SCLK, MISO, MOSI, SS
   pinMode(glcd_vspi->pinSS(), OUTPUT);
   digitalWrite(glcd_vspi->pinSS(), HIGH);
   

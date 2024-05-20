@@ -7,9 +7,9 @@
 //Pinout for Leaf V3.2.0
 #define BUTTON_PIN_CENTER  2  // INPUT
 #define BUTTON_PIN_LEFT    3  // INPUT
-#define BUTTON_PIN_RIGHT   4  // INPUT
-#define BUTTON_PIN_UP      5  // INPUT
-#define BUTTON_PIN_DOWN    6  // INPUT
+#define BUTTON_PIN_DOWN    4  // INPUT
+#define BUTTON_PIN_RIGHT   5  // INPUT
+#define BUTTON_PIN_UP      6  // INPUT
 
 /*
 //Pinout for Breadboard
@@ -27,7 +27,7 @@ void buttons_init(void);
 
 uint8_t buttons_check(void);
 uint8_t buttons_inspectPins(void);
-uint8_t buttons_debounce(char button);
+uint8_t buttons_debounce(uint8_t button);
 uint8_t buttons_get_state(void);
 
 

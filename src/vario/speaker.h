@@ -14,20 +14,20 @@
 #include "LCD.h"
 */
 
-/*
-//Pinout for Leaf V3.2.0
-#define SPEAKER_PWM        7
-#define SPEAKER_VOL_A      8
-#define SPEAKER_VOL_B      9
-#define PWM_CHANNEL        0   // ESP32 has many channels; we'll use the first
-*/
 
+//Pinout for Leaf V3.2.0
+#define SPEAKER_PIN       7
+#define SPEAKER_VOLA      8
+#define SPEAKER_VOLB      9
+#define PWM_CHANNEL       0   // ESP32 has many channels; we'll use the first
+
+/*
 // Pinout for Breakboard
 #define SPEAKER_PIN		5   // output pin to play sound signal
 #define SPEAKER_VOLA  4   // enable A pin for voltage amplification (loud)
 #define SPEAKER_VOLB	6   // enable B pin for voltage amplification (louder) (enable both A & B for loudest)
 #define PWM_CHANNEL   0   // ESP32 has many channels; we'll use the first
-
+*/
 
 //each "beep beep" cycle is a "measure", made up of play-length followed by rest-length, then repeat
 

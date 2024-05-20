@@ -124,7 +124,9 @@ LinearFit LinearRegression<n>::fit() {
         Serial.print(", ");
       }
       Serial.println("}");
-      die();
+      //die();
+      while (true) { delay(1);}
+      //TODO: safer end state here
     }
     result.m = numerator / denominator;
     result.b = (_sumYi - result.m * _sumXi) / _count;

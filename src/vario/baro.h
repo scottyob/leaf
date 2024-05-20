@@ -16,7 +16,10 @@
 #include "settings.h"
 */
 
+#include <Arduino.h>
 #include "Leaf_SPI.h"
+//#include "LinearRegression.h"
+
 
 // Sensor commands
 #define CMD_CONVERT_PRESSURE	0b01001000
@@ -64,5 +67,7 @@ void baro_filterALT(void);
 void baro_filterVARIO(void);
 
 void baro_flightLog(void);  
+
+void baro_test(void);
 
 #endif

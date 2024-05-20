@@ -5,10 +5,11 @@
  */
 #include <Arduino.h>
 #include "display.h"
+#include "Leaf_SPI.h"
 
-#define LCD_VSPI_SS 14
-#define GLCD_RS      9           // RS pin for data or instruction
-#define GLCD_RESET   7
+#define GLCD_RS LCD_RS
+#define GLCD_RESET LCD_RESET
+
 
 // Display Testing Temp Vars
 float wind_angle = 0;
@@ -23,12 +24,12 @@ char string_gpsLng[] = "0000000000";
 
 
 
-U8G2_ST7539_192X64_F_4W_HW_SPI u8g2(U8G2_R3, /* cs=*/ LCD_VSPI_SS, /* dc=*/ 9, /* reset=*/ 7);
+U8G2_ST7539_192X64_F_4W_HW_SPI u8g2(U8G2_R3, SPI_SS_LCD, LCD_RS, LCD_RESET);
 
 
 
 void display_init(void) {
-  digitalWrite(LCD_VSPI_SS, HIGH);
+  digitalWrite(SPI_SS_LCD, HIGH);
   u8g2.setBusClock(20000000);
   u8g2.begin();
   u8g2.setContrast(80);
@@ -132,8 +133,7 @@ void display_satellites(uint16_t x, uint16_t y, uint16_t size) {
      
     }
     
-    u8g2.drawStr(0, 10, "Hi Craig!");
-    
+   
     //draw other GPS stuff just for testing purposes
     u8g2.drawStr(0, size + y + 10, "Lat: ");
     u8g2.drawStr(20, size + y + 10, itoa(gps.location.lat(), string_gpsLat, 10));
@@ -305,6 +305,8 @@ void display_test(void) {
 
 
 void display_test_big(uint8_t page) {
+
+  /*
   
 char s[] = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x80\xc0"
 "\x60\x30\x10\x18\x08\x0c\x04\x04\x06\x06\x06\x06\x02\x06\x06\x06\x06\x04\x04"
@@ -483,7 +485,7 @@ GLCD_data(0b10100100);
 delay(500);
 */
 
-
+/*
 
 
   //GO HOME GLCD
@@ -495,22 +497,25 @@ delay(500);
   delay(20);
 
 
-  if (page = 1) {
-
+  if (page == 1) {
     for (int page=0; page<8; page++) {
       for (int d=0; d<192; d++) {
         GLCD_data(s[d+page*192]);  
       }
     }    
-  } else if (page = 2) {
+  } else if (page == 2) {
     for (int page=0; page<8; page++) {
       for (int d=0; d<192; d++) {
         GLCD_data(t[d+page*192]);  
       }
     }    
   }
-  delay(200);
+  delay(50);
 //BIG LCD TEST 
+
+
+*/
+
 }
 
 
@@ -528,7 +533,7 @@ void GLCD_data(byte data) {
 // Draw polygons 
 // by default, u8g2 lib supports polygons to 6 points, but only exposes u8g2_DrawTriangle
 // Max polygon point size can be increased from 6 in the u8g2 library, but we'll try to write display code that doesn't need library modifications
-
+/*
 void u8g2_DrawPoly(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) {
   u8g2_DrawPoly(x0, y0, x1, y1, x2, y2, false, false, false, false, false, false);  
 }
@@ -557,8 +562,8 @@ void u8g2_DrawPoly(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t 
   }
   u8g2_DrawPolygon(u8g2);
 }
+*/
 
 
-
-void rotate_points()
+//void rotate_points()
 

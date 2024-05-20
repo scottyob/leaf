@@ -161,12 +161,12 @@ Serial.println(button_hold_counter);
 
 // check the state of the button hardware pins (this is pulled out as a separate function so we can use this for a one-time check at startup)
 uint8_t buttons_inspectPins(void) {
-  char button = NONE;
-  if (digitalRead(BUTTON_PIN_UP) == HIGH) button = UP;
-  if (digitalRead(BUTTON_PIN_DOWN) == HIGH) button = DOWN;
-  if (digitalRead(BUTTON_PIN_LEFT) == HIGH) button = LEFT;
-  if (digitalRead(BUTTON_PIN_RIGHT) == HIGH) button = RIGHT;
-  if (digitalRead(BUTTON_PIN_CENTER) == HIGH) button = CENTER;  
+  uint8_t button = NONE;
+  if      (digitalRead(BUTTON_PIN_CENTER) == HIGH) button = CENTER;
+  else if (digitalRead(BUTTON_PIN_DOWN)   == HIGH) button = DOWN;
+  else if (digitalRead(BUTTON_PIN_LEFT)   == HIGH) button = LEFT;
+  else if (digitalRead(BUTTON_PIN_RIGHT)  == HIGH) button = RIGHT;
+  else if (digitalRead(BUTTON_PIN_UP)     == HIGH) button = UP;   
   return button;
 }
 

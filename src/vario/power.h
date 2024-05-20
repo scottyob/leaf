@@ -32,7 +32,8 @@ void power_turn_on(void);
 void power_turn_off(void);
 
 void power_set_input_current(uint8_t current);
-uint32_t power_get_batt_level(void);
+uint32_t power_get_batt_level(bool pct);
 
+void power_test(void);
 
 #endif

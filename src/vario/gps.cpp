@@ -18,7 +18,7 @@ const char disableVTG [] PROGMEM = "$PAIR062,5,0";  // disable message
 // Setup GPS
 #define gpsPort Serial0         // This is the hardware communication port (UART0) for GPS Rx and Tx lines.  We use the default ESP32S3 pins so no need to set them specifically
 #define GPSBaud 115200
-#define GPSSerialBufferSize 2048
+//#define GPSSerialBufferSize 2048
 TinyGPSPlus gps;                // The TinyGPSPlus object (this is the software class that stores all the GPS info and functions)
 
 // Satellite tracking
@@ -80,8 +80,7 @@ void gps_init(void) {
   gpsPort.begin(GPSBaud); 
   //gpsPort.setRxBufferSize(GPSSerialBufferSize);
   // Initialize all the uninitialized TinyGPSCustom objects
-  for (int i=0; i<4; ++i)
-  {
+  for (int i=0; i<4; ++i) {
     satNumber[i].begin(gps, "GPGSV", 4 + 4 * i); // offsets 4, 8, 12, 16
     elevation[i].begin(gps, "GPGSV", 5 + 4 * i); // offsets 5, 9, 13, 17
     azimuth[i].begin(  gps, "GPGSV", 6 + 4 * i); // offsets 6, 10, 14, 18
@@ -154,7 +153,7 @@ void gps_test_sats(void) {
 
 
   // Dispatch incoming characters
-  if (gpsPort.available() > 0) {
+  while (gpsPort.available() > 0) {
     gps.encode(gpsPort.read());
     if (totalGPGSVMessages.isUpdated()) {
       for (int i=0; i<4; ++i) {

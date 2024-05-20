@@ -2,7 +2,6 @@
  * baro.cpp
  *
  */
-#include <Arduino.h>
 #include "baro.h"
 
 // User Settings for Vario Performance
@@ -104,6 +103,9 @@ char baro_update(char process_step) {
   // up into several steps, to allow other code to process while we're waiting for the ADC to become ready.
   
 	switch (process_step) {
+    case 0:
+      return process_step;                    // if baro_update is called on step 0, do nothing, and return step 0.
+      break;
     case 1:
       baro_spiCommand(CMD_CONVERT_PRESSURE);  // Prep baro sensor ADC to read raw pressure value (then come back for step 2 in ~10ms)      
       break;
@@ -271,3 +273,26 @@ void baro_filterVARIO(void)
 	VARIO_RATEfiltered = (VARIO_RATEfiltered * (4*VARIO_SENSITIVITY - 1) + CLIMB_RATE) / (4*VARIO_SENSITIVITY);  // filter by weighting old values higher
 */
 }
+
+char process_step_test = 0;
+
+void baro_test(void) {
+  delay(10);  // delay for ADC processing bewteen update steps
+  process_step_test = baro_update(process_step_test);
+  if (process_step_test == 0) {
+    process_step_test++;  
+    Serial.print("PressureAltCm:");
+    Serial.print(P_ALT);
+    Serial.print(",");
+    Serial.print("FilteredAltCm:");
+    Serial.println(P_ALTfiltered);
+  }
+}
+
+
+
+
+
+
+
+

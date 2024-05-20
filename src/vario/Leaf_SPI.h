@@ -4,9 +4,11 @@
 #include <SPI.h>
 #include <Arduino.h>
 
-// Note, ESP32 has four SPI busses.  SPI0 and SPI1 are used for internal flash etc.  Default SPI bus for external peripherals is SPI2.
-// On ESP32, SPI2 is referred to as FSPI (also sometimes called "VSPI" by some arduino references)
-// Final note for reference: SPI3, or "HSPI" used for SD card
+// Note, ESP32 has four SPI busses.  
+// SPI0 and SPI1 -> Used for internal flash  
+// SPI2 -> Default bus for external peripherals (LCD, Baro, IMU).  Referred to generally as 'SPI' in code and variables below.
+//      Note: On ESP32, SPI2 is called "FSPI" (sometimes called "VSPI" by some arduino references)
+// SPI3 -> Used for SDcard in Quad SDIO Mode (SPI3 also called "HSPI")
 
 // SPI and peripheral devices using the default SPI Bus (SPI2 / FSPI) 
 #define SPI_SS_IMU       10
