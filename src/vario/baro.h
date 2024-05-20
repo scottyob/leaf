@@ -8,18 +8,9 @@
 #ifndef baro_h
 #define baro_h
 
-/*
-#include <stdint.h>
-#include <math.h>
-#include "SPI.h"
-#include "LCD.h"
-#include "settings.h"
-*/
-
 #include <Arduino.h>
 #include "Leaf_SPI.h"
-//#include "LinearRegression.h"
-
+#include "LinearRegression.h"
 
 // Sensor commands
 #define CMD_CONVERT_PRESSURE	0b01001000
@@ -29,24 +20,26 @@
 #define PfilterSize		6			// pressure alt filter values (minimum 1, max 10)
 
 
-
+/* 
 // Temperature Calculations
-extern int32_t TEMP;								// GLOBAL
-extern int32_t TEMPfiltered;						// GLOBAL
+int32_t TEMP;								
+int32_t TEMPfiltered;				
+
 // Compensated Pressure Values
-extern int32_t PRESSURE;							// GLOBAL
-extern int32_t PRESSUREfiltered;					// GLOBAL
+int32_t PRESSURE;							
+int32_t PRESSUREfiltered;					
 
 // Altitude above sea level (Pressure Altitude) in cm
-extern int32_t P_ALT;								// GLOBAL
-extern int32_t P_ALTfiltered;						// GLOBAL
-extern int32_t P_ALTinitial;						// GLOBAL	- pressure altitude at power-on to use for autostart feature
-
+int32_t P_ALT;								
+int32_t P_ALTfiltered;						
+int32_t P_ALTinitial;						//pressure altitude at power-on to use for autostart feature
 
 // Climb Rate
-extern int16_t CLIMB_RATE;							// GLOBAL
-extern int16_t CLIMB_RATEfiltered;					// GLOBAL
-extern int32_t VARIO_RATEfiltered;					// GLOBAL
+int16_t CLIMB_RATE;							
+int16_t CLIMB_RATEfiltered;					
+int32_t VARIO_RATEfiltered;	
+*/
+
 
 void baro_reset(void);
 char baro_update(char process_step);

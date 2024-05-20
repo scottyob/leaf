@@ -17,6 +17,7 @@ int32_t PRESSUREfiltered = 0;
 
 int32_t P_ALT = 0;
 int32_t P_ALTfiltered = 0;
+int32_t P_ALTregression = 0;
 int32_t P_ALTinitial = 0;
 int32_t lastAlt = 0;
 
@@ -29,7 +30,6 @@ int32_t VARIO_RATEfiltered = 0;
 int16_t varioVals[25];
 int16_t climbVals[31];
 int16_t climbSecVals[9];
-
 
 // Sensor Calibration Values (stored in chip PROM; must be read at startup before performing baro calculations)
 uint16_t C_SENS;
@@ -49,12 +49,15 @@ uint32_t D2_Tfiltered;
 int32_t dT;
 
 // Compensation Values
-int64_t OFF;        // Offset at actual temperature
-int64_t SENS;       // Sensitivity at actual temperature
+int64_t OFF1;        // Offset at actual temperature
+int64_t SENS1;       // Sensitivity at actual temperature
 // Extra compensation values for lower temperature ranges
 int32_t TEMP2;
 int64_t OFF2;
 int64_t SENS2;
+
+// LinearRegression to average out noisy sensor readings
+LinearRegression<10> alt_lr;
 
 //Initialize the baro sensor
 void baro_init(void)
@@ -87,7 +90,10 @@ void baro_init(void)
 	P_ALTfiltered = P_ALT;			// filtered value should start with first reading
 	lastAlt = P_ALTfiltered;		// assume we're stationary to start (previous Alt = Current ALt, so climb rate is zero)
 	P_ALTinitial = P_ALTfiltered;	// also save first value to use as starting point
+  P_ALTregression = P_ALTfiltered;
 	baro_update(4);  
+
+  alt_lr.update((double)millis(), (double)P_ALTinitial);
 }
 
 void baro_reset(void) {
@@ -186,16 +192,16 @@ int32_t baro_calculateAlt(void)
     }
 
     TEMP = TEMP - TEMP2;
-    OFF = OFF - OFF2;
-    SENS = SENS - SENS2;
+    OFF1 = OFF1 - OFF2;
+    SENS1 = SENS1 - SENS2;
 
 	//Filter Temp if necessary due to noise in values
     TEMPfiltered = TEMP;    //TODO: actually filter if needed
 		
   // calculate temperature compensated pressure (in 100ths of mbars)
-	OFF  = (int64_t)C_OFF*pow(2,16) + (((int64_t)C_TCO) * dT)/pow(2,7);
-	SENS = (int64_t)C_SENS*pow(2,15) + ((int64_t)C_TCS * dT) /pow(2,8);
-	PRESSURE = ((uint64_t)D1_P * SENS / (int64_t)pow(2,21) - OFF)/pow(2,15);
+	OFF1  = (int64_t)C_OFF*pow(2,16) + (((int64_t)C_TCO) * dT)/pow(2,7);
+	SENS1 = (int64_t)C_SENS*pow(2,15) + ((int64_t)C_TCS * dT) /pow(2,8);
+	PRESSURE = ((uint64_t)D1_P * SENS1 / (int64_t)pow(2,21) - OFF1)/pow(2,15);
 
 	// calculate pressure altitude in cm
 	return 4433100.0*(1.0-pow((float)PRESSURE/101325.0,(.190264)));
@@ -203,6 +209,13 @@ int32_t baro_calculateAlt(void)
 
 
 void baro_filterALT(void) {  
+
+  // new way with regression:
+  alt_lr.update((double)millis(), (double)P_ALT);
+  LinearFit fit = alt_lr.fit();
+  P_ALTregression = linear_value(&fit, (double)millis());
+
+  //old way with averaging last N values equally:
   for(int i=9; i>0; i--) {
     AltFilterReadings[i] = AltFilterReadings[i-1]; // move every reading down one
   }
@@ -285,7 +298,9 @@ void baro_test(void) {
     Serial.print(P_ALT);
     Serial.print(",");
     Serial.print("FilteredAltCm:");
-    Serial.println(P_ALTfiltered);
+    Serial.print(P_ALTfiltered);
+    Serial.print(",");
+    Serial.println(P_ALTregression);
   }
 }
 

@@ -7,18 +7,11 @@ uint8_t power_init(void) {
   pinMode(POWER_LATCH, OUTPUT);
   pinMode(POWER_CHARGE_I1, OUTPUT);
   pinMode(POWER_CHARGE_I2, OUTPUT);  
-  pinMode(POWER_CHARGE_GOOD, INPUT);
+  pinMode(POWER_CHARGE_GOOD, INPUT_PULLUP);
   pinMode(BATT_SENSE, INPUT);
 
-  
-  Serial.print("power_init ADC check: ");
-  Serial.print(analogRead(BATT_SENSE));
-  Serial.println("; completed");
-
-
   // configure system for power-up and initialization
-  
-  
+    
   // check power on state
   char powerOnState;
   // plugged in?
@@ -35,13 +28,9 @@ uint8_t power_init(void) {
 uint32_t ADC_value;
 
 uint32_t power_get_batt_level(bool pct) {
-  Serial.println("starting ADC read");
-  ADC_value = analogRead(BATT_SENSE);
-  Serial.println(ADC_value);
-  delay(100);
-  uint32_t batt_level_mv = ADC_value /*analogRead(BATT_SENSE)*/ * 5554 / 4095;  //    (3300mV ADC range / .5942 V_divider) = 5554.  Then divide by 4095 steps of resolution
+
+  uint32_t batt_level_mv = analogRead(BATT_SENSE) * 5554 / 4095;  //    (3300mV ADC range / .5942 V_divider) = 5554.  Then divide by 4095 steps of resolution
   uint32_t batt_level_pct;
-  Serial.println("Calculating pct");
   if (batt_level_mv < BATT_EMPTY_MV) {
     batt_level_pct = 0;
   } else if (batt_level_mv > BATT_FULL_MV) {
@@ -49,7 +38,6 @@ uint32_t power_get_batt_level(bool pct) {
   } else {
     batt_level_pct = 100 * (batt_level_mv - BATT_EMPTY_MV) / (BATT_FULL_MV - BATT_EMPTY_MV);
   }  
-  Serial.println("returning");
   if (pct) return batt_level_pct;  
   else return batt_level_mv;     
 }
@@ -91,10 +79,28 @@ void power_turn_off(void) {
 }
 
 void power_test(void) {
+
   Serial.print("Batt Voltage: ");
   Serial.print(power_get_batt_level(0));
   Serial.print(", Batt Percent: ");
   Serial.print(power_get_batt_level(1));
-  Serial.println("%");
+  Serial.print("%, Charge_Good: ");
+  if (!digitalRead(POWER_CHARGE_GOOD)) Serial.println("Charging!");
+  else Serial.println("Not Charging!");
+
+  if (Serial.available() > 0) {
+    char letter = char(Serial.read());
+    while (Serial.available() > 0) {
+      Serial.read(); //empty buffer
+    }
+
+    int fx = 0;
+    switch (letter) {
+      case '1': power_set_input_current(i100mA); Serial.println("Input Current to 100mA"); break;
+      case '2': power_set_input_current(i500mA); Serial.println("Input Current to 500mA"); break;
+      case '3': power_set_input_current(iMax); Serial.println("Input Current to Max (1348mA input; ~810mA charger)"); break;
+      case '0': power_set_input_current(iStandby); Serial.println("Input Current to Standby"); break;
+    }
+  } 
   delay(500);
 }
