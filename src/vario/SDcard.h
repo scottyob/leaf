@@ -7,8 +7,8 @@
 
 
 //Pinout for Leaf V3.2.0
-//These should be default pins for ESP32S3, so technically no need to use these and set them.  But here for completeness
 #define SDIO_DETECT       22  // INPUT
+//These should be default pins for ESP32S3, so technically no need to use these and set them.  But here for completeness
 #define SDIO_D2           33
 #define SDIO_D3           34
 #define SDIO_CMD          35
@@ -26,6 +26,6 @@ void renameFile(fs::FS &fs, const char * path1, const char * path2);
 void deleteFile(fs::FS &fs, const char * path);
 void testFileIO(fs::FS &fs, const char * path);
 void SDcard_init(void);
-
+void SDcard_test(void);
 
 #endif

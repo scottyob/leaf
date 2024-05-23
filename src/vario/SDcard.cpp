@@ -155,17 +155,6 @@ void testFileIO(fs::FS &fs, const char * path) {
     file.close();
 }
 
-
-/*
-#define SDIO_DETECT       22  // INPUT
-#define SDIO_D2           33
-#define SDIO_D3           34
-#define SDIO_CMD          35
-#define SDIO_CLK          36
-#define SDIO_D0           37
-#define SDIO_D1           38
-*/
-
 void SDcard_init(void) {
     // Shouldn't need to call set pins since we're using the default pins TODO: try removing this setPins call  
     if(!SD_MMC.setPins(SDIO_CLK, SDIO_CMD, SDIO_D0, SDIO_D1, SDIO_D2, SDIO_D3)){
@@ -174,9 +163,12 @@ void SDcard_init(void) {
     }
     
     if(!SD_MMC.begin()){
-        Serial.println("Card Mount Failed");
+        Serial.println("SDcard Mount Failed");
         return;
     }
+}
+
+void SDcard_test(void) {  
     uint8_t cardType = SD_MMC.cardType();
 
     if(cardType == CARD_NONE){

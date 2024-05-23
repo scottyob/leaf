@@ -33,6 +33,9 @@ void display_init(void) {
   u8g2.setBusClock(20000000);
   u8g2.begin();
   u8g2.setContrast(80);
+
+pinMode(LCD_BACKLIGHT, OUTPUT);
+
 }
 
 
@@ -68,6 +71,71 @@ void GLCD_init(void)
 }
 
 
+
+void display_battery_icon(uint16_t x, uint16_t y, uint8_t pct, bool charging) {
+
+  uint8_t w =  7;
+  uint8_t h = 12;  
+
+  u8g2.setDrawColor(1);      
+  u8g2.drawFrame(x,y+1,w,h-1);               // main battery box
+  u8g2.drawLine(x+w/3, y, x+w-w/3-1, y);     // little +nib tip
+  uint16_t fill = (h-2)*pct/100;
+  u8g2.drawBox(x+1, y+h-fill-1, w-2, fill);  // fill up to capacity
+
+  if(charging) {                             // draw lightning bolt if charging
+    for (int i = 0; i<7; i++) {
+      if ( (y+3+i) >= (y+h-fill-1) ) u8g2.setDrawColor(0); //invert lightning bolt where battery level is filled
+      u8g2.drawPixel(x+w/2,y+3+i);
+      if (i==2) u8g2.drawPixel(x+w/2-1,y+3+i);
+      if (i==3) {u8g2.drawPixel(x+w/2-1,y+3+i); u8g2.drawPixel(x+w/2+1,y+3+i);}
+      if (i==4) u8g2.drawPixel(x+w/2+1,y+3+i);
+    }
+    u8g2.setDrawColor(1); //end invert    
+  }
+}
+
+void display_test_bat_icon(void) {
+  uint8_t x = 1;
+  uint8_t y = 1;
+  uint8_t pct = 0;
+  uint8_t w =  7;
+  uint8_t h = 12; 
+  bool charging = 1;
+
+
+  u8g2.firstPage();
+  do {
+    for (int i=0; i<51; i++) {
+      u8g2.setDrawColor(1);      
+      u8g2.drawFrame(x,y+1,w,h-1);           // main battery box
+      u8g2.drawLine(x+w/3, y, x+w-w/3-1, y); // little +nib tip
+      uint16_t fill = (h-2)*pct/100;
+      u8g2.drawBox(x+1, y+h-fill-1, w-2, fill);  // fill up to capacity
+
+      // draw lightning bolt if charging
+      if(charging) {
+        for (int i = 0; i<7; i++) {
+          if ( (y+3+i) >= (y+h-fill-1) ) u8g2.setDrawColor(0); //invert lightning bolt where battery level is filled
+          u8g2.drawPixel(x+w/2,y+3+i);
+          if (i==2) u8g2.drawPixel(x+w/2-1,y+3+i);
+          if (i==3) {u8g2.drawPixel(x+w/2-1,y+3+i); u8g2.drawPixel(x+w/2+1,y+3+i);}
+          if (i==4) u8g2.drawPixel(x+w/2+1,y+3+i);
+        }
+        u8g2.setDrawColor(1); //end invert
+        
+      }
+
+      x += 10;
+      pct += 2;
+      if (x >= 63-w) {
+        x = 1;
+        y += h+2;
+      }  
+    }
+  } while ( u8g2.nextPage() );
+  delay(100);
+}
 
 // draw satellite constellation starting in upper left x, y and box size (width = height)
 void display_satellites(uint16_t x, uint16_t y, uint16_t size) {
@@ -305,8 +373,6 @@ void display_test(void) {
 
 
 void display_test_big(uint8_t page) {
-
-  /*
   
 char s[] = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x80\xc0"
 "\x60\x30\x10\x18\x08\x0c\x04\x04\x06\x06\x06\x06\x02\x06\x06\x06\x06\x04\x04"
@@ -495,6 +561,7 @@ delay(500);
   delay(20);
   GLCD_inst(0b10110000);  //Page address ->0
   delay(20);
+*/
 
 
   if (page == 1) {
@@ -510,11 +577,12 @@ delay(500);
       }
     }    
   }
-  delay(50);
+  digitalWrite(LCD_BACKLIGHT, !digitalRead(LCD_BACKLIGHT));
+  delay(500);
 //BIG LCD TEST 
 
 
-*/
+
 
 }
 

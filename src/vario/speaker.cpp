@@ -6,7 +6,17 @@ hw_timer_t *speaker_timer = NULL;
 #define NOTE_END 1
 #define NOTE_NONE 0
 
-#define FX_NOTE_LENGTH  250
+
+// Div = 320000
+// 500 = 2900 / 8 = 362
+// 250 = 1450     = 181
+
+// Div = 240000
+// 500 = 2230 / 8 = 278
+// 250 = 1450     = 181
+
+#define FX_NOTE_LENGTH  500
+#define SPKR_CLK_DIV 240000
 
 //Sound FX Tones
 uint16_t st_silence[] = {NOTE_END};
@@ -16,36 +26,40 @@ uint16_t st_decrease[] = {NOTE_C4, NOTE_F3, NOTE_END};   //110 140, END_OF_TONE}
 uint16_t st_neutral[] = {NOTE_C4, NOTE_C4, NOTE_END};    //110, 110, END_OF_TONE};
 uint16_t st_neutralLong[] = {NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_END}; //  {110, 110, 110, 110, 110, 110, 110, 110,10, 110, 1110, 110, 110, 110, 110, 110, 110, 110, 110, 110, END_OF_TONE};
 uint16_t st_double[] = {NOTE_C4, NOTE_NONE, NOTE_C4, NOTE_END};  //110, 0, 110, END_OF_TONE};
+
 uint16_t st_enter[] = {NOTE_A4, NOTE_C4, NOTE_E4, NOTE_END};     //150, 120, 90, END_OF_TONE};
 uint16_t st_exit[] = {NOTE_C5, NOTE_A5, NOTE_F4, NOTE_C4, NOTE_END};       //65, 90, 120, 150, END_OF_TONE};
-
-
 uint16_t st_confirm[] = {200, 200, 140, 140, 170, 170, 110, 110, NOTE_END};
 uint16_t st_cancel[] = {150, 200, 250, NOTE_END};
 uint16_t st_on[] = {250, 200, 150, 100, 50, NOTE_END};
 uint16_t st_off[] = {50, 100, 150, 200, 250, NOTE_END};
+
 uint16_t st_buttonpress[] = {180, 150, 120, NOTE_END};
 uint16_t st_buttonhold[] = {150, 200, 250, NOTE_END};
-uint16_t st_goingdown[] = {30, 31, 32, 33, 34, 35, 36, 38, 41, 46, NOTE_END};
 uint16_t st_goingup[] = {55, 54, 53, 52, 51, 50, 49, 47, 44, 39, NOTE_END};
-uint16_t st_octavesdown[] = {30, 30, 40, 40, 45, 45, 65, 65, 90, 90, NOTE_END};
-uint16_t st_octavesup[] = {90, 90, 65, 65, 45, 45, 40, 40, 30, 30, NOTE_END};
+uint16_t st_goingdown[] = {31, 31, 32, 33, 34, 35, 36, 38, 41, 46, NOTE_END};
+uint16_t st_octavesup[] = {45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, NOTE_END};
+uint16_t st_octavesdown[] = {31, 31, 40, 40, 45, 45, 65, 65, 90, 90, NOTE_END};
+
 
 
 
 uint16_t* sound_fx_tones[] = {
   st_silence,
+
   st_increase,
   st_decrease,
   st_neutral,
   st_neutralLong,
   st_double,
+
   st_enter,
   st_exit,
   st_confirm,
   st_cancel,
   st_on,
   st_off,
+
   st_buttonpress,
   st_buttonhold,
   st_goingup,
@@ -86,7 +100,7 @@ void speaker_init(void)
 	//speaker_setVolume(VOLUME);
 
   //setup speaker timer interrupt to track each "beat" of sound
-	speaker_timer = timerBegin(1, 320000, true);     // prescaler of 80,000 so timer ticks at 1KHz = 1ms per tick
+	speaker_timer = timerBegin(1, SPKR_CLK_DIV, true);     
   timerAttachInterrupt(speaker_timer, &onSpeakerTimer, true);
   timerAlarmWrite(speaker_timer, 1000, true);      
   //timerAlarmEnable(speaker_timer);
@@ -414,7 +428,13 @@ if (Serial.available() > 0) {
       case '1': speaker_setVolume(1); break;      
       case '2': speaker_setVolume(2); break;      
       case '3': speaker_setVolume(3); break;            
+      case '4': speaker_playSound(fx_buttonpress); break;            
+      case '5': speaker_playSound(fx_buttonhold); break;   
+      case '6': speaker_playSound(fx_confirm); break;   
+      case '7': speaker_playSound(fx_goingdown); break;   
+      case '8': speaker_playSound(fx_octavesup); break;   
+      case '9': speaker_playSound(fx_octavesdown); break;   
     }
-    speaker_playNote(fx);
+    if (fx) speaker_playNote(fx);    
   }
 }

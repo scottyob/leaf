@@ -101,12 +101,12 @@ enum sound_tones {
   fx_octavesdown
 };
 
-#define NOTE_B0 31
-#define NOTE_C1 33
-#define NOTE_CS1 35
-#define NOTE_D1 37
-#define NOTE_DS1 39
-#define NOTE_E1 41
+#define NOTE_B0 31      // will crash
+#define NOTE_C1 33      // will crash
+#define NOTE_CS1 35     // will crash
+#define NOTE_D1 37      // will crash
+#define NOTE_DS1 39     // will crash
+#define NOTE_E1 41      // Lowest note we can play without crashing for some reason
 #define NOTE_F1 44
 #define NOTE_FS1 46
 #define NOTE_G1 49

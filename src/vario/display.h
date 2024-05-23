@@ -22,8 +22,15 @@ void GLCD_init(void);
 
 
 void display_init(void);
+void display_satellites(uint16_t x, uint16_t y, uint16_t size);
+
+void display_battery_icon(uint16_t x, uint16_t y, uint8_t battery_pct);
+
+void display_test_bat_icon(void);
 void display_test(void);
 void display_test_big(uint8_t page);
-void display_satellites(uint16_t x, uint16_t y, uint16_t size);
+
+
+
 
 #endif

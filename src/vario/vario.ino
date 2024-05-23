@@ -10,6 +10,7 @@
 #include "baro.h"
 #include "IMU.h"
 #include "speaker.h"
+#include "SDcard.h"
 
 
 // Pinout for ESP32
@@ -19,6 +20,7 @@
 
 
 uint8_t display_page = 0;
+uint8_t display_do_tracker = 1;
 
 // keep track of what turned us on (usb plug or user power button), so we know what to initialize and display
 uint8_t bootUpState;
@@ -173,15 +175,10 @@ void IRAM_ATTR Timer0_ISR() {
 void setup() {
 
 // Start USB Serial Debugging Port
+delay(1000);
 Serial.begin(115200);
-
+delay(1000);
 Serial.println("Starting Setup");
-
-delay(1000);
-Serial.print("reading ADC ");  
-Serial.println(analogRead(1));
-delay(1000);
-
 
 /*
 //Start Main System Timer for Interrupt Events
@@ -202,6 +199,7 @@ imu_init();         Serial.println("Finished IMU");
 display_init();     Serial.println("Finished display");
 gps_init();         Serial.println("Finished GPS");
 speaker_init();     Serial.println("Finished Speaker");
+SDcard_init();      Serial.println("Finished SDcard");
 
 Serial.println("Finished Setup");
 
@@ -222,8 +220,9 @@ void loop() {
       if (display_page > 0) display_page--;
     } else if (button == RIGHT || button == CENTER || button == DOWN) {
       display_page++;
-      if (display_page > 6) display_page = 6;
+      if (display_page > 7) display_page = 7;
     }
+    display_do_tracker = 1;
     Serial.print("Going to page: ");
     Serial.println(display_page);
   }
@@ -234,8 +233,13 @@ void loop() {
       //gps_test();
       break;
     case 1:
-      display_test();      
-      power_test();
+      //display_test_bat_icon();      
+      //display_test();      
+      //power_test();
+      if (display_do_tracker) {
+        SDcard_test();
+        display_do_tracker = 0;
+      }
       break;
     case 2:
       speaker_TEST();
@@ -251,6 +255,11 @@ void loop() {
       break;
     case 6:
       display_test_big(2);      
+      break;
+    case 7:
+      speaker_playSound(fx_exit);
+      delay(2000);
+      power_turn_off();
       break;
   }
 }

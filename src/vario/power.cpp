@@ -1,6 +1,25 @@
 #include "power.h"
 
 
+
+void power_simple_init(void) {
+  
+  #define POWER_CHARGE_I1   39
+  #define POWER_CHARGE_I2   40
+  #define POWER_LATCH       48  
+
+  // enable 3.3V regulator
+  pinMode(POWER_LATCH, OUTPUT);
+  digitalWrite(POWER_LATCH, HIGH);
+
+  // set power supply to 500mA mode
+  pinMode(POWER_CHARGE_I1, OUTPUT);
+  pinMode(POWER_CHARGE_I2, OUTPUT);  
+  digitalWrite(POWER_CHARGE_I1, HIGH);
+  digitalWrite(POWER_CHARGE_I2, LOW);
+}
+
+
 uint8_t power_init(void) {
 
   // Set output / input pins to control battery charge and power supply  
@@ -75,7 +94,7 @@ void power_turn_on(void) {
 
 void power_turn_off(void) {
   // TODO: all the pre-shutdown operations like disabling devices and saving logs and system data
-  digitalWrite(POWER_LATCH, LOW);   // disable 3.3V regulator.  Systems will immediately lose power and shut down processor
+  digitalWrite(POWER_LATCH, LOW);   // disable 3.3V regulator.  Systems will immediately lose power and shut down processor (after user lets go of center button)
 }
 
 void power_test(void) {

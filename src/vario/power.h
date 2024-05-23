@@ -28,6 +28,8 @@ enum power_input_levels {i100mA, i500mA, iMax, iStandby};
 // Note: with this higher input limit, the battery charging will then be limited by the ISET pin resistor value, to approximately 810mA charging current)
 
 uint8_t power_init(void);
+void power_simple_init(void);
+
 void power_turn_on(void);
 void power_turn_off(void);
 
