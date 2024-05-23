@@ -10,7 +10,6 @@
 
 #include <Arduino.h>
 #include "Leaf_SPI.h"
-//#include "LinearRegression.h"
 
 // Sensor commands
 #define CMD_CONVERT_PRESSURE	0b01001000

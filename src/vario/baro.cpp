@@ -3,6 +3,7 @@
  *
  */
 #include "baro.h"
+#include "LinearRegression.h"
 
 // User Settings for Vario Performance
 #define VARIO_SENSITIVITY 3
@@ -57,7 +58,7 @@ int64_t OFF2;
 int64_t SENS2;
 
 // LinearRegression to average out noisy sensor readings
-//LinearRegression<10> alt_lr;
+LinearRegression<10> alt_lr;
 
 //Initialize the baro sensor
 void baro_init(void)
@@ -211,9 +212,9 @@ int32_t baro_calculateAlt(void)
 void baro_filterALT(void) {  
 
   // new way with regression:
-  //alt_lr.update((double)millis(), (double)P_ALT);
-  //LinearFit fit = alt_lr.fit();
-  //P_ALTregression = linear_value(&fit, (double)millis());
+  alt_lr.update((double)millis(), (double)P_ALT);
+  LinearFit fit = alt_lr.fit();
+  P_ALTregression = linear_value(&fit, (double)millis());
 
   //old way with averaging last N values equally:
   for(int i=9; i>0; i--) {

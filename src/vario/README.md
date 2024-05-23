@@ -17,3 +17,8 @@ tried but not going to use:
 * ICM20948_WE
 * AdaFruit ICM20948 (and associated dependencies)
 
+## ESP32 configuration
+
+* USB CDC On Boot -> "Enabled"
+* Flash Size -> 8MB
+* Partition Scheme -> 8M with spiffs (3MB APP/1.5MB SPIFFS)
