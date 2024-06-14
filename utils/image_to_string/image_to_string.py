@@ -1,5 +1,7 @@
 import argparse
+import glob
 import math
+import os
 
 import imageio.v2 as imageio
 from numpy.typing import NDArray
@@ -43,7 +45,13 @@ def main():
     parser.add_argument(
         "--image",
         help="Path to image to read",
-        type=str)
+        type=str,
+        default=None)
+    parser.add_argument(
+        "--folder",
+        help="Folder containing images to process",
+        type=str,
+        default=None)
     parser.add_argument(
         "--characters-per-line",
         help="Maximum number of characters per line",
@@ -52,19 +60,30 @@ def main():
     )
     args = parser.parse_args()
 
-    img = imageio.imread(args.image)
-    monochrome = make_monochrome(img)
-    lines = string_of_image(monochrome, args.characters_per_line)
-    for i, line in enumerate(lines):
-        if i == 0:
-            prefix = 'String s = "'
-        else:
-            prefix = '"'
-        if i == len(lines) - 1:
-            suffix = '";'
-        else:
-            suffix = '"'
-        print(prefix + line + suffix)
+    imgs = []
+    if args.image:
+        imgs.append(args.image)
+    if args.folder:
+        for ext in ("*.jpg", "*.bmp"):
+            imgs.extend(glob.glob(os.path.join(args.folder, ext)))
+
+    for img_file in imgs:
+        txt_file = os.path.splitext(img_file)[0] + ".txt"
+        img = imageio.imread(img_file)
+        monochrome = make_monochrome(img)
+        lines = string_of_image(monochrome, args.characters_per_line)
+        with open(txt_file, "w") as f:
+            for i, line in enumerate(lines):
+                if i == 0:
+                    prefix = 'String s = "'
+                else:
+                    prefix = '"'
+                if i == len(lines) - 1:
+                    suffix = '";'
+                else:
+                    suffix = '"'
+                f.write(prefix + line + suffix + "\n")
+        print(f"Wrote {txt_file}")
 
 
 if __name__ == '__main__':
