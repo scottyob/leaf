@@ -58,6 +58,11 @@ def main():
         type=int,
         default=78,
     )
+    parser.add_argument(
+        "--flip-horizontal",
+        help="Flip image horizontally before encoding",
+        action="store_true",
+    )
     args = parser.parse_args()
 
     imgs = []
@@ -71,6 +76,8 @@ def main():
         txt_file = os.path.splitext(img_file)[0] + ".txt"
         img = imageio.imread(img_file)
         monochrome = make_monochrome(img)
+        if args.flip_horizontal:
+            monochrome = np.fliplr(monochrome)
         lines = string_of_image(monochrome, args.characters_per_line)
         with open(txt_file, "w") as f:
             for i, line in enumerate(lines):
