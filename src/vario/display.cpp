@@ -5,6 +5,7 @@
  */
 #include <Arduino.h>
 #include "display.h"
+#include "display_tests.h"
 #include "Leaf_SPI.h"
 
 #define GLCD_RS LCD_RS
@@ -12,12 +13,12 @@
 
 
 // Display Testing Temp Vars
-float wind_angle = 0;
+float wind_angle = 1.57;
 char seconds = 0;
 char minutes = 0;
 char hours = 0;
 uint16_t heading = 0;
-char string_heading[] = "  N  ";
+char string_heading[] = " WNW ";
 char string_satNum[] = "00";
 char string_gpsLat[] = "0000000000";
 char string_gpsLng[] = "0000000000";
@@ -226,7 +227,7 @@ void display_test(void) {
     u8g2.setFont(u8g2_font_tinyunicode_tf);
     u8g2.drawStr(49, 18, "mph");
 
-    u8g2.setFont(u8g2_font_leaf_n_6x12_hn);
+    u8g2.setFont(leaf_6x12);
     u8g2.drawStr(44, 12, "103");       // speed
 
     
@@ -349,7 +350,7 @@ void display_test(void) {
     u8g2.drawRBox(0,146,51,16,3);
     u8g2.setDrawColor(0);
     u8g2.setFontMode(1);
-    u8g2.setFont(u8g2_font_leaf_n_6x12_hn);
+    u8g2.setFont(leaf_6x12);
     u8g2.drawStr(2, 160, "12:34:00");
     u8g2.setFontMode(0);
     u8g2.setDrawColor(1);
@@ -372,173 +373,8 @@ void display_test(void) {
 }
 
 
-void display_test_big(uint8_t page) {
+void display_test_big(uint8_t test_page) {
   
-char s[] = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x80\xc0"
-"\x60\x30\x10\x18\x08\x0c\x04\x04\x06\x06\x06\x06\x02\x06\x06\x06\x06\x04\x04"
-"\x0c\x08\x18\x10\x30\x60\xc0\x80\x00\x00\x00\x00\x00\x00\x00\x00\x87\x87\x87"
-"\x4b\x4b\x4b\x33\x33\x33\x00\x00\x00\x00\xe0\x00\x00\x00\x0e\x1f\x1b\x18\x88"
-"\x8c\x84\xc6\xc2\x1f\x1f\x00\xff\x00\x2e\x21\x2d\x29\xe6\x00\x06\x87\x87\x06"
-"\x06\x06\x06\x06\x9f\x9f\x00\x00\xff\x00\xfc\xfe\x86\x80\x80\xc0\x60\x18\x0c"
-"\xfe\xfe\x00\x00\xff\xff\x00\x00\x00\x00\x60\x60\x60\x60\xfc\xfc\x60\x60\x60"
-"\x60\x00\x00\x00\xff\xff\x00\x00\x00\xe6\xf7\x37\x36\x86\x86\xc6\xc6\x66\x66"
-"\xf6\xf6\x00\x00\x00\x00\x00\x00\xf0\xf8\xf8\x78\x78\x78\x78\x78\x78\x78\x78"
-"\x78\x78\xf8\xf8\xf0\x00\x00\x00\x00\x1c\x7f\x41\x41\x7f\x7f\x7f\x7f\x7f\x7f"
-"\x7f\x7f\x6c\x6c\x6c\x6c\x6c\x6c\x5c\x98\x98\x00\x00\x00\xc0\x70\x1c\x06\x03"
-"\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x03\x06\x1c\x70\xc0\x00\x00\x00\x03"
-"\x03\xfb\x83\x83\xf3\x9b\x9b\xf3\x00\x00\x91\x53\x37\x53\x91\x00\x06\x03\x03"
-"\x01\x0d\x0d\x0c\x1f\x1f\xcc\xcc\x00\xff\x00\x9a\xaa\xaa\xaa\x9a\x00\x06\x07"
-"\x07\x06\x06\x06\x06\x06\xdf\xdf\x00\x00\xff\x00\xf8\xfd\x85\x81\xf9\xf8\x80"
-"\x00\x04\xfd\xf9\x00\x00\xff\xff\x00\x00\xc0\xf8\xd8\xc0\xc0\xc0\xc3\xc3\xc0"
-"\xc0\xc0\xf8\xf8\x00\x00\xff\xff\x00\x00\x00\x01\x03\x03\x03\x01\x61\x60\x00"
-"\x00\x00\x63\x63\x00\x00\x00\x00\x00\x00\xff\xff\xf0\x60\x66\x66\x66\x66\x66"
-"\x66\x66\x66\x60\xf0\xff\xff\x00\x00\x00\x00\x20\x50\x88\x10\xa0\xc0\xc4\xd4"
-"\x14\x64\x08\xf0\x9b\xbb\xbb\xbb\xfb\xdb\xdb\xd9\x99\x00\x00\xfe\xdf\xe0\xe0"
-"\xb0\xb0\x18\x18\x0c\xbc\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\x00\xfc\xf8\xc0"
-"\xc0\xc0\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xdf\xfe\x00"
-"\x00\x00\x00\xbc\xdd\xcd\x8d\x0d\x0d\xcd\x00\x00\x22\x36\x2a\x22\x22\x00\x3e"
-"\x3e\x06\x06\x1e\x3e\x30\x36\x36\x3e\x1c\x00\xff\x00\x03\x00\x01\x00\x03\x00"
-"\x7c\xfe\xc6\xc6\x7c\x7c\xc6\xc6\xfe\x7c\x00\x00\xff\x00\x00\x81\xc1\xc1\xc0"
-"\xc1\xc3\xc3\xdb\x99\x18\x0c\x00\xff\xff\x00\x00\x81\xc1\xc1\x61\x61\x31\x31"
-"\x19\xf9\xf9\x01\x07\x07\x00\x00\xff\xff\x00\x00\x00\x3f\x3f\x03\x03\x1f\x3f"
-"\x30\x30\x33\x33\x3f\x1e\x00\x00\x00\x00\x00\x00\xff\xff\xf0\xe0\xe6\xe6\xe6"
-"\xe6\xe6\xe6\xe6\xe6\xe0\xf0\xff\xff\x00\x00\x00\x00\x00\x00\x02\x07\x0f\x07"
-"\x0b\x11\x22\x14\x08\x00\x6d\x6d\x6d\x6d\x6d\x6d\x5d\x99\x99\x00\x00\x03\x1f"
-"\x70\xc0\x01\x01\x03\x03\x06\x87\xe0\xf8\xf0\xe0\xe0\x90\x08\x04\x02\x01\x00"
-"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xc0\x70\x1f"
-"\x03\x00\x18\x18\x18\xff\x98\x98\x9f\x9e\x9e\x9b\x00\x00\x00\x00\xe0\x00\x00"
-"\x00\x30\xb0\xb8\x30\x30\x30\x30\x30\x30\xb0\xb0\x00\xff\x00\x40\xc0\xf8\xc0"
-"\x40\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\x00\x0f\x1f\xb9"
-"\xb0\xb0\xb0\xb0\xb0\xb9\x1f\x0f\x00\x00\xff\xff\x00\x00\x87\xc7\xc7\xe7\xe7"
-"\xe7\xe7\xe7\xef\xef\xc7\xc7\x87\x00\x00\xff\xff\x00\x00\x00\x3f\x3f\x33\x10"
-"\x98\x98\x98\x8c\x8c\x8c\x86\x86\x80\x80\x80\x80\x00\x00\xff\xff\x0f\x07\x67"
-"\x67\x67\x64\x64\x67\x67\x67\x04\x0c\xff\xff\x00\x00\x00\x00\x08\x18\x28\x4a"
-"\x2c\x18\x18\x2c\x4a\x28\x18\x08\x03\x13\x33\x73\xf3\x73\x33\x11\x01\x00\x00"
-"\x00\x00\x00\x01\x03\x06\x0c\x18\x36\x67\x47\xc3\x83\x83\x01\x01\x01\x00\x00"
-"\x00\x00\x00\x00\x00\x00\x00\x00\x80\x80\xc0\x40\x60\x30\x18\x0c\x06\x03\x01"
-"\x00\x00\x00\x00\x00\x00\x00\x7c\xc1\xc1\xf9\xcd\xcd\xf9\x00\x00\x71\x23\x27"
-"\x23\x21\x00\x07\x0f\x0d\x0c\x64\x66\x82\x83\x81\x6f\x6f\x00\xff\x00\x44\x44"
-"\x55\x54\x28\x00\xf8\xfc\x0e\x06\x76\xfe\xc6\xc6\xfe\x7c\x00\x00\xff\x00\x1e"
-"\x3f\x73\x61\x61\x61\x61\x61\x73\x3f\x1e\x00\x00\xff\xff\x00\x00\x0f\x1f\x1d"
-"\xb8\xb8\xb8\xb8\xb8\xb8\xb8\x1d\x1f\x0f\x00\x00\xff\xff\x00\x00\x00\x00\x00"
-"\x00\x00\x87\x8f\x8d\x8d\x8d\x8d\x8f\x87\x01\x01\x01\x01\x00\x00\xff\xff\x0f"
-"\x06\x66\x66\x66\x66\x66\x66\x66\x66\x06\x0f\xff\xff\x00\x00\x00\x00\xc0\xf0"
-"\x18\xcc\xe4\x30\x90\xc0\x60\x00\x80\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x20\xa0\xa1\xc1\x41\x43"
-"\x03\x03\x03\x03\x03\x03\x03\x83\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00"
-"\x00\x00\x00\x00\x00\x00\x36\x36\x36\x36\x36\x36\x36\x36\x36\x36\x00\x00\x45"
-"\x6d\x55\x45\x45\x00\x8c\xc6\xc6\x02\x1b\x9b\x19\xff\xff\xd8\x98\x00\xff\x00"
-"\x35\x55\x32\x12\x12\x00\xf0\xf0\x30\x30\xf0\xf0\x00\x10\xf6\xe6\x00\x00\xff"
-"\x00\x3c\x7e\xe7\xc3\xc3\xc3\xc3\xc3\xe7\x7e\x3c\x00\x00\xff\xff\x00\x00\x3e"
-"\x7f\x77\xe3\xe3\xe3\xe3\xe3\xe3\xe3\x77\x7f\x3e\x00\x00\xff\xff\x00\x00\x00"
-"\x00\x00\x00\x00\x35\x7f\x6d\x6d\x6d\x6d\x6d\x6d\x00\x00\x00\x00\x00\x00\x0f"
-"\x1f\x1f\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1f\x1f\x0f\x00\x00\x00\x00"
-"\x07\x1f\x30\x67\x4f\x18\x13\x07\x0c\x01\x03\x03\x3c\x7e\x66\x60\x38\x1c\x38"
-"\x70\x60\x66\x7e\x3c\x00\x88\xd8\xa8\x88\x88\x00\x00\x00\x00\x2a\x6a\x6a\xa9"
-"\xa9\x29\x00\x00\xc0\xe0\x78\x7c\xff\xff\xf8\x00\x00\x00\x00\xc6\xe7\x66\x06"
-"\x86\xc6\xe6\xef\x00\x00\x00\x00\x00\x06\x06\x06\x06\x06\x06\x06\x06\x7e\x00"
-"\xf0\xf7\x31\x33\x31\x37\x30\x33\x37\x36\x36\x33\x31\xf3\xf6\x36\x37\x33\x30"
-"\x3f\x30\x37\x32\x32\x32\x32\xf0\x37\xf7\xf0\xf0\xf3\xf7\xf6\xf6\xf7\xf3\xf0"
-"\xf0\x3f\x30\xf6\xf6\xf2\xf2\xf0\xf0\xf0\xf0\xf0\xf0\xf0\x30\x30\xff\xff\xf0"
-"\xe0\xc0\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x80\xc0\x60\x30\x3f\xff\xf0"
-"\x30\x30\x30\x30\x30\x30\x30\x30\x30\x30\x30\xf0\xf0\x30\x30\x30\x30\x30\x30"
-"\x30\x30\x30\x30\x30\xf0\xf0\x30\x30\x30\x30\x30\x30\x30\x30\x30\x30\x30\xf0"
-"\xf0\x30\x30\x30\x30\x30\x30\x30\x30\x30\x30\x30\xf0\xf0\x7c\xfe\xc6\xc6\xc0"
-"\xe0\x70\x38\x1c\x0e\xfe\xfe\x00\xae\xaa\xee\xa2\xa2\x00\x00\x00\x00\x0d\x15"
-"\x15\x15\x15\x0d\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x01\x03"
-"\x03\x03\x01\x00\x03\x03\x00\x00\x00\x00\x00\x7f\x30\x10\x18\x0c\x04\x06\x03"
-"\x7f\x00\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0f\x0f\x00\x00"
-"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0f\xf0\xff\xff\xff\xff\xff\xff\xff\xff"
-"\xff\xff\xff\xf0\xf0\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xf0\xf0\xff"
-"\xff\xff\xff\xff\xff\xff\xfe\xfc\xf8\xf0\x18\x0c\x06\x03\x01\x00\x00\x00\x00"
-"\x0f\x0f\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0f\x0f\x00\x00\x00\x00"
-"\x00\x00\x00\x00\x00\x00\x00\x0f\x0f\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-"\x00\x0f\x0f\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xff";
-
-char t[] = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x70\xf0\xf0\xf0\xb0\x30\x30"
-"\x30\x30\x30\x30\x30\x00\x00\x00\xfc\xfe\xfe\x8e\x8e\x8e\xc0\xc0\xe0\x60\x70"
-"\x30\x38\x18\x1c\xfc\xfe\xfe\x00\x00\x00\xff\xff\x00\x00\x00\xf0\xf8\x98\x98"
-"\xc0\xc0\x60\x60\x30\x30\xf8\xf8\x00\x00\x32\x55\x77\x55\x35\x00\x00\x00\x00"
-"\x00\x00\x00\x00\x00\xf8\xf8\x98\xc0\xc0\xc0\x60\x60\x60\x30\x30\x00\x00\x00"
-"\xb8\x90\x90\x90\x90\x00\x00\xff\xff\x00\x00\x00\x00\x60\x60\x60\x60\xfc\xfc"
-"\x60\x60\x60\x60\x00\x00\x00\xff\xff\x00\x00\xf3\xfb\x9b\x9b\xc3\xc3\x63\x63"
-"\x33\x33\xfb\xfb\x00\x00\x00\x00\x00\xf0\xf8\xf8\x78\x78\x78\x78\x78\x78\x78"
-"\x78\x78\x78\xf8\xf8\xf0\x00\x00\x1c\x7f\x41\x41\x7f\x7f\x7f\x7f\x7f\x7f\x7f"
-"\x7f\x00\x00\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-"\x00\x00\x00\x00\x00\x80\xc0\xe0\xf0\xf8\xfc\xfe\xff\x00\x60\x60\x60\x61\x63"
-"\x67\x67\x6e\x7c\x78\x78\x70\x00\x00\x00\xe1\xf3\xf3\x73\x73\x73\x01\x81\xc0"
-"\x80\x00\x00\x70\x70\x70\xf3\xf3\xe3\x00\x00\x00\xff\xff\x00\x00\x00\x78\xfd"
-"\xcd\xcd\x60\x30\x60\xc0\xcc\xcc\xfd\x79\x00\x00\x52\x55\x55\x55\x22\x00\x00"
-"\x00\x00\x00\x00\x00\x00\x00\x79\xfd\xcd\xcc\x60\x20\x30\x18\x18\xfc\xfc\x00"
-"\x00\x00\x8b\xd8\xa9\x88\x8b\x00\x00\xff\xff\x00\x00\xc0\xf8\xd8\xc0\xc0\xc0"
-"\xc3\xc3\xc0\xc0\xc0\xf8\xf8\x00\x00\xff\xff\x00\x00\x80\x81\x81\x81\x80\xb0"
-"\x30\x00\x80\x80\xb1\x31\x00\x00\x00\x00\x00\xff\xff\xf0\x60\x66\x66\x66\x66"
-"\x66\x66\x66\x66\x60\xf0\xff\xff\x00\x00\x60\xf0\x98\x10\xa0\xc0\xc4\xd4\x14"
-"\x64\x08\xf0\x00\x00\xff\xff\x00\x00\x00\xc0\xe0\xe0\xe0\xe0\xe0\xe0\xe0\xe0"
-"\xe0\xe0\xc0\x00\x04\x0e\x1f\x3f\x7f\xff\xff\xff\xff\xff\xff\x00\x0e\x0c\x8c"
-"\x9c\x98\x98\xd8\xf0\xf0\xf0\x70\x60\x00\x00\x00\x07\x0f\x0f\x0e\x0e\x0e\x0e"
-"\x07\x01\x07\x0f\x0e\x0e\x0e\x0e\x8f\x8f\x87\x80\x80\x00\xff\xff\x00\x00\x00"
-"\xc0\xe0\x60\x60\x60\xc0\x60\x60\x60\x60\xec\xcc\x04\x00\x43\x41\x43\x41\xc3"
-"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0c\x12\x12\x12\x0c\x00\x1c\x04\x0c\x04"
-"\x04\x00\x00\x00\x0e\x12\x0e\x02\x02\x00\x00\xff\xff\x00\x00\x81\xc1\xc1\x61"
-"\x61\x31\x31\x19\xf9\xf9\x01\x07\x07\x00\x00\xff\xff\x00\x00\x9f\x9f\x81\x01"
-"\x0f\x1f\x18\x18\x19\x19\x1f\x0f\x00\x00\x00\x00\x00\xff\xff\xf0\xe0\xe6\xe6"
-"\xe6\xe6\xe6\xe6\xe6\xe6\xe0\xf0\xff\xff\x00\x00\x00\x04\x0f\x1f\x0f\x0f\x1b"
-"\x31\x32\x1c\x08\x00\x00\x00\xff\xff\x00\x00\x00\xff\xff\x31\xec\xfc\xf0\xe1"
-"\xe7\xe6\xf1\xff\xff\x00\x00\x00\x00\x00\x00\x00\x01\x03\x07\x0f\x1f\x00\x83"
-"\xc7\xc7\xc7\xc5\x6d\x6c\x6c\x6c\x38\x38\x38\x00\x00\x00\xf0\xf8\xf8\x38\x38"
-"\x38\x38\xf0\xe0\xf0\x38\x38\x38\x38\x38\xfb\xfb\xf3\x01\x01\x00\xff\xff\x00"
-"\x00\x00\xf3\xf7\x36\x36\xf6\xf3\x06\x06\x36\x36\xf7\xe3\x00\x00\x48\x54\x5c"
-"\x54\x95\x00\x00\x00\x00\x00\x00\x00\x00\x00\x60\x60\x70\x60\x60\x60\x60\x60"
-"\x60\x60\x60\x00\x00\x00\x88\x54\x5c\x54\x94\x00\x00\xff\xff\x00\x00\x87\xc7"
-"\xc7\xe7\xe7\xe7\xe7\xe7\xef\xef\xc7\xc7\x87\x00\x00\xff\xff\x00\x00\x1f\x1f"
-"\x19\x08\xcc\xcc\xcc\xc6\xc6\xc6\xc3\xc3\xc0\xc0\xc0\xc0\x00\xff\xff\x0f\x07"
-"\x67\x67\x67\x64\x64\x67\x67\x67\x04\x0c\xff\xff\x00\x00\x18\x38\x68\xca\x6e"
-"\x3c\x18\x3c\x6e\xca\x68\x38\x18\x00\xff\xff\x00\x00\x00\xff\xff\x90\x9c\x0c"
-"\x6c\x64\x04\x64\x64\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-"\x00\x01\x01\x00\x00\x00\xc0\xc0\xc0\xc0\xc0\xc0\xc0\x00\x00\x00\x83\x87\x87"
-"\x87\x87\x87\x87\x83\x81\x03\x07\x07\x87\x87\x87\x87\x87\x03\x00\x00\x00\xff"
-"\xff\x00\x00\x00\xf3\xfb\x98\x98\xc1\x63\xc3\x83\x9b\x9b\xfb\xf1\x00\x00\x4a"
-"\x5a\x6a\x4a\x49\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf8\xf8\x18\x18\xf8\xf8"
-"\x80\x80\x98\xfb\xf3\x00\x00\x00\xd9\x44\xc4\x44\xd9\x00\x00\xff\xff\x00\x00"
-"\x0f\x1f\x1d\xb8\xb8\xb8\xb8\xb8\xb8\xb8\x1d\x1f\x0f\x00\x00\xff\xff\x00\x00"
-"\x00\x00\x00\x00\xc3\xc7\xc6\xc6\xc6\xc6\xc7\xc3\x00\x00\x00\x00\x00\xff\xff"
-"\x0f\x06\x66\x66\x66\x66\x66\x66\x66\x66\x06\x0f\xff\xff\x00\x00\xc0\xf0\x18"
-"\xcc\xe4\x30\x90\xc0\x60\x00\x80\x80\x00\x00\xff\xff\x00\x00\x00\xff\xff\x07"
-"\x67\x67\x07\x26\x66\x66\x66\xff\xff\x00\xf0\xf8\x98\x98\x80\xe0\x70\xe0\x80"
-"\x98\x98\x98\xf8\xf0\x00\x00\x00\x71\x71\x7b\x7f\x6e\x64\x64\x00\x00\x00\x7f"
-"\x7f\x7f\x03\x03\x03\x3f\x7f\x7f\x70\x70\x70\x73\x73\x73\x7f\x7f\x3f\x00\x00"
-"\x00\xff\xff\x00\x00\x00\x30\x11\x19\x09\x00\x00\x00\x01\x01\x01\x01\x00\x00"
-"\x00\x56\x51\x71\x51\x56\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x01\x00\x00"
-"\x58\x7d\x6d\x6d\x7d\x79\x60\x6c\x38\x00\x05\x04\x04\x04\x1d\x00\x00\xff\xff"
-"\x00\x00\x3e\x7f\x77\xe3\xe3\xe3\xe3\xe3\xe3\xe3\x77\x7f\x3e\x00\x00\xff\xff"
-"\x00\x00\x00\x00\x00\x00\x1a\x3f\x36\x36\x36\x36\x36\x36\x00\x00\x00\x00\x00"
-"\x0f\x1f\x1f\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1f\x1f\x0f\x00\x00\x07"
-"\x1f\x30\x67\x4f\x18\x13\x07\x0c\x01\x03\x03\x00\x00\xff\xff\x00\x00\x00\xff"
-"\xff\x03\xce\xce\xcf\xcf\xce\xce\xce\xff\xff\x00\xf0\xf9\x19\x19\x01\x80\x80"
-"\xc0\xe1\x61\x31\x31\xf9\xf8\x00\x00\x00\x3f\x63\x63\x3f\x03\x03\x03\x00\x00"
-"\x00\xfc\xfe\xfe\xce\xce\xce\xc0\xf0\x38\xf0\xe0\xc0\xce\xce\xce\xfe\xfe\xfc"
-"\x00\x00\x00\xff\xff\x03\x03\x03\x03\x03\x03\x03\x03\x03\x03\x03\xff\xff\x03"
-"\x03\x03\x03\x03\x03\x03\x03\x03\x03\x03\xff\x03\xff\xff\xff\xff\xff\xff\xff"
-"\xff\xff\xff\xff\x03\x03\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\x03\x03"
-"\xff\xff\xff\xfe\xfc\xf8\xf0\xe0\xc0\x80\x00\x80\xc0\x60\x30\x18\x0c\x06\x03"
-"\x03\xff\xff\x03\x03\x03\x03\x03\x03\x03\x03\x03\x03\x03\xff\xff\x03\x03\x03"
-"\x03\x03\x03\x03\x03\x03\x03\x03\xff\xff\x03\x03\x03\x03\x03\x03\x03\x03\x03"
-"\x03\x03\xff\xff\x03\x03\x03\x03\x03\x03\x03\x03\x03\x03\x03\xff\xff\x00\x00"
-"\x00\x03\x07\x07\x07\x07\x07\x07\x07\x07\x07\x07\x03\x00\x01\x03\x03\x03\x03"
-"\x01\x01\x00\x00\x00\x00\x00\x03\x03\x00\x00\x00\xc6\xc6\xc6\xfe\xc6\xc6\xc6"
-"\x00\x00\x00\x70\x71\x31\x39\x39\x19\x01\x00\x00\x00\x01\x01\x01\x01\x01\x01"
-"\x01\x00\x00\x00\x00\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xff\xff\xff\xff\xff"
-"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"
-"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01\x00\x00\x00\x00\x00"
-"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xff"
-"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
-
-
 //Serial.println("starting LCD stuff");
 /* NOT SURE WHAT THIS IS
 GLCD_inst(0b10100101);
@@ -564,26 +400,42 @@ delay(500);
 */
 
 
-  if (page == 1) {
+  if (test_page == 1) {
     for (int page=0; page<8; page++) {
       for (int d=0; d<192; d++) {
-        GLCD_data(s[d+page*192]);  
+        GLCD_data(vario_main_1[d+page*192]);  
       }
     }    
-  } else if (page == 2) {
+  } else if (test_page == 2) {
     for (int page=0; page<8; page++) {
       for (int d=0; d<192; d++) {
-        GLCD_data(t[d+page*192]);  
+        GLCD_data(vario_nav_1a[d+page*192]);  
       }
     }    
+  } else if (test_page == 3) {
+    for (int page=0; page<8; page++) {
+      for (int d=0; d<192; d++) {
+        GLCD_data(vario_nav_1b[d+page*192]);  
+      }
+    }   
+  } else if (test_page == 4) {
+    for (int page=0; page<8; page++) {
+      for (int d=0; d<192; d++) {
+        GLCD_data(vario_nav_2[d+page*192]);  
+      }
+    }   
+  } else if (test_page == 5) {
+    for (int page=0; page<8; page++) {
+      for (int d=0; d<192; d++) {
+        GLCD_data(offroad_1[d+page*192]);  
+      }
+    }   
   }
-  digitalWrite(LCD_BACKLIGHT, !digitalRead(LCD_BACKLIGHT));
-  delay(500);
+
+
+  //digitalWrite(LCD_BACKLIGHT, !digitalRead(LCD_BACKLIGHT));
+  //delay(500);
 //BIG LCD TEST 
-
-
-
-
 }
 
 
@@ -596,6 +448,572 @@ void GLCD_data(byte data) {
   digitalWrite(GLCD_RS, HIGH);
   GLCD_spiCommand(data);
 }
+
+
+char speed[] = "132";
+char windSpeed[] = "28";
+char turn = 1;
+uint16_t windDir = 235;
+
+char altitude[] = "23,857\"";
+char altAbvLaunch[] = "4,169";
+char glide[] = "10.4";
+char distFlown[] = "34.5";
+char glideToWypt[] = " 6.5";
+char timeToWypt[] = "12:34";
+char distToWypt[] = "42.7";
+char waypoint[] = "Marshall-LZ";
+char temp[] = "102";
+char accel[] = "2.1g";
+char altAbvLZ[] = "1,987";
+char climbRate[] = "+1385";
+char clockTime[] = "12:57pm";
+char timer[] = "1:23:45";
+float dirToWypt = -.25;
+
+
+/*
+void display_test_real() {
+  u8g2.firstPage();
+  do {
+    
+
+    // heading and turn
+    u8g2.setFont(leaf_7x10);
+    //if (turn == 0) string_heading[0] = '<';
+    //if (turn == 1) string_heading[4] = '>';    
+    string_heading[0] = '<';
+    string_heading[4] = '>';    
+    u8g2.drawStr(2, 10, string_heading);
+        
+    // speed
+    u8g2.setFont(leaf_6x12);
+    u8g2.drawStr(44, 12, speed);
+    u8g2.setFont(u8g2_font_tinyunicode_tf);
+    u8g2.drawStr(49, 18, "MPH");
+
+    // Nav Circles
+    u8g2.setDrawColor(1);
+    u8g2.drawDisc(25, 35, 24);  // Main Circle
+    u8g2.drawDisc(55, 29, 8);   // Wind Circle
+    u8g2.setDrawColor(0);
+    u8g2.drawDisc(25, 35, 22);  // center empty
+    display_drawTrianglePointer(55, 29, wind_angle, 7);
+    u8g2.setDrawColor(1);
+    u8g2.drawStr(51, 46, windSpeed);
+    
+    // waypoint name and progress bar
+    u8g2.setDrawColor(0);
+    u8g2.drawBox(1,49,63, 17);
+    u8g2.setDrawColor(1);
+    u8g2.drawFrame(1, 49, 63, 4);
+    u8g2.drawBox(1, 49, 27, 4);  // 3rd argument is filled width from left (% of 64 pixels)
+    u8g2.setFont(u8g2_font_7x14B_tr);
+    u8g2.drawStr(1, 64, waypoint);
+
+    // field dividers
+    u8g2.drawLine(1, 65, 64, 65);
+    u8g2.drawLine(1, 89, 64, 89);
+    u8g2.drawLine(1, 113, 64, 113);
+    u8g2.drawLine(33, 65, 33, 113);
+
+
+    // vario bar
+    u8g2.drawLine(52, 114, 52, 192);
+    // u8g2.drawFrame(54, 64, 11, 116);
+    u8g2.drawBox(53, 164, 12, 20);
+
+    // Time to Waypoint
+    u8g2.setFont(leaf_5h);
+    //u8g2.drawStr(4, 72, ">TIME");
+    u8g2.drawStr(4, 72, "M:S>&");
+    u8g2.setFont(leaf_6x12);
+    u8g2.drawStr(1, 87, timeToWypt);
+
+    // Dist to Waypoint
+    u8g2.setFont(leaf_5h);
+    //u8g2.drawStr(35, 72, ">KM");
+    u8g2.drawStr(35, 72, "KM>%");
+    u8g2.setFont(leaf_8x14);
+    u8g2.drawStr(35, 88, distToWypt);
+
+    // Glide over ground now
+    u8g2.setFont(leaf_5h);
+    u8g2.drawStr(4, 96, "`GLIDE");
+    u8g2.setFont(leaf_8x14);
+    u8g2.drawStr(1, 112, glide);
+
+    // Glide to waypoint
+    u8g2.setFont(leaf_5h);
+    u8g2.drawStr(35, 96, "`WAYPT");
+    u8g2.setFont(leaf_8x14);
+    u8g2.drawStr(35, 112, glideToWypt);
+
+
+    // Timer 
+    u8g2.drawBox(7, 116, 42, 16);
+    u8g2.setDrawColor(0);
+    u8g2.setFont(leaf_6x12);
+    u8g2.drawStr(14, 130, timer);
+    u8g2.setDrawColor(1);
+
+    // Clock
+    u8g2.setFont(leaf_6x12);
+    u8g2.drawStr(5, 147, clockTime);
+
+    // Climb
+    u8g2.drawBox(1, 153, 51, 18);
+    u8g2.setDrawColor(0);
+    u8g2.setFont(leaf_8x14);
+    u8g2.drawStr(2, 169, climbRate);
+    u8g2.setDrawColor(1);
+    
+    // Altitude(s)
+    u8g2.setFont(leaf_5h);
+    u8g2.drawStr(4, 177, "ALTITUDE");
+    u8g2.setFont(leaf_8x14);
+    u8g2.drawStr(2, 192, altitude);
+
+
+  } while ( u8g2.nextPage() );  
+}
+*/
+
+/*
+
+void display_test_real_2() {
+
+  dirToWypt += .005;
+  wind_angle -= .0075;
+  delay(10);
+  u8g2.firstPage();
+  do {
+    
+
+
+        
+    // speed
+    u8g2.setFont(leaf_6x12);
+    u8g2.drawStr(1, 12, speed);
+    u8g2.setFont(leaf_5h);
+    u8g2.drawStr(15, 18, "MPH");
+
+    // heading and turn
+    u8g2.setFont(leaf_7x10);
+    //if (turn == 0) string_heading[0] = '<';
+    //if (turn == 1) string_heading[4] = '>';    
+    string_heading[0] = '<';
+    string_heading[4] = '>';    
+    u8g2.drawStr(23, 10, string_heading);
+
+    // Nav Circles
+    uint8_t nav_x = 38;
+    uint8_t nav_y = 42;
+    uint8_t nav_r = 26;
+    uint8_t wind_r = 8;
+
+    u8g2.setDrawColor(1);
+    u8g2.drawDisc(nav_x, nav_y, nav_r);  // Main Circle
+    u8g2.setDrawColor(0);
+    u8g2.drawDisc(nav_x, nav_y, nav_r-2);  // center empty
+    u8g2.setDrawColor(1);
+    u8g2.drawDisc(nav_x, nav_y, wind_r);   // Wind Circle
+    
+    // Pointer (Travel)
+    uint8_t pointer_w = 5;              // half width of arrowhead
+    uint8_t pointer_h = 11;             // full height of arrowhead
+    uint8_t pointer_x = nav_x;
+    uint8_t pointer_y = nav_y-nav_r-4;    //tip of arrow
+    u8g2.setDrawColor(0);
+    u8g2.drawBox(nav_x-(pointer_w)/2, nav_y-nav_r, pointer_w, 2);
+    u8g2.setDrawColor(1);
+    // arrow point    
+    u8g2.drawLine(pointer_x-pointer_w, pointer_y+pointer_h, pointer_x, pointer_y);
+    u8g2.drawLine(pointer_x+pointer_w, pointer_y+pointer_h, pointer_x, pointer_y);
+    u8g2.drawLine(pointer_x-pointer_w-1, pointer_y+pointer_h, pointer_x-1, pointer_y);
+    u8g2.drawLine(pointer_x+pointer_w+1, pointer_y+pointer_h, pointer_x+1, pointer_y);
+    //arrow flats
+    u8g2.drawLine(pointer_x-pointer_w, pointer_y+pointer_h, pointer_x-pointer_w/2, pointer_y+pointer_h);
+    u8g2.drawLine(pointer_x+pointer_w, pointer_y+pointer_h, pointer_x+pointer_w/2, pointer_y+pointer_h);
+    //arrow shaft
+    u8g2.drawLine(pointer_x-pointer_w/2, pointer_y+pointer_h, pointer_x-pointer_w/2, pointer_y+pointer_h*2);
+    u8g2.drawLine(pointer_x+pointer_w/2, pointer_y+pointer_h, pointer_x+pointer_w/2, pointer_y+pointer_h*2);
+
+    // Waypoint Pointer
+    uint8_t waypoint_tip_r = 25;
+    uint8_t waypoint_shaft_r = 23;    
+    uint8_t waypoint_tail_r = 20;
+    float waypoint_arrow_angle = 0.205;
+    
+    int8_t waypoint_tip_x = sin(dirToWypt)*waypoint_tip_r+nav_x;
+    int8_t waypoint_tip_y = nav_y-cos(dirToWypt)*waypoint_tip_r;    
+    int8_t waypoint_shaft_x = sin(dirToWypt)*waypoint_shaft_r+nav_x;
+    int8_t waypoint_shaft_y = nav_y-cos(dirToWypt)*waypoint_shaft_r;    
+
+
+    u8g2.drawLine(nav_x+1, nav_y, waypoint_shaft_x+1, waypoint_shaft_y);
+    u8g2.drawLine(nav_x, nav_y+1, waypoint_shaft_x, waypoint_shaft_y+1);
+    u8g2.drawLine(nav_x, nav_y, waypoint_shaft_x, waypoint_shaft_y);          // the real center line; others are just to fatten it up
+    u8g2.drawLine(nav_x-1, nav_y, waypoint_shaft_x-1, waypoint_shaft_y);
+    u8g2.drawLine(nav_x, nav_y-1, waypoint_shaft_x, waypoint_shaft_y-1);
+
+    int8_t tail_left_x = sin(dirToWypt - waypoint_arrow_angle) * (waypoint_tail_r) + nav_x;
+    int8_t tail_left_y = nav_y - cos(dirToWypt - waypoint_arrow_angle) * (waypoint_tail_r);
+    int8_t tail_right_x = sin(dirToWypt + waypoint_arrow_angle) * (waypoint_tail_r) + nav_x;
+    int8_t tail_right_y = nav_y - cos(dirToWypt + waypoint_arrow_angle) * (waypoint_tail_r);
+
+    u8g2.drawLine(tail_left_x, tail_left_y, waypoint_tip_x, waypoint_tip_y);
+    u8g2.drawLine(tail_right_x, tail_right_y, waypoint_tip_x, waypoint_tip_y);
+    u8g2.drawLine(tail_right_x, tail_right_y, tail_left_x, tail_left_y);
+    u8g2.drawTriangle(tail_left_x, tail_left_y, waypoint_tip_x, waypoint_tip_y, tail_right_x, tail_right_y);
+
+
+
+
+    // Wind Vector
+    u8g2.setDrawColor(0);
+    display_drawTrianglePointer(nav_x, nav_y, wind_angle, 7);
+    u8g2.setDrawColor(1);
+    u8g2.setFont(leaf_5x8);
+    u8g2.drawStr(53, 19, windSpeed);
+
+    // vario bar    
+    u8g2.drawFrame(1, 13, 13, 119);
+    u8g2.setDrawColor(0);   
+    u8g2.drawLine(12, 15, 12, 58);
+    u8g2.setDrawColor(1); 
+
+    // Climb
+    u8g2.drawBox(14, 65, 50, 18);
+    u8g2.drawTriangle(8, 73, 13, 68, 13, 78);
+    u8g2.setDrawColor(0);
+    u8g2.setFont(leaf_8x14);
+    u8g2.drawStr(13, 81, climbRate);
+    u8g2.setDrawColor(1);
+
+    // Altitude(s)
+    u8g2.setFont(leaf_8x14);
+    u8g2.drawStr(16, 99, altitude);
+
+    // Clock
+    u8g2.setFont(leaf_6x12);
+    u8g2.drawStr(18, 115, clockTime);
+
+    // Timer 
+    uint8_t timer_x = 14;
+    uint8_t timer_y = 116;
+    uint8_t timer_w = 50;
+    uint8_t timer_h = 16;
+
+    u8g2.drawBox(timer_x, timer_y, timer_w, timer_h);
+    u8g2.setDrawColor(0);
+    
+    //u8g2.drawPixel(timer_x, timer_y);
+    //u8g2.drawPixel(timer_x, timer_y+timer_h-1);
+    //u8g2.drawPixel(timer_x+timer_w-1, timer_y);
+    //u8g2.drawPixel(timer_x+timer_w-1, timer_y+timer_h-1);
+    
+    u8g2.setFont(leaf_6x12);
+    u8g2.drawStr(timer_x+5, timer_y+timer_h-2, timer);
+    u8g2.setDrawColor(1);
+
+
+
+    // field dividers
+    u8g2.drawLine(14, 101, 64, 101);
+    u8g2.drawLine(1, 131, 64, 131);
+    u8g2.drawLine(1, 154, 64, 154);
+    u8g2.drawLine(1, 177, 64, 177);
+    u8g2.drawLine(33, 132, 33, 176);
+
+
+    // Time to Waypoint
+    u8g2.setFont(leaf_5h);    
+    u8g2.drawStr(4, 138, "M:S>&");
+    u8g2.setFont(leaf_6x12);
+    u8g2.drawStr(1, 152, timeToWypt);
+
+    // Dist to Waypoint
+    u8g2.setFont(leaf_5h);
+    //u8g2.drawStr(35, 72, ">KM");
+    u8g2.drawStr(35, 138, "KM>%");
+    u8g2.setFont(leaf_8x14);
+    u8g2.drawStr(35, 153, distToWypt);
+
+    // Glide over ground now
+    u8g2.setFont(leaf_5h);
+    u8g2.drawStr(4, 161, "`GLIDE");
+    u8g2.setFont(leaf_8x14);
+    u8g2.drawStr(1, 176, glide);
+
+    // Glide to waypoint
+    u8g2.setFont(leaf_5h);
+    u8g2.drawStr(35, 161, "`WAYPT");
+    u8g2.setFont(leaf_8x14);
+    u8g2.drawStr(35, 176, glideToWypt);
+
+
+
+    // waypoint name and progress bar
+    u8g2.drawFrame(1, 177, 63, 4);
+    u8g2.drawBox(2, 178, 27, 2);  // 3rd argument is filled width from left (% of 64 pixels)
+    u8g2.setFont(u8g2_font_7x14B_tr);
+    u8g2.drawStr(1, 192, waypoint);
+
+
+
+  } while ( u8g2.nextPage() ); 
+
+}
+*/
+
+
+void display_test_real_3() {
+
+  dirToWypt += .005;
+  wind_angle -= .0075;
+  delay(10);
+  u8g2.firstPage();
+  do {        
+    // speed
+    u8g2.setFont(leaf_6x12);
+    u8g2.drawStr(1, 12, speed);
+    u8g2.setFont(leaf_5h);
+    u8g2.drawStr(15, 18, "MPH");
+
+    // heading and turn
+    u8g2.setFont(leaf_7x10);
+    //if (turn == 0) string_heading[0] = '<';
+    //if (turn == 1) string_heading[4] = '>';    
+    string_heading[0] = '<';
+    string_heading[4] = '>';    
+    u8g2.drawStr(23, 10, string_heading);
+
+    // Nav Circles
+    uint8_t nav_x = 38;
+    uint8_t nav_y = 38;
+    uint8_t nav_r = 25;
+    uint8_t wind_r = 8;
+
+    u8g2.setDrawColor(1);
+    u8g2.drawDisc(nav_x, nav_y, nav_r);  // Main Circle
+    u8g2.setDrawColor(0);
+    u8g2.drawDisc(nav_x, nav_y, nav_r-2);  // center empty
+    u8g2.setDrawColor(1);
+    u8g2.drawDisc(nav_x, nav_y, wind_r);   // Wind Circle
+    
+
+    // Straight Arrow Pointer (Travel Direction)
+    uint8_t pointer_w = 5;              // half width of arrowhead
+    uint8_t pointer_h = 9;             // full height of arrowhead
+    uint8_t pointer_x = nav_x;
+    uint8_t pointer_y = nav_y-nav_r-2;    //tip of arrow
+
+    u8g2.setDrawColor(0);
+    u8g2.drawBox(nav_x-(pointer_w)/2, nav_y-nav_r, pointer_w, 2);
+    u8g2.setDrawColor(1);
+    // arrow point    
+    u8g2.drawLine(pointer_x-pointer_w, pointer_y+pointer_h, pointer_x, pointer_y);
+    u8g2.drawLine(pointer_x+pointer_w, pointer_y+pointer_h, pointer_x, pointer_y);
+    u8g2.drawLine(pointer_x-pointer_w-1, pointer_y+pointer_h, pointer_x-1, pointer_y);
+    u8g2.drawLine(pointer_x+pointer_w+1, pointer_y+pointer_h, pointer_x+1, pointer_y);
+    //arrow flats
+    u8g2.drawLine(pointer_x-pointer_w, pointer_y+pointer_h, pointer_x-pointer_w/2, pointer_y+pointer_h);
+    u8g2.drawLine(pointer_x+pointer_w, pointer_y+pointer_h, pointer_x+pointer_w/2, pointer_y+pointer_h);
+    //arrow shaft
+    u8g2.drawLine(pointer_x-pointer_w/2, pointer_y+pointer_h, pointer_x-pointer_w/2, pointer_y+pointer_h*2);
+    u8g2.drawLine(pointer_x+pointer_w/2, pointer_y+pointer_h, pointer_x+pointer_w/2, pointer_y+pointer_h*2);
+
+    // Waypoint Pointer
+    uint8_t waypoint_tip_r = 23;
+    uint8_t waypoint_shaft_r = 20;    
+    uint8_t waypoint_tail_r = 18;
+    float waypoint_arrow_angle = 0.205;
+    
+    int8_t waypoint_tip_x = sin(dirToWypt)*waypoint_tip_r+nav_x;
+    int8_t waypoint_tip_y = nav_y-cos(dirToWypt)*waypoint_tip_r;    
+    int8_t waypoint_shaft_x = sin(dirToWypt)*waypoint_shaft_r+nav_x;
+    int8_t waypoint_shaft_y = nav_y-cos(dirToWypt)*waypoint_shaft_r;    
+
+
+    u8g2.drawLine(nav_x+1, nav_y, waypoint_shaft_x+1, waypoint_shaft_y);
+    u8g2.drawLine(nav_x, nav_y+1, waypoint_shaft_x, waypoint_shaft_y+1);
+    u8g2.drawLine(nav_x, nav_y, waypoint_shaft_x, waypoint_shaft_y);          // the real center line; others are just to fatten it up
+    u8g2.drawLine(nav_x-1, nav_y, waypoint_shaft_x-1, waypoint_shaft_y);
+    u8g2.drawLine(nav_x, nav_y-1, waypoint_shaft_x, waypoint_shaft_y-1);
+
+    int8_t tail_left_x = sin(dirToWypt - waypoint_arrow_angle) * (waypoint_tail_r) + nav_x;
+    int8_t tail_left_y = nav_y - cos(dirToWypt - waypoint_arrow_angle) * (waypoint_tail_r);
+    int8_t tail_right_x = sin(dirToWypt + waypoint_arrow_angle) * (waypoint_tail_r) + nav_x;
+    int8_t tail_right_y = nav_y - cos(dirToWypt + waypoint_arrow_angle) * (waypoint_tail_r);
+
+    u8g2.drawLine(tail_left_x, tail_left_y, waypoint_tip_x, waypoint_tip_y);
+    u8g2.drawLine(tail_right_x, tail_right_y, waypoint_tip_x, waypoint_tip_y);
+    u8g2.drawLine(tail_right_x, tail_right_y, tail_left_x, tail_left_y);
+    u8g2.drawTriangle(tail_left_x, tail_left_y, waypoint_tip_x, waypoint_tip_y, tail_right_x, tail_right_y);
+
+
+
+
+    // Wind Vector
+    u8g2.setDrawColor(0);
+    display_drawTrianglePointer(nav_x, nav_y, wind_angle, 7);
+    u8g2.setDrawColor(1);
+    u8g2.setFont(leaf_5x8);
+    u8g2.drawStr(53, 19, windSpeed);
+
+    // vario bar    
+    u8g2.drawFrame(1, 13, 13, 110);
+    //u8g2.setDrawColor(0);       //only needed if nav cricle overlaps vario bar
+    //u8g2.drawLine(12, 15, 12, 58);
+    u8g2.setDrawColor(1); 
+
+    uint8_t cursor_y = 57;
+
+    // Climb    
+    u8g2.drawBox(14, cursor_y, 50, 18);
+    u8g2.drawTriangle(8, cursor_y+8, 13, cursor_y+3, 13, cursor_y+13);
+    u8g2.setDrawColor(0);
+    u8g2.setFont(leaf_8x14);
+    u8g2.drawStr(13, cursor_y+16, climbRate);
+    u8g2.setDrawColor(1);
+    cursor_y += 18;
+
+    // Altitude(s)
+    u8g2.setFont(leaf_8x14);
+    u8g2.drawStr(16, cursor_y+16, altitude);
+    cursor_y += 16;
+
+    // Line divider
+    u8g2.drawLine(14, cursor_y+2, 64, cursor_y+2);
+    cursor_y += 2;
+
+    // Clock
+    u8g2.setFont(leaf_6x12);
+    u8g2.drawStr(18, cursor_y+14, clockTime);
+    cursor_y +=15;
+
+    // Timer 
+    uint8_t timer_x = 14;
+    uint8_t timer_y = cursor_y;
+    uint8_t timer_w = 50;
+    uint8_t timer_h = 15;
+    u8g2.drawBox(timer_x, timer_y, timer_w, timer_h);
+    u8g2.setDrawColor(0);    
+    //u8g2.drawPixel(timer_x, timer_y);
+    //u8g2.drawPixel(timer_x, timer_y+timer_h-1);
+    //u8g2.drawPixel(timer_x+timer_w-1, timer_y);
+    //u8g2.drawPixel(timer_x+timer_w-1, timer_y+timer_h-1);    
+    u8g2.setFont(leaf_6x12);
+    u8g2.drawStr(timer_x+5, timer_y+timer_h-1, timer);
+    u8g2.setDrawColor(1);
+    cursor_y += 15;
+
+    //***** FIELD BOXES *****//
+
+    uint8_t temp_cursor = cursor_y;     //save cursor position for next column
+
+    // Time to Waypoint
+    u8g2.setFont(leaf_5h);    
+    cursor_y += 6;
+    u8g2.drawStr(1, cursor_y, "TIME>%");    
+    u8g2.setFont(leaf_6x12);
+    cursor_y +=13;
+    u8g2.drawStr(1, cursor_y, timeToWypt);
+
+    cursor_y = temp_cursor;
+
+    // Dist to Waypoint
+    u8g2.setFont(leaf_5h);
+    cursor_y += 6;
+    u8g2.drawStr(35, cursor_y, "KM>&");
+    //u8g2.drawStr(35, 138, "KM>%");
+    u8g2.setFont(leaf_6x12);
+    cursor_y += 13;
+    u8g2.drawStr(38, cursor_y, distToWypt);
+
+    // column divider
+    u8g2.drawLine(33, temp_cursor, 33, cursor_y);
+
+    // divider line
+    cursor_y += 1;
+    u8g2.drawLine(1, cursor_y, 64, cursor_y);
+    cursor_y += 1;
+
+    temp_cursor = cursor_y;             //save cursor position for next column
+
+    // Glide over ground now
+    u8g2.setFont(leaf_5h);
+    cursor_y += 6;
+    u8g2.drawStr(1, cursor_y, "`GLIDE");
+    u8g2.setFont(leaf_6x12);
+    cursor_y += 13;
+    u8g2.drawStr(4, cursor_y, glide);
+
+    cursor_y = temp_cursor;
+
+    // Glide to waypoint
+    u8g2.setFont(leaf_5h);
+    cursor_y += 6;
+    u8g2.drawStr(35, cursor_y, "`WAYPT");
+    u8g2.setFont(leaf_6x12);
+    cursor_y += 13;
+    u8g2.drawStr(38, cursor_y, glideToWypt);
+
+    // column divider
+    u8g2.drawLine(33, temp_cursor, 33, cursor_y);
+
+    // divider line
+    cursor_y += 1;
+    u8g2.drawLine(1, cursor_y, 64, cursor_y);
+    cursor_y += 1;
+
+
+
+    // waypoint name and progress bar
+    u8g2.drawFrame(1, cursor_y-1, 63, 4);
+    u8g2.drawBox(2, 178, 27, 2);  // 3rd argument is filled width from left (% of 64 pixels)
+    u8g2.setFont(u8g2_font_7x14B_tr);
+    u8g2.drawStr(1, cursor_y+11, waypoint);
+
+    //icons
+    u8g2.setFont(leaf_icons);
+    u8g2.drawStr(1,192,"6");
+    u8g2.drawStr()
+
+
+
+  } while ( u8g2.nextPage() ); 
+
+}
+
+void display_drawTrianglePointer(uint16_t x, uint16_t y, float angle, uint16_t radius) {    
+    if (angle > 2 * PI) angle = 0;
+
+    int16_t wind_triangle_tip_len = radius-1;  // pixels from center for point
+    int16_t wind_triangle_tail_len = radius-1;  // pixels from center for the tails
+    float wind_triangle_tail_angle = 0.65;  // pixels tail width (half-width)
+    /*
+    u8g2.setDrawColor(0);
+    u8g2.drawDisc(wind_triangle_center_x, wind_triangle_center_y, wind_triangle_radius);
+    u8g2.setDrawColor(1);
+    u8g2.drawCircle(wind_triangle_center_x, wind_triangle_center_y, wind_triangle_radius);        
+    */
+    uint16_t tip_xprime = x + sin(angle + PI)*wind_triangle_tip_len;
+    uint16_t tip_yprime = y - cos(angle + PI)*wind_triangle_tip_len;
+    uint16_t tail_1_xprime = x + sin(angle + wind_triangle_tail_angle)*wind_triangle_tail_len;
+    uint16_t tail_1_yprime = y - cos(angle + wind_triangle_tail_angle)*wind_triangle_tail_len;
+    uint16_t tail_2_xprime = x + sin(angle - wind_triangle_tail_angle)*wind_triangle_tail_len;
+    uint16_t tail_2_yprime = y - cos(angle - wind_triangle_tail_angle)*wind_triangle_tail_len;
+    uint16_t tail_mid_xprime = x + sin(angle)*wind_triangle_tail_len/2;
+    uint16_t tail_mid_yprime = y - cos(angle)*wind_triangle_tail_len/2;
+    
+    u8g2.drawTriangle(tip_xprime, tip_yprime, tail_1_xprime, tail_1_yprime, tail_mid_xprime, tail_mid_yprime);
+    u8g2.drawTriangle(tip_xprime, tip_yprime, tail_2_xprime, tail_2_yprime, tail_mid_xprime, tail_mid_yprime);
+    u8g2.drawLine(tip_xprime, tip_yprime, tail_1_xprime, tail_1_yprime);
+    u8g2.drawLine(tail_mid_xprime, tail_mid_yprime, tail_2_xprime, tail_2_yprime);
+}
+
 
 
 // Draw polygons 
