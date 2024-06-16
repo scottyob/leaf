@@ -220,7 +220,7 @@ void loop() {
       if (display_page > 0) display_page--;
     } else if (button == RIGHT || button == CENTER || button == DOWN) {
       display_page++;
-      if (display_page > 7) display_page = 7;
+      if (display_page > 12) display_page = 12;
     }
     display_do_tracker = 1;
     Serial.print("Going to page: ");
@@ -236,10 +236,11 @@ void loop() {
       //display_test_bat_icon();      
       //display_test();      
       //power_test();
-      if (display_do_tracker) {
-        SDcard_test();
+      //if (display_do_tracker) {
+        display_test_real_3();
+        //SDcard_test();
         display_do_tracker = 0;
-      }
+      //}
       break;
     case 2:
       speaker_TEST();
@@ -257,6 +258,15 @@ void loop() {
       display_test_big(2);      
       break;
     case 7:
+      display_test_big(3);      
+      break;
+    case 8:
+      display_test_big(4);      
+      break;
+    case 9:
+      display_test_big(5);      
+      break;
+    case 12:
       speaker_playSound(fx_exit);
       delay(2000);
       power_turn_off();
