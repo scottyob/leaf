@@ -454,6 +454,9 @@ char speed[] = "132";
 char windSpeed[] = "28";
 char turn = 1;
 uint16_t windDir = 235;
+int16_t varioBar_climbRate = -100;     // cm/s  (i.e. m/s * 100)
+int8_t climbChange = 2;
+
 
 char altitude[] = "23,857\"";
 char altAbvLaunch[] = "4,169";
@@ -862,17 +865,118 @@ void display_test_real_3() {
     u8g2.setFont(leaf_5x8);
     u8g2.drawStr(53, 19, windSpeed);
 
-    // vario bar    
-    u8g2.drawFrame(1, 13, 13, 110);
+
+
+
+
+    // vario bar ******************************************************          
+    int16_t varioBar_climbRateMax = 500;   // this is the bar height, but because we can fill then empty the bar, we can show twice this climb value
+    int16_t varioBar_climbRateMin = -500;  // again, bar height, so we can show twice this sink value
+    
+    uint8_t varioBarFrame_top = 13;
+    uint8_t varioBarFrame_length = 111;
+    uint8_t varioBarFrame_width = 14;
+    uint8_t varioBarFrame_mid = varioBarFrame_top+varioBarFrame_length/2;
+    
+    u8g2.drawFrame(0, varioBarFrame_top, varioBarFrame_width, varioBarFrame_length);
     //u8g2.setDrawColor(0);       //only needed if nav cricle overlaps vario bar
     //u8g2.drawLine(12, 15, 12, 58);
-    u8g2.setDrawColor(1); 
+    //u8g2.setDrawColor(1); 
+
+
+    // Fill varioBar
+    uint8_t varioBarFill_top = varioBarFrame_top+1;    
+    uint8_t varioBarFill_bot = varioBarFrame_top+varioBarFrame_length-2;
+    uint8_t varioBarFill_top_length = varioBarFrame_mid - varioBarFill_top+1;
+    uint8_t varioBarFill_bot_length = varioBarFill_bot-varioBarFrame_mid+1;
+
+
+    int16_t varioBarFill_pixels = 0;
+    uint8_t varioBarFill_start = 1;
+    uint8_t varioBarFill_end = 1;
+
+    if (varioBar_climbRate > 2 * varioBar_climbRateMax || varioBar_climbRate < 2 * varioBar_climbRateMin) {
+      // do nothing, the bar is maxxed out which looks empty
+      
+    } else if (varioBar_climbRate > varioBar_climbRateMax) {      
+      // fill top half inverted
+      varioBarFill_pixels = varioBarFill_top_length * (varioBar_climbRate - varioBar_climbRateMax) / varioBar_climbRateMax;
+      varioBarFill_start = varioBarFill_top;
+      varioBarFill_end   = varioBarFrame_mid - varioBarFill_pixels;
+
+    } else if (varioBar_climbRate < varioBar_climbRateMin) {      
+      // fill bottom half inverted
+      varioBarFill_pixels = varioBarFill_bot_length * (varioBar_climbRate - varioBar_climbRateMin) / varioBar_climbRateMin;
+      varioBarFill_start = varioBarFrame_mid + varioBarFill_pixels;
+      varioBarFill_end   = varioBarFill_bot;      
+      
+    } else if (varioBar_climbRate < 0) {      
+      // fill bottom half positive
+      varioBarFill_pixels = varioBarFill_bot_length * (varioBar_climbRate) / varioBar_climbRateMin;      
+      varioBarFill_start = varioBarFrame_mid;
+      varioBarFill_end   = varioBarFrame_mid + varioBarFill_pixels;      
+      
+    } else {      
+      // fill top half positive
+      varioBarFill_pixels = varioBarFill_top_length * (varioBar_climbRate) / varioBar_climbRateMax;      
+      varioBarFill_start = varioBarFrame_mid - varioBarFill_pixels;      
+      varioBarFill_end   = varioBarFrame_mid;
+    }
+
+    u8g2.drawBox(1, varioBarFill_start, 12, varioBarFill_end - varioBarFill_start + 1);
+
+    if  (varioBar_climbRate > 1100) {
+      climbChange = -2;
+      varioBar_climbRate = 1090;
+    } else if (varioBar_climbRate < -1100) {
+      climbChange = 2;
+      varioBar_climbRate = -1090;
+    }
+
+    varioBar_climbRate += climbChange;
+
+
+
+
+
+
+    
+    
+
+
+
+    // Tick marks on varioBar 
+    uint8_t tickSpacing = varioBarFill_top_length / 5;  // start with top half tick spacing
+    uint8_t line_y = varioBarFrame_top;
+
+    for (int i = 1; i <= 9; i ++) {
+      if (i == 5) {
+        // at midpoint, switch to bottom half 
+        line_y = varioBarFrame_mid;
+        tickSpacing = varioBarFill_bot_length / 5;
+      } else {
+        // draw a tick-mark line
+        line_y += tickSpacing;
+        if (line_y >= varioBarFill_start && line_y <= varioBarFill_end) {
+          u8g2.setDrawColor(0);
+        } else {
+          u8g2.setDrawColor(1);
+        }
+        u8g2.drawLine(1, line_y, 12, line_y);
+      }
+    }
+    u8g2.setDrawColor(1);    
+
+
+
+    // Data Fields *****************************
 
     uint8_t cursor_y = 57;
 
     // Climb    
+    u8g2.setDrawColor(1);  
     u8g2.drawBox(14, cursor_y, 50, 18);
-    u8g2.drawTriangle(8, cursor_y+8, 13, cursor_y+3, 13, cursor_y+13);
+    u8g2.drawTriangle(8, cursor_y+11, 13, cursor_y+6, 13, cursor_y+16);
     u8g2.setDrawColor(0);
     u8g2.setFont(leaf_8x14);
     u8g2.drawStr(13, cursor_y+16, climbRate);
@@ -897,7 +1001,7 @@ void display_test_real_3() {
     uint8_t timer_x = 14;
     uint8_t timer_y = cursor_y;
     uint8_t timer_w = 50;
-    uint8_t timer_h = 15;
+    uint8_t timer_h = 16;
     u8g2.drawBox(timer_x, timer_y, timer_w, timer_h);
     u8g2.setDrawColor(0);    
     //u8g2.drawPixel(timer_x, timer_y);
@@ -905,11 +1009,13 @@ void display_test_real_3() {
     //u8g2.drawPixel(timer_x+timer_w-1, timer_y);
     //u8g2.drawPixel(timer_x+timer_w-1, timer_y+timer_h-1);    
     u8g2.setFont(leaf_6x12);
-    u8g2.drawStr(timer_x+5, timer_y+timer_h-1, timer);
+    u8g2.drawStr(timer_x+5, timer_y+timer_h-2, timer);
     u8g2.setDrawColor(1);
-    cursor_y += 15;
+    cursor_y += 16;
 
-    //***** FIELD BOXES *****//
+
+
+    //***** FIELD BOXES *****// *****************************************************
 
     uint8_t temp_cursor = cursor_y;     //save cursor position for next column
 
@@ -926,7 +1032,7 @@ void display_test_real_3() {
     // Dist to Waypoint
     u8g2.setFont(leaf_5h);
     cursor_y += 6;
-    u8g2.drawStr(35, cursor_y, "KM>&");
+    u8g2.drawStr(36, cursor_y, "KM>&");
     //u8g2.drawStr(35, 138, "KM>%");
     u8g2.setFont(leaf_6x12);
     cursor_y += 13;
@@ -937,7 +1043,7 @@ void display_test_real_3() {
 
     // divider line
     cursor_y += 1;
-    u8g2.drawLine(1, cursor_y, 64, cursor_y);
+    u8g2.drawLine(0, cursor_y, 63, cursor_y);
     cursor_y += 1;
 
     temp_cursor = cursor_y;             //save cursor position for next column
@@ -955,7 +1061,7 @@ void display_test_real_3() {
     // Glide to waypoint
     u8g2.setFont(leaf_5h);
     cursor_y += 6;
-    u8g2.drawStr(35, cursor_y, "`WAYPT");
+    u8g2.drawStr(36, cursor_y, "`WAYPT");
     u8g2.setFont(leaf_6x12);
     cursor_y += 13;
     u8g2.drawStr(38, cursor_y, glideToWypt);
@@ -965,21 +1071,31 @@ void display_test_real_3() {
 
     // divider line
     cursor_y += 1;
-    u8g2.drawLine(1, cursor_y, 64, cursor_y);
-    cursor_y += 1;
+    //u8g2.drawLine(1, cursor_y, 64, cursor_y);
+    //cursor_y += 1;
 
+    // progress bar
+    u8g2.drawFrame(0, cursor_y, 64, 4);
+    u8g2.drawBox(1, cursor_y+1, 27, 2);  // 3rd argument is filled width from left (% of 64 pixels)
+    cursor_y += 4;
 
-
-    // waypoint name and progress bar
-    u8g2.drawFrame(1, cursor_y-1, 63, 4);
-    u8g2.drawBox(2, 178, 27, 2);  // 3rd argument is filled width from left (% of 64 pixels)
+    // waypoint name
     u8g2.setFont(u8g2_font_7x14B_tr);
-    u8g2.drawStr(1, cursor_y+11, waypoint);
+    cursor_y += 11;
+    u8g2.drawStr(0, cursor_y, waypoint);
+    cursor_y +=1;
+    
+
 
     //icons
     u8g2.setFont(leaf_icons);
-    u8g2.drawStr(1,192,"6");
-    u8g2.drawStr()
+    u8g2.drawStr(0,192,"6");      // Battery
+    u8g2.drawStr(14,192, "<");    // SD card
+    u8g2.drawStr(24,192, "%");    // bluetooth
+    u8g2.drawStr(31,192, "'");    // wifi
+    u8g2.drawStr(42,192, "+");    // gps
+    u8g2.drawStr(53,192, "#");    // Menu
+    
 
 
 
