@@ -62,4 +62,12 @@ void baro_flightLog(void);
 
 void baro_test(void);
 
+
+
+int32_t baro_getAlt (void);
+int16_t baro_getClimbRate (void);
+int16_t baro_getVarioBar (void);
+
+void baro_updateFakeNumbers(void);
+
 #endif

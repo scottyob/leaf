@@ -47,6 +47,15 @@ void gps_enterBackupMode(void);
 void gps_softReset(void);
 void gps_hardReset(void);
 
+void gps_updateFakeNumbers(void);
+
+float gps_getAltMeters(void);
+float gps_getSpeed_kph(void);
+float gps_getSpeed_mph(void);
+float gps_getCourseDeg(void);
+const char *gps_getCourseCardinal(void);
+uint8_t gps_getTurn();
+float gps_getRelativeBearing(void);
 
 
 

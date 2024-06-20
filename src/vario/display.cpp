@@ -8,6 +8,10 @@
 #include "display_tests.h"
 #include "Leaf_SPI.h"
 
+#include "gps.h"
+#include "baro.h"
+#include "power.h"
+
 #define GLCD_RS LCD_RS
 #define GLCD_RESET LCD_RESET
 
@@ -35,7 +39,7 @@ void display_init(void) {
   u8g2.begin();
   u8g2.setContrast(80);
 
-pinMode(LCD_BACKLIGHT, OUTPUT);
+  pinMode(LCD_BACKLIGHT, OUTPUT);
 
 }
 
@@ -43,6 +47,7 @@ pinMode(LCD_BACKLIGHT, OUTPUT);
 
 
 // Initialize the GRAPHIC LCD
+// used for writing block data to test bmp display images ... won't save in final version
 void GLCD_init(void)
 {
   pinMode(GLCD_RS, OUTPUT);
@@ -455,7 +460,7 @@ char windSpeed[] = "28";
 char turn = 1;
 uint16_t windDir = 235;
 int16_t varioBar_climbRate = -100;     // cm/s  (i.e. m/s * 100)
-int8_t climbChange = 2;
+int8_t climbChange = 10;
 
 
 char altitude[] = "23,857\"";
@@ -475,312 +480,331 @@ char timer[] = "1:23:45";
 float dirToWypt = -.25;
 
 
+
 /*
-void display_test_real() {
-  u8g2.firstPage();
-  do {
-    
 
-    // heading and turn
-    u8g2.setFont(leaf_7x10);
-    //if (turn == 0) string_heading[0] = '<';
-    //if (turn == 1) string_heading[4] = '>';    
-    string_heading[0] = '<';
-    string_heading[4] = '>';    
-    u8g2.drawStr(2, 10, string_heading);
-        
-    // speed
-    u8g2.setFont(leaf_6x12);
-    u8g2.drawStr(44, 12, speed);
-    u8g2.setFont(u8g2_font_tinyunicode_tf);
-    u8g2.drawStr(49, 18, "MPH");
+float gps_getSpeed_kph() { return gps.speed.kmph(); }
+float gps_getSpeed_mph() { return gps.speed.mph(); }
+float gps_getCourseDeg() { return gps.course.deg(); }
+float gps_getAltMeters() { return gps.altitude.meters(); }
 
-    // Nav Circles
-    u8g2.setDrawColor(1);
-    u8g2.drawDisc(25, 35, 24);  // Main Circle
-    u8g2.drawDisc(55, 29, 8);   // Wind Circle
-    u8g2.setDrawColor(0);
-    u8g2.drawDisc(25, 35, 22);  // center empty
-    display_drawTrianglePointer(55, 29, wind_angle, 7);
-    u8g2.setDrawColor(1);
-    u8g2.drawStr(51, 46, windSpeed);
-    
-    // waypoint name and progress bar
-    u8g2.setDrawColor(0);
-    u8g2.drawBox(1,49,63, 17);
-    u8g2.setDrawColor(1);
-    u8g2.drawFrame(1, 49, 63, 4);
-    u8g2.drawBox(1, 49, 27, 4);  // 3rd argument is filled width from left (% of 64 pixels)
-    u8g2.setFont(u8g2_font_7x14B_tr);
-    u8g2.drawStr(1, 64, waypoint);
-
-    // field dividers
-    u8g2.drawLine(1, 65, 64, 65);
-    u8g2.drawLine(1, 89, 64, 89);
-    u8g2.drawLine(1, 113, 64, 113);
-    u8g2.drawLine(33, 65, 33, 113);
-
-
-    // vario bar
-    u8g2.drawLine(52, 114, 52, 192);
-    // u8g2.drawFrame(54, 64, 11, 116);
-    u8g2.drawBox(53, 164, 12, 20);
-
-    // Time to Waypoint
-    u8g2.setFont(leaf_5h);
-    //u8g2.drawStr(4, 72, ">TIME");
-    u8g2.drawStr(4, 72, "M:S>&");
-    u8g2.setFont(leaf_6x12);
-    u8g2.drawStr(1, 87, timeToWypt);
-
-    // Dist to Waypoint
-    u8g2.setFont(leaf_5h);
-    //u8g2.drawStr(35, 72, ">KM");
-    u8g2.drawStr(35, 72, "KM>%");
-    u8g2.setFont(leaf_8x14);
-    u8g2.drawStr(35, 88, distToWypt);
-
-    // Glide over ground now
-    u8g2.setFont(leaf_5h);
-    u8g2.drawStr(4, 96, "`GLIDE");
-    u8g2.setFont(leaf_8x14);
-    u8g2.drawStr(1, 112, glide);
-
-    // Glide to waypoint
-    u8g2.setFont(leaf_5h);
-    u8g2.drawStr(35, 96, "`WAYPT");
-    u8g2.setFont(leaf_8x14);
-    u8g2.drawStr(35, 112, glideToWypt);
-
-
-    // Timer 
-    u8g2.drawBox(7, 116, 42, 16);
-    u8g2.setDrawColor(0);
-    u8g2.setFont(leaf_6x12);
-    u8g2.drawStr(14, 130, timer);
-    u8g2.setDrawColor(1);
-
-    // Clock
-    u8g2.setFont(leaf_6x12);
-    u8g2.drawStr(5, 147, clockTime);
-
-    // Climb
-    u8g2.drawBox(1, 153, 51, 18);
-    u8g2.setDrawColor(0);
-    u8g2.setFont(leaf_8x14);
-    u8g2.drawStr(2, 169, climbRate);
-    u8g2.setDrawColor(1);
-    
-    // Altitude(s)
-    u8g2.setFont(leaf_5h);
-    u8g2.drawStr(4, 177, "ALTITUDE");
-    u8g2.setFont(leaf_8x14);
-    u8g2.drawStr(2, 192, altitude);
-
-
-  } while ( u8g2.nextPage() );  
-}
 */
 
-/*
 
-void display_test_real_2() {
 
+uint8_t display_speed(uint8_t cursor_x, uint8_t cursor_y) {    
+  uint16_t displaySpeed = gps_getSpeed_mph() + 0.5;   // add half so we effectively round when truncating from float to int.
+  if (displaySpeed >= 1000) displaySpeed = 999;       // cap display value at 3 digits
+
+  if (displaySpeed < 10) cursor_x += 6; // leave a space if only 1 digit
+  u8g2.setCursor(cursor_x, cursor_y);
+
+  u8g2.setFont(leaf_6x12);
+  u8g2.print(displaySpeed);
+  if (displaySpeed < 100) cursor_x = 13;
+  else cursor_x = 19;
+  return cursor_x;    // keep track of whether we printed a 3 digit or 2 digit speed value
+}
+
+void display_headingTurn(uint8_t cursor_x, uint8_t cursor_y) {
+  u8g2.setCursor(cursor_x, cursor_y);
+  u8g2.setFont(leaf_7x10);
+
+  //Left turn arrow if needed
+  char displayTurn = '=' + gps_getTurn();   // in the 7x10 font, '=' is the "no turn" center state; 3 chars to each side are incresing amounts of turn arrow
+  if (displayTurn < '=') u8g2.print(displayTurn);  
+
+  // Cardinal heading direction  
+  const char *displayHeadingCardinal = gps_getCourseCardinal();  
+  if      (strlen(displayHeadingCardinal) == 1) u8g2.setCursor(cursor_x + 16, cursor_y);
+  else if (strlen(displayHeadingCardinal) == 2) u8g2.setCursor(cursor_x + 12, cursor_y);
+  else                                          u8g2.setCursor(cursor_x +  8, cursor_y);
+
+  u8g2.print(displayHeadingCardinal);
+
+  //Right turn arrow if needed
+  u8g2.setCursor(cursor_x + 32, cursor_y);
+  if (displayTurn > '=') u8g2.print(displayTurn);  
+}
+
+
+void display_alt(uint8_t cursor_x, uint8_t cursor_y, const uint8_t *font, int32_t displayAlt) {      
+  if (/*ft unit preference*/ false) displayAlt = displayAlt *100 / 3048; // convert cm to ft
+  else displayAlt /= 100;    //convert from cm to m
+
+  u8g2.setCursor(cursor_x, cursor_y);  
+  u8g2.setFont(font);
+  uint8_t fontWidth = 9; // char width plus space  
+  if (font == leaf_8x14) fontWidth = 9;
+  else if (font == leaf_6x12) fontWidth = 7;
+  else if (font == leaf_5h) fontWidth = 6;  
+  
+  if (displayAlt < 0) {
+    u8g2.print('-');
+    displayAlt *= -1;
+    if (displayAlt > 9999) displayAlt = 9999;        // max string size if negative
+  } else if (displayAlt > 99999) displayAlt = 99999; // max string size if positive
+
+  uint8_t digits = 0;
+  bool keepZeros = 0;
+
+  // Thousands piece
+  if (displayAlt > 999) {    
+    digits = displayAlt/1000;
+    displayAlt -= (1000 * digits); // keep the last 3 digits
+    keepZeros = 1;                            // keep leading zeros for rest of digits since we printed something in thousands place
+    if (digits < 10) u8g2.setCursor(cursor_x + fontWidth, cursor_y);
+    u8g2.print(digits);    
+    u8g2.print(',');    
+  }
+  // rest of the number
+  u8g2.setCursor(cursor_x += (2*fontWidth+3), cursor_y);    // the +3 is for the comma  
+  if (keepZeros) {     
+    for (int i = 100; i > 0; i /= 10) {
+      digits = displayAlt/i;
+      displayAlt -= (digits * i);
+      u8g2.print(digits);
+      u8g2.setCursor(cursor_x += fontWidth, cursor_y);
+    }
+  } else { // no leading zeros for altitudes less than 1000
+    if (displayAlt < 100) cursor_x += fontWidth;
+    if (displayAlt <  10) cursor_x += fontWidth;
+    u8g2.setCursor(cursor_x, cursor_y);
+    u8g2.print(displayAlt);
+  }      
+}
+
+
+
+void display_varioBar(uint8_t varioBarFrame_top, uint8_t varioBarFrame_length, uint8_t varioBarFrame_width, int16_t displayBarClimbRate) {
+  int16_t varioBar_climbRateMax = 500;   // this is the bar height, but because we can fill then empty the bar, we can show twice this climb value
+  int16_t varioBar_climbRateMin = -500;  // again, bar height, so we can show twice this sink value
+
+  uint8_t varioBarFrame_mid = varioBarFrame_top+varioBarFrame_length/2;
+  
+  u8g2.drawFrame(0, varioBarFrame_top, varioBarFrame_width, varioBarFrame_length);
+  
+  //u8g2.setDrawColor(0);       
+  //u8g2.drawBox(1, varioBarFrame_top+1, varioBarFrame_length-2, varioBarFrame_width-2);    //only needed if varioBar overlaps something else
+  //u8g2.setDrawColor(1); 
+
+  // Fill varioBar
+  uint8_t varioBarFill_top = varioBarFrame_top+1;    
+  uint8_t varioBarFill_bot = varioBarFrame_top+varioBarFrame_length-2;
+  uint8_t varioBarFill_top_length = varioBarFrame_mid - varioBarFill_top+1;
+  uint8_t varioBarFill_bot_length = varioBarFill_bot-varioBarFrame_mid+1;
+
+  int16_t varioBarFill_pixels = 0;
+  uint8_t varioBarFill_start = 1;
+  uint8_t varioBarFill_end = 1;
+
+  if (displayBarClimbRate > 2 * varioBar_climbRateMax || displayBarClimbRate < 2 * varioBar_climbRateMin) {
+    // do nothing, the bar is maxxed out which looks empty
+    
+  } else if (displayBarClimbRate > varioBar_climbRateMax) {      
+    // fill top half inverted
+    varioBarFill_pixels = varioBarFill_top_length * (displayBarClimbRate - varioBar_climbRateMax) / varioBar_climbRateMax;
+    varioBarFill_start = varioBarFill_top;
+    varioBarFill_end   = varioBarFrame_mid - varioBarFill_pixels;
+
+  } else if (displayBarClimbRate < varioBar_climbRateMin) {      
+    // fill bottom half inverted
+    varioBarFill_pixels = varioBarFill_bot_length * (displayBarClimbRate - varioBar_climbRateMin) / varioBar_climbRateMin;
+    varioBarFill_start = varioBarFrame_mid + varioBarFill_pixels;
+    varioBarFill_end   = varioBarFill_bot;      
+    
+  } else if (displayBarClimbRate < 0) {      
+    // fill bottom half positive
+    varioBarFill_pixels = varioBarFill_bot_length * (displayBarClimbRate) / varioBar_climbRateMin;      
+    varioBarFill_start = varioBarFrame_mid;
+    varioBarFill_end   = varioBarFrame_mid + varioBarFill_pixels;      
+    
+  } else {      
+    // fill top half positive
+    varioBarFill_pixels = varioBarFill_top_length * (displayBarClimbRate) / varioBar_climbRateMax;      
+    varioBarFill_start = varioBarFrame_mid - varioBarFill_pixels;      
+    varioBarFill_end   = varioBarFrame_mid;
+  }
+
+  u8g2.drawBox(1, varioBarFill_start, 12, varioBarFill_end - varioBarFill_start + 1);
+  
+  // Tick marks on varioBar 
+  uint8_t tickSpacing = varioBarFill_top_length / 5;  // start with top half tick spacing
+  uint8_t line_y = varioBarFrame_top;
+
+  for (int i = 1; i <= 9; i ++) {
+    if (i == 5) {
+      // at midpoint, switch to bottom half 
+      line_y = varioBarFrame_mid;
+      tickSpacing = varioBarFill_bot_length / 5;
+    } else {
+      // draw a tick-mark line
+      line_y += tickSpacing;
+      if (line_y >= varioBarFill_start && line_y <= varioBarFill_end) {
+        u8g2.setDrawColor(0);
+      } else {
+        u8g2.setDrawColor(1);
+      }
+      u8g2.drawLine(1, line_y, 6, line_y);
+    }
+  }
+}
+
+void display_climbRatePointerBox(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t triSize, int16_t displayClimbRate) {
+  bool climbInFPM = false;
+  float climbInMS = 0;
+  u8g2.setDrawColor(1);  
+  u8g2.drawBox(x, y, w, h);
+  u8g2.drawTriangle(x-triSize, y+h/2, x-1, y+h/2-triSize, x-1, y+h/2+triSize);
+    
+  u8g2.setCursor(x, y += 16);   //scoot cursor down for bottom justified font
+  u8g2.setFont(leaf_8x14);
+  uint8_t fontWidth = 9;        // character size plus space
+  u8g2.setDrawColor(0);
+
+  if (displayClimbRate > 0) u8g2.print('+');
+  else if (displayClimbRate < 0) {
+    u8g2.print('-');
+    displayClimbRate *= -1; // keep positive part
+  }
+  x += fontWidth;
+
+  if (climbInFPM) {
+    displayClimbRate = displayClimbRate * 197 / 100;    // convert from cm/s to fpm
+    if (displayClimbRate < 1000) x += fontWidth;
+    if (displayClimbRate < 100 ) x += fontWidth;
+    if (displayClimbRate < 10  ) x += fontWidth;
+    u8g2.setCursor(x, y);
+    u8g2.print(displayClimbRate);
+  } else {
+    displayClimbRate = (displayClimbRate + 5) / 10;     // lose one decimal place and round off in the process
+    climbInMS = (float)displayClimbRate/10;             // convert to float for ease of printing with the decimal in place
+    if (climbInMS < 10  ) x += fontWidth;
+    u8g2.setCursor(x, y);
+    u8g2.print(climbInMS, 1);
+  }
+  u8g2.setDrawColor(1);   // always set back to 1 if we've been using 0, just in case the next draw function forgets  
+}
+
+void display_altAboveLaunch(uint8_t x, uint8_t y, int32_t aboveLaunchAlt) {
+  u8g2.setCursor(x, y - 16);
+  u8g2.setFont(leaf_5h);
+  u8g2.print("Above Launch");
+  display_alt(x, y, leaf_6x12, aboveLaunchAlt);
+}
+
+
+void display_battIcon(uint8_t x, uint8_t y) {
+  /*  
+      / batt charging (not full)
+      0 batt at 0%
+      1 batt at 10%
+      --etc--
+      9 batt at 90%
+      : batt at 100%
+      ; batt charging (full)
+  */
+  uint8_t battPercent = power_getBattLevel(0);
+  uint16_t battMV = power_getBattLevel(1);
+  uint16_t battADC = power_getBattLevel(2);
+  char battIcon = '0' + (battPercent+5)/10;
+  if (power_getBattCharging()) {
+    if (battPercent >= 100) battIcon = ';';
+    else battIcon = '/';
+  }
+
+
+  u8g2.setCursor(x, y);
+  u8g2.setFont(leaf_icons);
+
+  
+  
+  
+  u8g2.print(battIcon);
+  
+  Serial.print("percent: ");
+  Serial.print(battPercent);
+  Serial.print(" icon: ");
+  Serial.print((char)battIcon);
+  Serial.print(" milivolts: ");
+  Serial.print(battMV);
+  Serial.print(" ADC: ");
+  Serial.println(battADC);
+
+  u8g2.setFont(leaf_6x12);
+  u8g2.setCursor(x, y+=15);
+  u8g2.print(battPercent);
+  u8g2.setCursor(x, y+=15);
+  u8g2.print(battMV);
+  u8g2.setCursor(x, y+=15);
+  u8g2.print(battADC);
+}
+
+void display_update_temp_vars() {
   dirToWypt += .005;
   wind_angle -= .0075;
-  delay(10);
+
+  varioBar_climbRate += climbChange;  
+  if  (varioBar_climbRate > 1100) {
+    climbChange *= -1;
+    varioBar_climbRate = 1090;
+  } else if (varioBar_climbRate < -1100) {
+    climbChange *= -1;
+    varioBar_climbRate = -1090;
+  }
+}
+
+/*********************************************************************************
+**    NAV PAGE        ************************************************************
+*********************************************************************************/
+void display_nav_page() {
+  baro_updateFakeNumbers();
+  gps_updateFakeNumbers();
+
   u8g2.firstPage();
-  do {
-    
-
-
-        
-    // speed
-    u8g2.setFont(leaf_6x12);
-    u8g2.drawStr(1, 12, speed);
-    u8g2.setFont(leaf_5h);
-    u8g2.drawStr(15, 18, "MPH");
-
-    // heading and turn
-    u8g2.setFont(leaf_7x10);
-    //if (turn == 0) string_heading[0] = '<';
-    //if (turn == 1) string_heading[4] = '>';    
-    string_heading[0] = '<';
-    string_heading[4] = '>';    
-    u8g2.drawStr(23, 10, string_heading);
-
-    // Nav Circles
-    uint8_t nav_x = 38;
-    uint8_t nav_y = 42;
-    uint8_t nav_r = 26;
-    uint8_t wind_r = 8;
-
-    u8g2.setDrawColor(1);
-    u8g2.drawDisc(nav_x, nav_y, nav_r);  // Main Circle
-    u8g2.setDrawColor(0);
-    u8g2.drawDisc(nav_x, nav_y, nav_r-2);  // center empty
-    u8g2.setDrawColor(1);
-    u8g2.drawDisc(nav_x, nav_y, wind_r);   // Wind Circle
-    
-    // Pointer (Travel)
-    uint8_t pointer_w = 5;              // half width of arrowhead
-    uint8_t pointer_h = 11;             // full height of arrowhead
-    uint8_t pointer_x = nav_x;
-    uint8_t pointer_y = nav_y-nav_r-4;    //tip of arrow
-    u8g2.setDrawColor(0);
-    u8g2.drawBox(nav_x-(pointer_w)/2, nav_y-nav_r, pointer_w, 2);
-    u8g2.setDrawColor(1);
-    // arrow point    
-    u8g2.drawLine(pointer_x-pointer_w, pointer_y+pointer_h, pointer_x, pointer_y);
-    u8g2.drawLine(pointer_x+pointer_w, pointer_y+pointer_h, pointer_x, pointer_y);
-    u8g2.drawLine(pointer_x-pointer_w-1, pointer_y+pointer_h, pointer_x-1, pointer_y);
-    u8g2.drawLine(pointer_x+pointer_w+1, pointer_y+pointer_h, pointer_x+1, pointer_y);
-    //arrow flats
-    u8g2.drawLine(pointer_x-pointer_w, pointer_y+pointer_h, pointer_x-pointer_w/2, pointer_y+pointer_h);
-    u8g2.drawLine(pointer_x+pointer_w, pointer_y+pointer_h, pointer_x+pointer_w/2, pointer_y+pointer_h);
-    //arrow shaft
-    u8g2.drawLine(pointer_x-pointer_w/2, pointer_y+pointer_h, pointer_x-pointer_w/2, pointer_y+pointer_h*2);
-    u8g2.drawLine(pointer_x+pointer_w/2, pointer_y+pointer_h, pointer_x+pointer_w/2, pointer_y+pointer_h*2);
-
-    // Waypoint Pointer
-    uint8_t waypoint_tip_r = 25;
-    uint8_t waypoint_shaft_r = 23;    
-    uint8_t waypoint_tail_r = 20;
-    float waypoint_arrow_angle = 0.205;
-    
-    int8_t waypoint_tip_x = sin(dirToWypt)*waypoint_tip_r+nav_x;
-    int8_t waypoint_tip_y = nav_y-cos(dirToWypt)*waypoint_tip_r;    
-    int8_t waypoint_shaft_x = sin(dirToWypt)*waypoint_shaft_r+nav_x;
-    int8_t waypoint_shaft_y = nav_y-cos(dirToWypt)*waypoint_shaft_r;    
-
-
-    u8g2.drawLine(nav_x+1, nav_y, waypoint_shaft_x+1, waypoint_shaft_y);
-    u8g2.drawLine(nav_x, nav_y+1, waypoint_shaft_x, waypoint_shaft_y+1);
-    u8g2.drawLine(nav_x, nav_y, waypoint_shaft_x, waypoint_shaft_y);          // the real center line; others are just to fatten it up
-    u8g2.drawLine(nav_x-1, nav_y, waypoint_shaft_x-1, waypoint_shaft_y);
-    u8g2.drawLine(nav_x, nav_y-1, waypoint_shaft_x, waypoint_shaft_y-1);
-
-    int8_t tail_left_x = sin(dirToWypt - waypoint_arrow_angle) * (waypoint_tail_r) + nav_x;
-    int8_t tail_left_y = nav_y - cos(dirToWypt - waypoint_arrow_angle) * (waypoint_tail_r);
-    int8_t tail_right_x = sin(dirToWypt + waypoint_arrow_angle) * (waypoint_tail_r) + nav_x;
-    int8_t tail_right_y = nav_y - cos(dirToWypt + waypoint_arrow_angle) * (waypoint_tail_r);
-
-    u8g2.drawLine(tail_left_x, tail_left_y, waypoint_tip_x, waypoint_tip_y);
-    u8g2.drawLine(tail_right_x, tail_right_y, waypoint_tip_x, waypoint_tip_y);
-    u8g2.drawLine(tail_right_x, tail_right_y, tail_left_x, tail_left_y);
-    u8g2.drawTriangle(tail_left_x, tail_left_y, waypoint_tip_x, waypoint_tip_y, tail_right_x, tail_right_y);
-
-
-
-
-    // Wind Vector
-    u8g2.setDrawColor(0);
-    display_drawTrianglePointer(nav_x, nav_y, wind_angle, 7);
-    u8g2.setDrawColor(1);
-    u8g2.setFont(leaf_5x8);
-    u8g2.drawStr(53, 19, windSpeed);
-
-    // vario bar    
-    u8g2.drawFrame(1, 13, 13, 119);
-    u8g2.setDrawColor(0);   
-    u8g2.drawLine(12, 15, 12, 58);
-    u8g2.setDrawColor(1); 
-
-    // Climb
-    u8g2.drawBox(14, 65, 50, 18);
-    u8g2.drawTriangle(8, 73, 13, 68, 13, 78);
-    u8g2.setDrawColor(0);
-    u8g2.setFont(leaf_8x14);
-    u8g2.drawStr(13, 81, climbRate);
-    u8g2.setDrawColor(1);
-
-    // Altitude(s)
-    u8g2.setFont(leaf_8x14);
-    u8g2.drawStr(16, 99, altitude);
-
-    // Clock
-    u8g2.setFont(leaf_6x12);
-    u8g2.drawStr(18, 115, clockTime);
-
-    // Timer 
-    uint8_t timer_x = 14;
-    uint8_t timer_y = 116;
-    uint8_t timer_w = 50;
-    uint8_t timer_h = 16;
-
-    u8g2.drawBox(timer_x, timer_y, timer_w, timer_h);
-    u8g2.setDrawColor(0);
-    
-    //u8g2.drawPixel(timer_x, timer_y);
-    //u8g2.drawPixel(timer_x, timer_y+timer_h-1);
-    //u8g2.drawPixel(timer_x+timer_w-1, timer_y);
-    //u8g2.drawPixel(timer_x+timer_w-1, timer_y+timer_h-1);
-    
-    u8g2.setFont(leaf_6x12);
-    u8g2.drawStr(timer_x+5, timer_y+timer_h-2, timer);
-    u8g2.setDrawColor(1);
-
-
-
-    // field dividers
-    u8g2.drawLine(14, 101, 64, 101);
-    u8g2.drawLine(1, 131, 64, 131);
-    u8g2.drawLine(1, 154, 64, 154);
-    u8g2.drawLine(1, 177, 64, 177);
-    u8g2.drawLine(33, 132, 33, 176);
-
-
-    // Time to Waypoint
-    u8g2.setFont(leaf_5h);    
-    u8g2.drawStr(4, 138, "M:S>&");
-    u8g2.setFont(leaf_6x12);
-    u8g2.drawStr(1, 152, timeToWypt);
-
-    // Dist to Waypoint
-    u8g2.setFont(leaf_5h);
-    //u8g2.drawStr(35, 72, ">KM");
-    u8g2.drawStr(35, 138, "KM>%");
-    u8g2.setFont(leaf_8x14);
-    u8g2.drawStr(35, 153, distToWypt);
-
-    // Glide over ground now
-    u8g2.setFont(leaf_5h);
-    u8g2.drawStr(4, 161, "`GLIDE");
-    u8g2.setFont(leaf_8x14);
-    u8g2.drawStr(1, 176, glide);
-
-    // Glide to waypoint
-    u8g2.setFont(leaf_5h);
-    u8g2.drawStr(35, 161, "`WAYPT");
-    u8g2.setFont(leaf_8x14);
-    u8g2.drawStr(35, 176, glideToWypt);
-
-
-
-    // waypoint name and progress bar
-    u8g2.drawFrame(1, 177, 63, 4);
-    u8g2.drawBox(2, 178, 27, 2);  // 3rd argument is filled width from left (% of 64 pixels)
-    u8g2.setFont(u8g2_font_7x14B_tr);
-    u8g2.drawStr(1, 192, waypoint);
-
-
+  do { 
+    uint8_t x = display_speed(0,12);
+    display_headingTurn(x+3, 10);
+    display_alt(17, 26, leaf_8x14, baro_getAlt());
 
   } while ( u8g2.nextPage() ); 
-
+  
 }
-*/
+
+/*********************************************************************************
+**    THERMAL PAGE        ********************************************************
+*********************************************************************************/
+void display_thermal_page() {
+  baro_updateFakeNumbers();
+  gps_updateFakeNumbers();
+  display_update_temp_vars();
+
+  u8g2.firstPage();
+  do { 
+    uint8_t x = display_speed(0,12);
+    display_headingTurn(x+3, 10);
+    display_alt(17, 26, leaf_8x14, baro_getAlt());
+    display_altAboveLaunch(17, 50, baro_getAlt() - 120000);
+    display_varioBar(13, 111, 14, varioBar_climbRate);
+    display_climbRatePointerBox(14, 59, 50, 17, 6, varioBar_climbRate);     // x, y, w, h, triangle size
+    
+    display_battIcon(20, 90);
+
+    u8g2.drawBox(0,154,64,38);
+
+  } while ( u8g2.nextPage() ); 
+  
+}
 
 
 void display_test_real_3() {
 
-  dirToWypt += .005;
-  wind_angle -= .0075;
-  delay(10);
+
   u8g2.firstPage();
   do {        
-    // speed
+
     u8g2.setFont(leaf_6x12);
-    u8g2.drawStr(1, 12, speed);
+    u8g2.drawStr(0, 12, speed);
     u8g2.setFont(leaf_5h);
     u8g2.drawStr(15, 18, "MPH");
 
@@ -932,16 +956,6 @@ void display_test_real_3() {
       climbChange = 2;
       varioBar_climbRate = -1090;
     }
-
-    varioBar_climbRate += climbChange;
-
-
-
-
-
-
-    
-    
 
 
 
@@ -1102,6 +1116,7 @@ void display_test_real_3() {
   } while ( u8g2.nextPage() ); 
 
 }
+
 
 void display_drawTrianglePointer(uint16_t x, uint16_t y, float angle, uint16_t radius) {    
     if (angle > 2 * PI) angle = 0;

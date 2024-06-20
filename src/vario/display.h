@@ -34,7 +34,8 @@ void display_test_real(void);
 void display_test_real_2(void);
 void display_test_real_3(void);
 void display_test_big(uint8_t page);
-
+void display_nav_page(void);
+void display_thermal_page(void);
 
 
 

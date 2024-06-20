@@ -46,10 +46,11 @@ uint8_t power_init(void) {
 
 uint32_t ADC_value;
 
-uint32_t power_get_batt_level(bool pct) {
-
-  uint32_t batt_level_mv = analogRead(BATT_SENSE) * 5554 / 4095;  //    (3300mV ADC range / .5942 V_divider) = 5554.  Then divide by 4095 steps of resolution
-  uint32_t batt_level_pct;
+uint16_t power_getBattLevel(uint8_t value) {
+  uint16_t adc_level = analogRead(BATT_SENSE);
+  //uint16_t batt_level_mv = adc_level * 5554 / 4095;  //    (3300mV ADC range / .5942 V_divider) = 5554.  Then divide by 4095 steps of resolution
+  uint16_t batt_level_mv = adc_level * 5300 / 4095 + 260; // adjusted formula to account for ESP32 ADC non-linearity; based on calibration measurements.  This is most accurate between 2.4V and 4.7V
+  uint16_t batt_level_pct;
   if (batt_level_mv < BATT_EMPTY_MV) {
     batt_level_pct = 0;
   } else if (batt_level_mv > BATT_FULL_MV) {
@@ -57,8 +58,13 @@ uint32_t power_get_batt_level(bool pct) {
   } else {
     batt_level_pct = 100 * (batt_level_mv - BATT_EMPTY_MV) / (BATT_FULL_MV - BATT_EMPTY_MV);
   }  
-  if (pct) return batt_level_pct;  
-  else return batt_level_mv;     
+  if (value == 1) return batt_level_mv;  
+  else if (value == 2) return adc_level;
+  else return batt_level_pct;
+}
+
+bool power_getBattCharging() {
+  return (!digitalRead(POWER_CHARGE_GOOD)); // logic low is charging, logic high is not
 }
 
 // Note: the Battery Charger Chip has controllable input current (which is then used for both batt charging AND system load).  The battery will be charged with whatever current is remaining after system load.
@@ -100,9 +106,9 @@ void power_turn_off(void) {
 void power_test(void) {
 
   Serial.print("Batt Voltage: ");
-  Serial.print(power_get_batt_level(0));
+  Serial.print(power_getBattLevel(0));
   Serial.print(", Batt Percent: ");
-  Serial.print(power_get_batt_level(1));
+  Serial.print(power_getBattLevel(1));
   Serial.print("%, Charge_Good: ");
   if (!digitalRead(POWER_CHARGE_GOOD)) Serial.println("Charging!");
   else Serial.println("Not Charging!");

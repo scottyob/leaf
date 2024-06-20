@@ -233,20 +233,23 @@ void loop() {
       //gps_test();
       break;
     case 1:
+  
       //display_test_bat_icon();      
       //display_test();      
       //power_test();
-      //if (display_do_tracker) {
-        display_test_real_3();
+      if (display_do_tracker) {
+        full_system_test();
+        delay(500);
+        //display_test_real_3();
         //SDcard_test();
-        display_do_tracker = 0;
-      //}
+        //display_do_tracker = 0;
+      }
       break;
     case 2:
       speaker_TEST();
       break;
     case 3:      
-      baro_test();
+      //baro_test();
       break;
     case 4:
       imu_test();
@@ -274,4 +277,12 @@ void loop() {
   }
 }
 
+void full_system_test() {
+  // update baro sensor
+  taskman_baro = baro_update(taskman_baro);
+  if (taskman_baro == 0) taskman_baro = 1;
+  // update display
+  display_thermal_page();
+  
 
+}

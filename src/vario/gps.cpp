@@ -7,6 +7,7 @@
 
 #include "gps.h"
 
+
 const char enableGGA [] PROGMEM = "$PAIR062,0,1";   // enable GGA message every 1 second
 const char enableGSV [] PROGMEM = "PAIR062,3,4";    // enable GSV message every 1 second
 const char enableRMC [] PROGMEM = "PAIR062,4,1";    // enable RMC message every 1 second
@@ -14,6 +15,7 @@ const char enableRMC [] PROGMEM = "PAIR062,4,1";    // enable RMC message every 
 const char disableGLL [] PROGMEM = "$PAIR062,1,0";  // disable message
 const char disableGSA [] PROGMEM = "$PAIR062,2,0";  // disable message
 const char disableVTG [] PROGMEM = "$PAIR062,5,0";  // disable message
+
 
 // Setup GPS
 #define gpsPort Serial0         // This is the hardware communication port (UART0) for GPS Rx and Tx lines.  We use the default ESP32S3 pins so no need to set them specifically
@@ -74,11 +76,9 @@ void gps_init(void) {
   delay(100);
   digitalWrite(GPS_RESET, HIGH);  // 
 
-
-
-
   gpsPort.begin(GPSBaud); 
   //gpsPort.setRxBufferSize(GPSSerialBufferSize);
+
   // Initialize all the uninitialized TinyGPSCustom objects
   for (int i=0; i<4; ++i) {
     satNumber[i].begin(gps, "GPGSV", 4 + 4 * i); // offsets 4, 8, 12, 16
@@ -144,6 +144,71 @@ void gps_test(void) {
     gps_displaySatellitesInView();
   }
   */
+}
+
+
+float fakeGPSAlt = 0;
+float fakeSpeed = 0;
+float fakeSpeedIncrement = 3;
+float fakeCourse = 0;
+
+void gps_updateFakeNumbers() {
+  fakeCourse += 5;
+  if (fakeCourse >= 360) fakeCourse = 0;
+
+  fakeSpeed += fakeSpeedIncrement;
+  if (fakeSpeed >= 200 ) {
+    fakeSpeed = 200;
+    fakeSpeedIncrement = -3;
+  } else if (fakeSpeed <= 0) {
+    fakeSpeed = 0;
+    fakeSpeedIncrement = 3;
+  }
+}
+
+float fakeWaypointBearing = 90;
+
+float gps_getAltMeters() { return fakeGPSAlt; } //gps.altitude.meters(); }
+float gps_getSpeed_kph() { return fakeSpeed; } //gps.speed.kmph(); }
+float gps_getSpeed_mph() { return fakeSpeed; } //gps.speed.mph(); }
+float gps_getCourseDeg() { return fakeCourse;  } //gps.course.deg(); }
+const char *gps_getCourseCardinal() { return gps.cardinal(gps_getCourseDeg()); }
+
+float gps_getWaypointBearing() { return fakeWaypointBearing;  }
+
+
+float gps_getRelativeBearing() {
+  float desiredCourse = gps_getWaypointBearing();
+  float ourCourse = gps_getCourseDeg();
+  float offCourse = desiredCourse - ourCourse;
+  if (offCourse < - 180) offCourse += 360;
+  else if (offCourse > 180) offCourse -=360;
+
+  return offCourse;
+}
+
+
+
+float turnThreshold1 = 20;
+float turnThreshold2 = 40;
+float turnThreshold3 = 60;
+
+uint8_t gps_getTurn() { 
+  
+  float offCourse = gps_getRelativeBearing();
+  uint8_t fakeTurn = 0;
+
+  if (offCourse > turnThreshold1) {
+    if (offCourse > turnThreshold3) fakeTurn = 3;
+    else if (offCourse > turnThreshold2) fakeTurn = 2;
+    else fakeTurn = 1;    
+  } else if (offCourse < -turnThreshold1) {
+    if (offCourse < -turnThreshold3) fakeTurn = -3;
+    else if (offCourse < -turnThreshold2) fakeTurn = -2;
+    else fakeTurn = -1;    
+  }  
+
+  return fakeTurn;
 }
 
 

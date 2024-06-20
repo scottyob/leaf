@@ -306,6 +306,35 @@ void baro_test(void) {
 }
 
 
+int32_t fakeAlt = 0;
+int16_t fakeClimbRate = 0;
+int16_t fakeVarioRate = 0;
+int32_t change = 1;
+
+
+int32_t baro_getAlt (void) {  
+  return fakeAlt;
+}
+
+int16_t baro_getClimbRate (void) {
+  return fakeClimbRate;
+}
+
+int16_t baro_getVarioBar (void) {
+  return fakeVarioRate;
+}
+
+void baro_updateFakeNumbers(void) {
+  fakeAlt = (float)(100 * change);
+  change *= 10;
+  if (change >= 1000000) {
+    change = -1;
+  } else if (change <= -100000) {
+    change = 1;
+  }
+}
+
+
 
 
 

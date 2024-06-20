@@ -572,3 +572,300 @@ char original_t[] = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x70\xf0\xf
 "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xff"
 "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
+
+
+
+/*
+void display_test_real() {
+  u8g2.firstPage();
+  do {
+    
+
+    // heading and turn
+    u8g2.setFont(leaf_7x10);
+    //if (turn == 0) string_heading[0] = '<';
+    //if (turn == 1) string_heading[4] = '>';    
+    string_heading[0] = '<';
+    string_heading[4] = '>';    
+    u8g2.drawStr(2, 10, string_heading);
+        
+    // speed
+    u8g2.setFont(leaf_6x12);
+    u8g2.drawStr(44, 12, speed);
+    u8g2.setFont(u8g2_font_tinyunicode_tf);
+    u8g2.drawStr(49, 18, "MPH");
+
+    // Nav Circles
+    u8g2.setDrawColor(1);
+    u8g2.drawDisc(25, 35, 24);  // Main Circle
+    u8g2.drawDisc(55, 29, 8);   // Wind Circle
+    u8g2.setDrawColor(0);
+    u8g2.drawDisc(25, 35, 22);  // center empty
+    display_drawTrianglePointer(55, 29, wind_angle, 7);
+    u8g2.setDrawColor(1);
+    u8g2.drawStr(51, 46, windSpeed);
+    
+    // waypoint name and progress bar
+    u8g2.setDrawColor(0);
+    u8g2.drawBox(1,49,63, 17);
+    u8g2.setDrawColor(1);
+    u8g2.drawFrame(1, 49, 63, 4);
+    u8g2.drawBox(1, 49, 27, 4);  // 3rd argument is filled width from left (% of 64 pixels)
+    u8g2.setFont(u8g2_font_7x14B_tr);
+    u8g2.drawStr(1, 64, waypoint);
+
+    // field dividers
+    u8g2.drawLine(1, 65, 64, 65);
+    u8g2.drawLine(1, 89, 64, 89);
+    u8g2.drawLine(1, 113, 64, 113);
+    u8g2.drawLine(33, 65, 33, 113);
+
+
+    // vario bar
+    u8g2.drawLine(52, 114, 52, 192);
+    // u8g2.drawFrame(54, 64, 11, 116);
+    u8g2.drawBox(53, 164, 12, 20);
+
+    // Time to Waypoint
+    u8g2.setFont(leaf_5h);
+    //u8g2.drawStr(4, 72, ">TIME");
+    u8g2.drawStr(4, 72, "M:S>&");
+    u8g2.setFont(leaf_6x12);
+    u8g2.drawStr(1, 87, timeToWypt);
+
+    // Dist to Waypoint
+    u8g2.setFont(leaf_5h);
+    //u8g2.drawStr(35, 72, ">KM");
+    u8g2.drawStr(35, 72, "KM>%");
+    u8g2.setFont(leaf_8x14);
+    u8g2.drawStr(35, 88, distToWypt);
+
+    // Glide over ground now
+    u8g2.setFont(leaf_5h);
+    u8g2.drawStr(4, 96, "`GLIDE");
+    u8g2.setFont(leaf_8x14);
+    u8g2.drawStr(1, 112, glide);
+
+    // Glide to waypoint
+    u8g2.setFont(leaf_5h);
+    u8g2.drawStr(35, 96, "`WAYPT");
+    u8g2.setFont(leaf_8x14);
+    u8g2.drawStr(35, 112, glideToWypt);
+
+
+    // Timer 
+    u8g2.drawBox(7, 116, 42, 16);
+    u8g2.setDrawColor(0);
+    u8g2.setFont(leaf_6x12);
+    u8g2.drawStr(14, 130, timer);
+    u8g2.setDrawColor(1);
+
+    // Clock
+    u8g2.setFont(leaf_6x12);
+    u8g2.drawStr(5, 147, clockTime);
+
+    // Climb
+    u8g2.drawBox(1, 153, 51, 18);
+    u8g2.setDrawColor(0);
+    u8g2.setFont(leaf_8x14);
+    u8g2.drawStr(2, 169, climbRate);
+    u8g2.setDrawColor(1);
+    
+    // Altitude(s)
+    u8g2.setFont(leaf_5h);
+    u8g2.drawStr(4, 177, "ALTITUDE");
+    u8g2.setFont(leaf_8x14);
+    u8g2.drawStr(2, 192, altitude);
+
+
+  } while ( u8g2.nextPage() );  
+}
+*/
+
+/*
+
+void display_test_real_2() {
+
+  dirToWypt += .005;
+  wind_angle -= .0075;
+  delay(10);
+  u8g2.firstPage();
+  do {
+    
+
+
+        
+    // speed
+    u8g2.setFont(leaf_6x12);
+    u8g2.drawStr(1, 12, speed);
+    u8g2.setFont(leaf_5h);
+    u8g2.drawStr(15, 18, "MPH");
+
+    // heading and turn
+    u8g2.setFont(leaf_7x10);
+    //if (turn == 0) string_heading[0] = '<';
+    //if (turn == 1) string_heading[4] = '>';    
+    string_heading[0] = '<';
+    string_heading[4] = '>';    
+    u8g2.drawStr(23, 10, string_heading);
+
+    // Nav Circles
+    uint8_t nav_x = 38;
+    uint8_t nav_y = 42;
+    uint8_t nav_r = 26;
+    uint8_t wind_r = 8;
+
+    u8g2.setDrawColor(1);
+    u8g2.drawDisc(nav_x, nav_y, nav_r);  // Main Circle
+    u8g2.setDrawColor(0);
+    u8g2.drawDisc(nav_x, nav_y, nav_r-2);  // center empty
+    u8g2.setDrawColor(1);
+    u8g2.drawDisc(nav_x, nav_y, wind_r);   // Wind Circle
+    
+    // Pointer (Travel)
+    uint8_t pointer_w = 5;              // half width of arrowhead
+    uint8_t pointer_h = 11;             // full height of arrowhead
+    uint8_t pointer_x = nav_x;
+    uint8_t pointer_y = nav_y-nav_r-4;    //tip of arrow
+    u8g2.setDrawColor(0);
+    u8g2.drawBox(nav_x-(pointer_w)/2, nav_y-nav_r, pointer_w, 2);
+    u8g2.setDrawColor(1);
+    // arrow point    
+    u8g2.drawLine(pointer_x-pointer_w, pointer_y+pointer_h, pointer_x, pointer_y);
+    u8g2.drawLine(pointer_x+pointer_w, pointer_y+pointer_h, pointer_x, pointer_y);
+    u8g2.drawLine(pointer_x-pointer_w-1, pointer_y+pointer_h, pointer_x-1, pointer_y);
+    u8g2.drawLine(pointer_x+pointer_w+1, pointer_y+pointer_h, pointer_x+1, pointer_y);
+    //arrow flats
+    u8g2.drawLine(pointer_x-pointer_w, pointer_y+pointer_h, pointer_x-pointer_w/2, pointer_y+pointer_h);
+    u8g2.drawLine(pointer_x+pointer_w, pointer_y+pointer_h, pointer_x+pointer_w/2, pointer_y+pointer_h);
+    //arrow shaft
+    u8g2.drawLine(pointer_x-pointer_w/2, pointer_y+pointer_h, pointer_x-pointer_w/2, pointer_y+pointer_h*2);
+    u8g2.drawLine(pointer_x+pointer_w/2, pointer_y+pointer_h, pointer_x+pointer_w/2, pointer_y+pointer_h*2);
+
+    // Waypoint Pointer
+    uint8_t waypoint_tip_r = 25;
+    uint8_t waypoint_shaft_r = 23;    
+    uint8_t waypoint_tail_r = 20;
+    float waypoint_arrow_angle = 0.205;
+    
+    int8_t waypoint_tip_x = sin(dirToWypt)*waypoint_tip_r+nav_x;
+    int8_t waypoint_tip_y = nav_y-cos(dirToWypt)*waypoint_tip_r;    
+    int8_t waypoint_shaft_x = sin(dirToWypt)*waypoint_shaft_r+nav_x;
+    int8_t waypoint_shaft_y = nav_y-cos(dirToWypt)*waypoint_shaft_r;    
+
+
+    u8g2.drawLine(nav_x+1, nav_y, waypoint_shaft_x+1, waypoint_shaft_y);
+    u8g2.drawLine(nav_x, nav_y+1, waypoint_shaft_x, waypoint_shaft_y+1);
+    u8g2.drawLine(nav_x, nav_y, waypoint_shaft_x, waypoint_shaft_y);          // the real center line; others are just to fatten it up
+    u8g2.drawLine(nav_x-1, nav_y, waypoint_shaft_x-1, waypoint_shaft_y);
+    u8g2.drawLine(nav_x, nav_y-1, waypoint_shaft_x, waypoint_shaft_y-1);
+
+    int8_t tail_left_x = sin(dirToWypt - waypoint_arrow_angle) * (waypoint_tail_r) + nav_x;
+    int8_t tail_left_y = nav_y - cos(dirToWypt - waypoint_arrow_angle) * (waypoint_tail_r);
+    int8_t tail_right_x = sin(dirToWypt + waypoint_arrow_angle) * (waypoint_tail_r) + nav_x;
+    int8_t tail_right_y = nav_y - cos(dirToWypt + waypoint_arrow_angle) * (waypoint_tail_r);
+
+    u8g2.drawLine(tail_left_x, tail_left_y, waypoint_tip_x, waypoint_tip_y);
+    u8g2.drawLine(tail_right_x, tail_right_y, waypoint_tip_x, waypoint_tip_y);
+    u8g2.drawLine(tail_right_x, tail_right_y, tail_left_x, tail_left_y);
+    u8g2.drawTriangle(tail_left_x, tail_left_y, waypoint_tip_x, waypoint_tip_y, tail_right_x, tail_right_y);
+
+
+
+
+    // Wind Vector
+    u8g2.setDrawColor(0);
+    display_drawTrianglePointer(nav_x, nav_y, wind_angle, 7);
+    u8g2.setDrawColor(1);
+    u8g2.setFont(leaf_5x8);
+    u8g2.drawStr(53, 19, windSpeed);
+
+    // vario bar    
+    u8g2.drawFrame(1, 13, 13, 119);
+    u8g2.setDrawColor(0);   
+    u8g2.drawLine(12, 15, 12, 58);
+    u8g2.setDrawColor(1); 
+
+    // Climb
+    u8g2.drawBox(14, 65, 50, 18);
+    u8g2.drawTriangle(8, 73, 13, 68, 13, 78);
+    u8g2.setDrawColor(0);
+    u8g2.setFont(leaf_8x14);
+    u8g2.drawStr(13, 81, climbRate);
+    u8g2.setDrawColor(1);
+
+    // Altitude(s)
+    u8g2.setFont(leaf_8x14);
+    u8g2.drawStr(16, 99, altitude);
+
+    // Clock
+    u8g2.setFont(leaf_6x12);
+    u8g2.drawStr(18, 115, clockTime);
+
+    // Timer 
+    uint8_t timer_x = 14;
+    uint8_t timer_y = 116;
+    uint8_t timer_w = 50;
+    uint8_t timer_h = 16;
+
+    u8g2.drawBox(timer_x, timer_y, timer_w, timer_h);
+    u8g2.setDrawColor(0);
+    
+    //u8g2.drawPixel(timer_x, timer_y);
+    //u8g2.drawPixel(timer_x, timer_y+timer_h-1);
+    //u8g2.drawPixel(timer_x+timer_w-1, timer_y);
+    //u8g2.drawPixel(timer_x+timer_w-1, timer_y+timer_h-1);
+    
+    u8g2.setFont(leaf_6x12);
+    u8g2.drawStr(timer_x+5, timer_y+timer_h-2, timer);
+    u8g2.setDrawColor(1);
+
+
+
+    // field dividers
+    u8g2.drawLine(14, 101, 64, 101);
+    u8g2.drawLine(1, 131, 64, 131);
+    u8g2.drawLine(1, 154, 64, 154);
+    u8g2.drawLine(1, 177, 64, 177);
+    u8g2.drawLine(33, 132, 33, 176);
+
+
+    // Time to Waypoint
+    u8g2.setFont(leaf_5h);    
+    u8g2.drawStr(4, 138, "M:S>&");
+    u8g2.setFont(leaf_6x12);
+    u8g2.drawStr(1, 152, timeToWypt);
+
+    // Dist to Waypoint
+    u8g2.setFont(leaf_5h);
+    //u8g2.drawStr(35, 72, ">KM");
+    u8g2.drawStr(35, 138, "KM>%");
+    u8g2.setFont(leaf_8x14);
+    u8g2.drawStr(35, 153, distToWypt);
+
+    // Glide over ground now
+    u8g2.setFont(leaf_5h);
+    u8g2.drawStr(4, 161, "`GLIDE");
+    u8g2.setFont(leaf_8x14);
+    u8g2.drawStr(1, 176, glide);
+
+    // Glide to waypoint
+    u8g2.setFont(leaf_5h);
+    u8g2.drawStr(35, 161, "`WAYPT");
+    u8g2.setFont(leaf_8x14);
+    u8g2.drawStr(35, 176, glideToWypt);
+
+
+
+    // waypoint name and progress bar
+    u8g2.drawFrame(1, 177, 63, 4);
+    u8g2.drawBox(2, 178, 27, 2);  // 3rd argument is filled width from left (% of 64 pixels)
+    u8g2.setFont(u8g2_font_7x14B_tr);
+    u8g2.drawStr(1, 192, waypoint);
+
+
+
+  } while ( u8g2.nextPage() ); 
+
+}
+*/
