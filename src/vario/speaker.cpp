@@ -82,7 +82,7 @@ volatile bool sound_varioResting = 0;		              // are we resting (silence)
 volatile bool sound_currentlyPlaying = 0;         	// are we playing a sound?
 volatile bool sound_fx = 0;                      // track if we have any sound effects to play (button presses, etc)
 
-uint16_t random_note[] = {0, NOTE_END};
+uint16_t random_note[] = {0, NOTE_END};   // this is to allow playing single notes by changing random_note[0], while still having a NOTE_END terminator following.
 
 void speaker_init(void)
 {
@@ -98,9 +98,9 @@ void speaker_init(void)
 	//speaker_setVolume(VOLUME);
 
   //setup speaker timer interrupt to track each "beat" of sound
-	speaker_timer = timerBegin(1, SPKR_CLK_DIV, true);     
-  timerAttachInterrupt(speaker_timer, &onSpeakerTimer, true);
-  timerAlarmWrite(speaker_timer, 1000, true);      
+	speaker_timer = timerBegin(1, SPKR_CLK_DIV, true);            // timer#, clock divider, count up -- this just configures, but doesn't start.   NOTE: timerEnd() de-configures.
+  timerAttachInterrupt(speaker_timer, &onSpeakerTimer, true);   // timer, ISR call, rising edge                                                  NOTE: timerDetachInterrupt() does the opposite
+  timerAlarmWrite(speaker_timer, 1000, true);                   // timer, value, reload
   //timerAlarmEnable(speaker_timer);
 
   speaker_enableTimer();
@@ -279,6 +279,47 @@ void speaker_updateVarioNote(int16_t verticalRate)
 
 
 // timerWrite(timer, 0)
+
+
+/* 
+
+//run once when booting up:
+timerSetup() {
+  ..attach timer to interrupt (do_this_when_time_expires);
+  ..set timer to auto-renew itself when it expires
+  ..set timer time to default 1 second.
+}
+
+//run every ~500ms to adjust values based on pressure sensor output
+// note: all three of these variables are declared volatile (not even sure if that's needed since they are only ever set here; but the interrupt could be reading them while this function is changing them)
+void updateNote() {
+  ..do calculations on climbRate to set the following:
+  noteToPlay = stuff;
+  noise_time = stuff;
+  silence_time = stuff;
+}
+
+ISR: do_this_when_time_expires() {
+  if (noteToPlay > 0)
+      if (beeping) {
+      ..set timer to appropriate length of rest (silence_time);
+      ..set pwm_speakerOutput(0);
+      beeping = false;
+      } else {
+      ..set timer to appropriate length of beep (noise_time);
+      ..set pwm_speakerOutput(noteToPlay);
+      beeping = true;
+      }
+  else {
+    ..set pwm_speakerOutput(0);
+    // timer will keep cycling at whatever the last set time-period was
+  }
+}
+
+
+
+
+*/
 
 // Sound driver
 void IRAM_ATTR onSpeakerTimer() {
