@@ -16,7 +16,7 @@ hw_timer_t *speaker_timer = NULL;
 // 250 = 1450     = 181
 
 #define FX_NOTE_LENGTH  500
-#define SPKR_CLK_DIV 240000
+#define SPKR_CLK_DIV 40000
 
 //Sound FX Tones
 uint16_t st_silence[] = {NOTE_END};
@@ -325,7 +325,8 @@ ISR: do_this_when_time_expires() {
 void IRAM_ATTR onSpeakerTimer() {
   //first disable the alarm that got us here, until we're ready for the next one
   timerAlarmDisable(speaker_timer);
-  Serial.println("disable timer - top of interrupt");
+  Serial.print("disable timer - top of interrupt.  millis: ");
+  Serial.println(millis());
 
   //prioritize sound effects from buttons etc before we get to vario beeps
   if (sound_fx) {								
@@ -333,7 +334,7 @@ void IRAM_ATTR onSpeakerTimer() {
 		if (*snd_index != NOTE_END) {
 			if (*snd_index != sound_fxNoteLast) ledcWriteTone(PWM_CHANNEL, *snd_index);   // only change pwm if it's a different note, otherwise we get a little audio blip between the same notes
       sound_fxNoteLast = *snd_index;
-      timerAlarmWrite(speaker_timer, FX_NOTE_LENGTH, true); // start timer for play period
+      timerAlarmWrite(speaker_timer, 2*FX_NOTE_LENGTH, true); // start timer for play period
       timerAlarmEnable(speaker_timer);
       Serial.println("enable timer - in bewteen FX tones");			
 
@@ -357,14 +358,14 @@ void IRAM_ATTR onSpeakerTimer() {
       ledcWriteTone(PWM_CHANNEL, 0);                // "play" silence since we're resting between beeps
       sound_varioNoteLast = 0;
       sound_varioResting = false;                      // next time through we want to play sound
-      timerAlarmWrite(speaker_timer, sound_varioRestLength, true); // start timer for the rest period
+      timerAlarmWrite(speaker_timer, 2*sound_varioRestLength, true); // start timer for the rest period
       timerAlarmEnable(speaker_timer);              // ...and go!
       Serial.println("enable timer - vario Rest");			
     } else {
       if (sound_varioNote != sound_varioNoteLast) ledcWriteTone(PWM_CHANNEL, sound_varioNote);  // play the note, but only if different, otherwise we get a little audio blip between the same successive notes (happens when vario is pegged and there's no rest period between)
       sound_varioNoteLast = sound_varioNote;
       if (sound_varioRestLength) sound_varioResting = true;   // next time through we want to rest (play silence), unless climb is maxed out (ie, rest length == 0)
-      timerAlarmWrite(speaker_timer, sound_varioPlayLength, true); // start timer for play period
+      timerAlarmWrite(speaker_timer, 2*sound_varioPlayLength, true); // start timer for play period
       timerAlarmEnable(speaker_timer);
       Serial.println("enable timer - vario beep");			
     }

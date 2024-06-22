@@ -38,10 +38,10 @@
 #define CLIMB_NOTE_MIN		    500		// min tone pitch in Hz for >0 climb
 #define CLIMB_NOTE_MAX 		   1600	  // max tone pitch in Hz for CLIMB_MAX (when vario peaks and starts holding a solid tone)
 #define CLIMB_NOTE_MAXMAX    2200	  // max tone pitch in Hz when vario is truly pegged, even in solid-tone mode
-#define CLIMB_PLAY_MAX		   1200 	// ms play per measure (at min climb)
-#define CLIMB_PLAY_MIN		    200   // ms play per measure (at max climb)
-#define CLIMB_REST_MAX       1000		// ms silence per measure (at min climb)
-#define CLIMB_REST_MIN	      100		// ms silence per measure (at max climb)
+#define CLIMB_PLAY_MAX		   100//1200 	// ms play per measure (at min climb)
+#define CLIMB_PLAY_MIN		    50//200   // ms play per measure (at max climb)
+#define CLIMB_REST_MAX       50//1000		// ms silence per measure (at min climb)
+#define CLIMB_REST_MIN	      25//100		// ms silence per measure (at max climb)
 
 // LiftyAir DEFINITIONS    (for air rising slower than your sinkrate, so net climbrate is negative, but not as bad as it would be in still air)
 #define LIFTYAIR_TONE_MIN	    180		// min pitch tone for lift air @ -(setting)m/s
@@ -58,10 +58,10 @@
 #define SINK_NOTE_MAX		      110   // lowest tone pitch for sink @ SINK_MAX (when vario bottoms out and starts holding a solid tone)
 #define SINK_NOTE_MAXMAX       70   // bottom tone pitch for sink (when vario is truly pegged, even in solid tone mode)
 
-#define SINK_PLAY_MIN		     1200   // ms play per measure (at min sink)
-#define SINK_PLAY_MAX		     2000 	// ms play per measure (at max sink)
-#define SINK_REST_MIN	       1000		// silence samples (at min sink)
-#define SINK_REST_MAX	       1000		// silence samples (at max sink)
+#define SINK_PLAY_MIN		     100//1200   // ms play per measure (at min sink)
+#define SINK_PLAY_MAX		     200//2000 	// ms play per measure (at max sink)
+#define SINK_REST_MIN	       50//1000		// silence samples (at min sink)
+#define SINK_REST_MAX	       50//1000		// silence samples (at max sink)
 
 
 void speaker_init(void);
