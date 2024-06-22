@@ -31,33 +31,37 @@
 
 //each "beep beep" cycle is a "measure", made up of play-length followed by rest-length, then repeat
 
+
 // CLIMB TONE DEFINITIONS
 #define CLIMB_AUDIO_THRESHOLD  10 	// don't play unless climb rate is over this value (cm/s)
 #define CLIMB_MAX		          800		// above this cm/s climb rate, note doesn't get higher
-#define CLIMB_NOTE_MIN		    440		// min tone pitch in Hz for >0 climb
-#define CLIMB_NOTE_MAX 		   1600	  // max tone pitch in Hz for CLIMB_MAX
-#define CLIMB_PLAY_MAX		   1500 	// ms play per measure (at min climb)
-#define CLIMB_PLAY_MIN		    250   // ms play per measure (at max climb)
-#define CLIMB_REST_MAX       1500		// ms silence per measure (at min climb)
-#define CLIMB_REST_MIN	      250		// ms silence per measure (at max climb)
+#define CLIMB_NOTE_MIN		    500		// min tone pitch in Hz for >0 climb
+#define CLIMB_NOTE_MAX 		   1600	  // max tone pitch in Hz for CLIMB_MAX (when vario peaks and starts holding a solid tone)
+#define CLIMB_NOTE_MAXMAX    2200	  // max tone pitch in Hz when vario is truly pegged, even in solid-tone mode
+#define CLIMB_PLAY_MAX		   1200 	// ms play per measure (at min climb)
+#define CLIMB_PLAY_MIN		    200   // ms play per measure (at max climb)
+#define CLIMB_REST_MAX       1000		// ms silence per measure (at min climb)
+#define CLIMB_REST_MIN	      100		// ms silence per measure (at max climb)
 
 // LiftyAir DEFINITIONS    (for air rising slower than your sinkrate, so net climbrate is negative, but not as bad as it would be in still air)
 #define LIFTYAIR_TONE_MIN	    180		// min pitch tone for lift air @ -(setting)m/s
 #define LIFTYAIR_TONE_MAX	    150		// max pitch tone for lifty air @ .1m/s climb
 #define LIFTYAIR_PLAY	  	      1		//
 #define LIFTYAIR_GAP		        1
-#define LIFTYAIR_REST_MAX   20
-#define LIFTYAIR_REST_MIN   10
+#define LIFTYAIR_REST_MAX      20
+#define LIFTYAIR_REST_MIN      10
 
 // SINK TONE DEFINITIONS
-#define SINK_ALARM           -250   // cm/s sink rate that triggers sink alarm audio
-#define SINK_NOTE_MIN		      254   // min tone pitch for sink @ SINK_MAX
-#define SINK_NOTE_MAX		      224   // max tone pitch for sink > SINK_ALARM
-#define SINK_MAX		          800		// at this sink rate, tone doesn't get lower
-#define SINK_PLAY_MIN		       25		// play samples at SINK_ALARM (min sink)
-#define SINK_PLAY_MAX		       35		// play samples at SINK_MAX   (max sink)
-#define SINK_REST_MAX	     10		// silence samples (at min sink)
-#define SINK_REST_MIN	      1		// silence samples (at max sink)
+#define SINK_ALARM           -050   // cm/s sink rate that triggers sink alarm audio
+#define SINK_MAX		         -800		// at this sink rate, tone doesn't get lower
+#define SINK_NOTE_MIN		      300   // highest tone pitch for sink > SINK_ALARM
+#define SINK_NOTE_MAX		      110   // lowest tone pitch for sink @ SINK_MAX (when vario bottoms out and starts holding a solid tone)
+#define SINK_NOTE_MAXMAX       70   // bottom tone pitch for sink (when vario is truly pegged, even in solid tone mode)
+
+#define SINK_PLAY_MIN		     1200   // ms play per measure (at min sink)
+#define SINK_PLAY_MAX		     2000 	// ms play per measure (at max sink)
+#define SINK_REST_MIN	       1000		// silence samples (at min sink)
+#define SINK_REST_MAX	       1000		// silence samples (at max sink)
 
 
 void speaker_init(void);

@@ -60,6 +60,189 @@ int64_t SENS2;
 // LinearRegression to average out noisy sensor readings
 LinearRegression<10> alt_lr;
 
+
+//*******************************************
+// fake stuff for testing
+
+int32_t fakeAlt = 0;
+int16_t fakeClimbRate = 0;
+int16_t fakeVarioRate = 0;
+int32_t change = 1;
+
+
+int32_t baro_getAlt(void) {  
+  return fakeAlt;  
+}
+
+int16_t baro_getClimbRate(void) {
+  return fakeClimbRate;
+}
+
+int16_t baro_getVarioBar(void) {
+  return fakeVarioRate;
+}
+
+void baro_updateFakeNumbers(void) {
+  fakeAlt = (float)(100 * change);
+  change *= 10;
+  if (change >= 1000000) {
+    change = -1;
+  } else if (change <= -100000) {
+    change = 1;
+  }
+}
+
+
+//143 test values
+int32_t altitude_values[] = {
+  1,  // index pointer to value place
+5225	,
+5402	,
+5528	,
+5605	,
+5631	,
+5609	,
+5540	,
+5426	,
+5270	,
+5076	,
+4849	,
+4593	,
+4316	,
+4022	,
+3720	,
+3418	,
+3123	,
+2843	,
+2589	,
+2368	,
+2190	,
+2063	,
+1997	,
+1999	,
+2075	,
+2234	,
+2480	,
+2816	,
+3246	,
+3771	,
+4389	,
+5098	,
+5893	,
+6767	,
+7710	,
+8712	,
+9760	,
+10838	,
+11930	,
+13018	,
+14082	,
+15103	,
+16062	,
+16940	,
+17717	,
+18378	,
+18910	,
+19301	,
+19544	,
+19636	,
+19580	,
+19383	,
+19057	,
+18621	,
+18097	,
+17516	,
+16910	,
+16314	,
+15769	,
+15312	,
+14983	,
+14818	,
+14848	,
+15096	,
+15579	,
+16302	,
+17259	,
+18431	,
+19785	,
+21277	,
+22851	,
+24442	,
+25978	,
+27385	,
+28594	,
+29540	,
+30173	,
+30462	,
+30399	,
+30000	,
+29311	,
+28406	,
+27384	,
+26362	,
+25467	,
+24827	,
+24556	,
+24744	,
+25437	,
+26636	,
+28284	,
+30267	,
+32420	,
+34542	,
+36418	,
+37844	,
+38658	,
+38772	,
+38194	,
+37040	,
+35532	,
+33975	,
+32714	,
+32076	,
+32307	,
+33505	,
+35580	,
+38246	,
+41050	,
+43461	,
+44982	,
+45287	,
+44340	,
+42449	,
+40235	,
+38491	,
+37955	,
+39050	,
+41680	,
+45171	,
+48434	,
+50339	,
+50187	,
+48114	,
+45176	,
+42996	,
+43018	,
+45674	,
+49931	,
+53646	,
+54727	,
+52582	,
+48847	,
+46593	,
+48143	,
+52937	,
+57430	,
+57848	,
+53967	,
+50113	,
+51220	,
+57001	,
+61178	
+};
+
+// end fake stuff for testing
+
 //Initialize the baro sensor
 void baro_init(void)
 {
@@ -92,7 +275,13 @@ void baro_init(void)
 	lastAlt = P_ALTfiltered;		// assume we're stationary to start (previous Alt = Current ALt, so climb rate is zero)
 	P_ALTinitial = P_ALTfiltered;	// also save first value to use as starting point
   P_ALTregression = P_ALTfiltered;
+
+  fakeAlt = altitude_values[altitude_values[0]];
+  lastAlt = fakeAlt;
+
 	baro_update(4);  
+
+
 
   //alt_lr.update((double)millis(), (double)P_ALTinitial);
 }
@@ -162,9 +351,12 @@ void baro_flightLog(void) {
 void baro_updateClimb(void)
 {
 	//TODO: incorporate ACCEL for added precision/accuracy
-	CLIMB_RATE = (P_ALTfiltered - lastAlt) * 20;				    // climb is updated every 1/20 second, so climb rate is cm change per 1/20sec * 20
+	//CLIMB_RATE = (P_ALTfiltered - lastAlt) * 20;				    // climb is updated every 1/20 second, so climb rate is cm change per 1/20sec * 20
+  //lastAlt = P_ALTfiltered;								// store last alt value for next time
 
-	lastAlt = P_ALTfiltered;								// store last alt value for next time
+  fakeClimbRate = (fakeAlt - lastAlt) / 2; // test value changes every 2 seconds, so climbrate needs to be halved
+  lastAlt = fakeAlt;
+	
 	baro_filterVARIO();									// filter vario rate and climb rate displays
 	//speaker_updateClimbTone();
 }
@@ -232,6 +424,10 @@ void baro_filterALT(void) {
   P_ALTfiltered /= PfilterSize;
 
 	//P_ALTfiltered = (P_ALTfiltered * (PfilterSize - 1) + P_ALT) / PfilterSize;   	// filter by weighting old values higher
+
+  fakeAlt = altitude_values[altitude_values[0]];
+  altitude_values[0] = altitude_values[0] + 1;
+  if (altitude_values[0] == 144) altitude_values[0] = 1;
 }
 
 
@@ -304,40 +500,3 @@ void baro_test(void) {
     Serial.println(P_ALTregression);
   }
 }
-
-
-int32_t fakeAlt = 0;
-int16_t fakeClimbRate = 0;
-int16_t fakeVarioRate = 0;
-int32_t change = 1;
-
-
-int32_t baro_getAlt (void) {  
-  return fakeAlt;
-}
-
-int16_t baro_getClimbRate (void) {
-  return fakeClimbRate;
-}
-
-int16_t baro_getVarioBar (void) {
-  return fakeVarioRate;
-}
-
-void baro_updateFakeNumbers(void) {
-  fakeAlt = (float)(100 * change);
-  change *= 10;
-  if (change >= 1000000) {
-    change = -1;
-  } else if (change <= -100000) {
-    change = 1;
-  }
-}
-
-
-
-
-
-
-
-

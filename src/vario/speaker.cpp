@@ -69,16 +69,14 @@ uint16_t* sound_fx_tones[] = {
 };
 
 // volatile pointer to the sound sample to play
-uint16_t* volatile snd_index;
-
-
+ uint16_t* volatile snd_index;
 
 volatile uint16_t sound_varioNote = 0;			    // note to play for vario beeps
 volatile uint16_t sound_varioNoteLast = 0;		// last note played for vario beeps
 volatile uint16_t sound_varioPlayLength = CLIMB_PLAY_MAX;		// 
 volatile uint16_t sound_varioRestLength = CLIMB_REST_MAX;		// 
 
-volatile uint16_t sound_fxNoteLast = 0;		// last note played for vario beeps
+volatile uint16_t sound_fxNoteLast = 0;		// last note played for sound effects
 
 volatile bool sound_varioResting = 0;		              // are we resting (silence) between beeps?
 volatile bool sound_currentlyPlaying = 0;         	// are we playing a sound?
@@ -202,13 +200,33 @@ void speaker_updateClimbToneParameters(void)
 void speaker_updateVarioNote(int16_t verticalRate)
 {
   if(verticalRate > CLIMB_AUDIO_THRESHOLD) {
-    sound_varioNote = verticalRate * (CLIMB_NOTE_MAX - CLIMB_NOTE_MIN) / CLIMB_MAX + CLIMB_NOTE_MIN;
-    sound_varioPlayLength = CLIMB_PLAY_MAX - (verticalRate * (CLIMB_PLAY_MAX - CLIMB_PLAY_MIN) / CLIMB_MAX);
-    sound_varioRestLength = CLIMB_REST_MAX - (verticalRate * (CLIMB_REST_MAX - CLIMB_REST_MIN) / CLIMB_MAX);
-  } else if (verticalRate < SINK_ALARM) {
-    //do similar stuff for sink beeps
+    // first clamp to thresholds if climbRate is over the max
+    if (verticalRate >= CLIMB_MAX) {
+      sound_varioNote = verticalRate * (CLIMB_NOTE_MAX - CLIMB_NOTE_MIN) / CLIMB_MAX + CLIMB_NOTE_MIN;
+      if (sound_varioNote > CLIMB_NOTE_MAXMAX) sound_varioNote = CLIMB_NOTE_MAXMAX;
+      sound_varioPlayLength = CLIMB_PLAY_MIN;
+      sound_varioRestLength = 0;    // just hold a continuous tone, no pulses
+    } else {
+      sound_varioNote = verticalRate * (CLIMB_NOTE_MAX - CLIMB_NOTE_MIN) / CLIMB_MAX + CLIMB_NOTE_MIN;
+      sound_varioPlayLength = CLIMB_PLAY_MAX - (verticalRate * (CLIMB_PLAY_MAX - CLIMB_PLAY_MIN) / CLIMB_MAX);
+      sound_varioRestLength = CLIMB_REST_MAX - (verticalRate * (CLIMB_REST_MAX - CLIMB_REST_MIN) / CLIMB_MAX);
+    }
+  } else if (verticalRate < SINK_ALARM) {    
+    // first clamp to thresholds if sinkRate is over the max
+    if (verticalRate <= SINK_MAX) {
+      sound_varioNote = SINK_NOTE_MIN - verticalRate * (SINK_NOTE_MIN - SINK_NOTE_MAX) / SINK_MAX;
+      if (sound_varioNote < SINK_NOTE_MAXMAX || sound_varioNote > SINK_NOTE_MAX) sound_varioNote = SINK_NOTE_MAXMAX;  // the second condition (|| > SINK_NOTE_MAX) is to prevent uint16 wrap-around to a much higher number
+      sound_varioPlayLength = SINK_PLAY_MAX;
+      sound_varioRestLength = 0;    // just hold a continuous tone, no pulses
+    } else {
+      sound_varioNote = SINK_NOTE_MIN - verticalRate * (SINK_NOTE_MIN - SINK_NOTE_MAX) / SINK_MAX;
+      sound_varioPlayLength = SINK_PLAY_MIN + (verticalRate * (SINK_PLAY_MAX - SINK_PLAY_MIN) / SINK_MAX);
+      sound_varioRestLength = SINK_REST_MIN + (verticalRate * (SINK_REST_MAX - SINK_REST_MIN) / SINK_MAX);
+    }
+  } else {
+    sound_varioNote = 0;
   }
-  Serial.print("Note: ");
+  Serial.print("Update Function -- Note: ");
   Serial.print(sound_varioNote);
   Serial.print(" Play: ");
   Serial.print(sound_varioPlayLength);
@@ -266,7 +284,7 @@ void speaker_updateVarioNote(int16_t verticalRate)
 void IRAM_ATTR onSpeakerTimer() {
   //first disable the alarm that got us here, until we're ready for the next one
   timerAlarmDisable(speaker_timer);
-  //Serial.println("disable timer - top of interrupt");
+  Serial.println("disable timer - top of interrupt");
 
   //prioritize sound effects from buttons etc before we get to vario beeps
   if (sound_fx) {								
@@ -296,17 +314,22 @@ void IRAM_ATTR onSpeakerTimer() {
     // Handle the beeps and rests of a vario sound "measure"
     if (sound_varioResting) {
       ledcWriteTone(PWM_CHANNEL, 0);                // "play" silence since we're resting between beeps
+      sound_varioNoteLast = 0;
       sound_varioResting = false;                      // next time through we want to play sound
       timerAlarmWrite(speaker_timer, sound_varioRestLength, true); // start timer for the rest period
       timerAlarmEnable(speaker_timer);              // ...and go!
       Serial.println("enable timer - vario Rest");			
     } else {
-      ledcWriteTone(PWM_CHANNEL, sound_varioNote);  // play the note
-      sound_varioResting = true;                       // next time through we want to rest (play silence)
+      if (sound_varioNote != sound_varioNoteLast) ledcWriteTone(PWM_CHANNEL, sound_varioNote);  // play the note, but only if different, otherwise we get a little audio blip between the same successive notes (happens when vario is pegged and there's no rest period between)
+      sound_varioNoteLast = sound_varioNote;
+      if (sound_varioRestLength) sound_varioResting = true;   // next time through we want to rest (play silence), unless climb is maxed out (ie, rest length == 0)
       timerAlarmWrite(speaker_timer, sound_varioPlayLength, true); // start timer for play period
       timerAlarmEnable(speaker_timer);
       Serial.println("enable timer - vario beep");			
     }
+  } else {
+    ledcWriteTone(PWM_CHANNEL, 0);  // play silence (if timer is configured for auto-reload, we have to do this here because sound_varioNote might have been set to 0 while we were beeping, and then we'll keep beeping)
+    Serial.println("didn't do anything in ISR");
   }
 /*
 

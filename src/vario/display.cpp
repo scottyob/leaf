@@ -716,12 +716,10 @@ void display_battIcon(uint8_t x, uint8_t y) {
 
   u8g2.setCursor(x, y);
   u8g2.setFont(leaf_icons);
-
-  
-  
-  
+ 
+ 
   u8g2.print(battIcon);
-  
+  /*  
   Serial.print("percent: ");
   Serial.print(battPercent);
   Serial.print(" icon: ");
@@ -730,7 +728,7 @@ void display_battIcon(uint8_t x, uint8_t y) {
   Serial.print(battMV);
   Serial.print(" ADC: ");
   Serial.println(battADC);
-
+  */
   u8g2.setFont(leaf_6x12);
   u8g2.setCursor(x, y+=15);
   u8g2.print(battPercent);
@@ -775,7 +773,7 @@ void display_nav_page() {
 **    THERMAL PAGE        ********************************************************
 *********************************************************************************/
 void display_thermal_page() {
-  baro_updateFakeNumbers();
+  //baro_updateFakeNumbers();
   gps_updateFakeNumbers();
   display_update_temp_vars();
 
@@ -785,8 +783,8 @@ void display_thermal_page() {
     display_headingTurn(x+3, 10);
     display_alt(17, 26, leaf_8x14, baro_getAlt());
     display_altAboveLaunch(17, 50, baro_getAlt() - 120000);
-    display_varioBar(13, 111, 14, varioBar_climbRate);
-    display_climbRatePointerBox(14, 59, 50, 17, 6, varioBar_climbRate);     // x, y, w, h, triangle size
+    display_varioBar(13, 111, 14, baro_getClimbRate());
+    display_climbRatePointerBox(14, 59, 50, 17, 6, baro_getClimbRate());     // x, y, w, h, triangle size
     
     display_battIcon(20, 90);
 
