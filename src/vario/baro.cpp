@@ -354,7 +354,7 @@ void baro_updateClimb(void)
 	//CLIMB_RATE = (P_ALTfiltered - lastAlt) * 20;				    // climb is updated every 1/20 second, so climb rate is cm change per 1/20sec * 20
   //lastAlt = P_ALTfiltered;								// store last alt value for next time
 
-  fakeClimbRate = (fakeAlt - lastAlt) / 2; // test value changes every 2 seconds, so climbrate needs to be halved
+  fakeClimbRate = (fakeAlt - lastAlt) / 2;    // test value changes every 2 seconds, so climbrate needs to be halved
   lastAlt = fakeAlt;
 	
 	baro_filterVARIO();									// filter vario rate and climb rate displays

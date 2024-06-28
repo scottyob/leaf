@@ -268,13 +268,15 @@ void loop() {
 }
 
 void full_system_test() {
-  delay(500);
+  delay(100);
   // update baro sensor
   taskman_baro = baro_update(taskman_baro);
   if (taskman_baro == 0) taskman_baro = 1;
   speaker_updateVarioNote(baro_getClimbRate());
   // update display
   display_thermal_page();
+
+
 
   // allow setting volume by sending a 0, 1, 2, 3 character over Serial  
   if (Serial.available() > 0) {
