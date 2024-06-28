@@ -4,6 +4,12 @@
 * U8g2 LCD: 2.34.22
 * SparkFun 9DoF IMU Breakout - ICM 20948 - Arduino Library: 1.2.12
 
+## ESP32 configuration
+ ESP Board Manager Package 2.0.14
+
+* USB CDC On Boot -> "Enabled"
+* Flash Size -> 8MB
+* Partition Scheme -> 8M with spiffs (3MB APP/1.5MB SPIFFS)
 
 
 tried but not going to use:
@@ -16,9 +22,3 @@ tried but not going to use:
     -> enable NMEAGPS_INTERRUPT_PROCESSING
 * ICM20948_WE
 * AdaFruit ICM20948 (and associated dependencies)
-
-## ESP32 configuration
-
-* USB CDC On Boot -> "Enabled"
-* Flash Size -> 8MB
-* Partition Scheme -> 8M with spiffs (3MB APP/1.5MB SPIFFS)

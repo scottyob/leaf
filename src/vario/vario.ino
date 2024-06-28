@@ -15,7 +15,7 @@
 
 // Pinout for ESP32
 #define AVAIL_GPIO_0       0  // unused, broken out to header
-#define AVAIL_GPIO_21     21  // unused, broken out to header (also can be used as LCD backlight if desired)
+#define AVAIL_GPIO_21     21  // unused, broken out to header (also used as LCD backlight if desired)
 #define AVAIL_GPIO_41     41  // unused, broken out to header
 
 
@@ -24,14 +24,6 @@ uint8_t display_do_tracker = 1;
 
 // keep track of what turned us on (usb plug or user power button), so we know what to initialize and display
 uint8_t bootUpState;
-
-
-
-//should move to SPI file later
-//#define LCD_RS    46          // RS pin for data or instruction
-//#define GLCD_RS    9          // RS pin for data or instruction
-//#define GLCD_RESET 7          // Reset pin
-//#define LED_PIN    6
 
 
 // Main Loop & Task Manager
@@ -175,35 +167,34 @@ void IRAM_ATTR Timer0_ISR() {
 void setup() {
 
 // Start USB Serial Debugging Port
-delay(1000);
-Serial.begin(115200);
-delay(1000);
-Serial.println("Starting Setup");
+  Serial.begin(115200);
+  delay(1000);
+  Serial.println("Starting Setup");
+  /*
+  //Start Main System Timer for Interrupt Events
+    Timer0_Cfg = timerBegin(0, 80, true);                 // Prescaler of 80, so 80Mhz drops to 1Mhz
+    timerAttachInterrupt(Timer0_Cfg, &Timer0_ISR, true);  // Attach interrupt to handle alarm events
+    timerAlarmWrite(Timer0_Cfg, 100000, true);            // Set alarm to go every 100,000 ticks (every 0.1 seconds)
+    timerAlarmEnable(Timer0_Cfg);                         // Enable alarm & timer
+  */
 
-/*
-//Start Main System Timer for Interrupt Events
-  Timer0_Cfg = timerBegin(0, 80, true);                 // Prescaler of 80, so 80Mhz drops to 1Mhz
-  timerAttachInterrupt(Timer0_Cfg, &Timer0_ISR, true);  // Attach interrupt to handle alarm events
-  timerAlarmWrite(Timer0_Cfg, 100000, true);            // Set alarm to go every 100,000 ticks (every 0.1 seconds)
-  timerAlarmEnable(Timer0_Cfg);                         // Enable alarm & timer
-*/
+  // Initialize buttons and power first so we can check what state we're powering up in (i.e., if a button powered us on or being plugged in to USB or something else)
+  buttons_init();  Serial.println("Finished buttons");
+  bootUpState = power_init(); Serial.println("Finished Power");
+  
 
-// Initialize buttons and power first so we can check what state we're powering up in
-buttons_init();  Serial.println("Finished buttons");
-bootUpState = power_init(); Serial.println("Finished Power");
+  display_init();     Serial.println("Finished display");
+  spi_init();         Serial.println("Finished SPI");
+  //GLCD_init();        Serial.println("Finished GLCD");
+  baro_init();        Serial.println("Finished Baro");
+  imu_init();         Serial.println("Finished IMU");
+  gps_init();         Serial.println("Finished GPS");
+  speaker_init();     Serial.println("Finished Speaker");
+  SDcard_init();      Serial.println("Finished SDcard");
 
-setup_Leaf_SPI();   Serial.println("Finished SPI");
-GLCD_init();        Serial.println("Finished GLCD");
-baro_init();        Serial.println("Finished Baro");
-imu_init();         Serial.println("Finished IMU");
-display_init();     Serial.println("Finished display");
-gps_init();         Serial.println("Finished GPS");
-speaker_init();     Serial.println("Finished Speaker");
-SDcard_init();      Serial.println("Finished SDcard");
+  speaker_playSound(fx_enter);      // play sound quickly so user knows they can let go of the power button
 
-Serial.println("Finished Setup");
-
-
+  Serial.println("Finished Setup");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

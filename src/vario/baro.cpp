@@ -258,12 +258,12 @@ void baro_init(void)
   baro_reset();
 
 	// read calibration values
-	C_SENS = SPI_baro_readCalibration(1);
-	C_OFF = SPI_baro_readCalibration(2);
-	C_TCS = SPI_baro_readCalibration(3);
-	C_TCO = SPI_baro_readCalibration(4);
-	C_TREF = SPI_baro_readCalibration(5);
-	C_TEMPSENS = SPI_baro_readCalibration(6);
+	C_SENS = spi_readBaroCalibration(1);
+	C_OFF = spi_readBaroCalibration(2);
+	C_TCS = spi_readBaroCalibration(3);
+	C_TCO = spi_readBaroCalibration(4);
+	C_TREF = spi_readBaroCalibration(5);
+	C_TEMPSENS = spi_readBaroCalibration(6);
 
 	// after initialization, get first baro sensor reading to populate values
 	baro_update(1);  
@@ -288,7 +288,7 @@ void baro_init(void)
 
 void baro_reset(void) {
 	unsigned char command = 0b00011110;	// This is the command to reset, and for the sensor to copy calibration data into the register as needed
-  baro_spiCommand(command);
+  spi_writeBaroCommand(command);
 	delay(3);						                // delay time required before sensor is ready
 }
 
@@ -303,14 +303,14 @@ char baro_update(char process_step) {
       return process_step;                    // if baro_update is called on step 0, do nothing, and return step 0.
       break;
     case 1:
-      baro_spiCommand(CMD_CONVERT_PRESSURE);  // Prep baro sensor ADC to read raw pressure value (then come back for step 2 in ~10ms)      
+      spi_writeBaroCommand(CMD_CONVERT_PRESSURE);  // Prep baro sensor ADC to read raw pressure value (then come back for step 2 in ~10ms)      
       break;
     case 2:
-      D1_P = SPI_baro_readADC();              // Read raw pressure value  
-      baro_spiCommand(CMD_CONVERT_TEMP);      // Prep baro sensor ADC to read raw temperature value (then come back for step 3 in ~10ms)
+      D1_P = spi_readBaroADC();              // Read raw pressure value  
+      spi_writeBaroCommand(CMD_CONVERT_TEMP);      // Prep baro sensor ADC to read raw temperature value (then come back for step 3 in ~10ms)
       break;
     case 3:
-      D2_T = SPI_baro_readADC();						  // read digital temp data
+      D2_T = spi_readBaroADC();						  // read digital temp data
       P_ALT = baro_calculateAlt();            // calculate Pressure Altitude in cm
       break;
     case 4:

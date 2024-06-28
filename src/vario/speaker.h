@@ -3,23 +3,13 @@
 
 #include <Arduino.h>
 
-/*  Old includes from AVR file
-#include <avr/power.h>
-#include <avr/io.h>
-#include <avr/interrupt.h>
-#include <util/delay.h>
-
-#include "display.h"
-#include "settings.h"
-#include "LCD.h"
-*/
-
+#define FX_NOTE_LENGTH  500
+#define SPEAKER_TIMER_FREQ 1000   // Hz
 
 //Pinout for Leaf V3.2.0
 #define SPEAKER_PIN       7
 #define SPEAKER_VOLA      8
 #define SPEAKER_VOLB      9
-#define PWM_CHANNEL       0   // ESP32 has many channels; we'll use the first
 
 /*
 // Pinout for Breakboard
@@ -31,17 +21,16 @@
 
 //each "beep beep" cycle is a "measure", made up of play-length followed by rest-length, then repeat
 
-
 // CLIMB TONE DEFINITIONS
 #define CLIMB_AUDIO_THRESHOLD  10 	// don't play unless climb rate is over this value (cm/s)
 #define CLIMB_MAX		          800		// above this cm/s climb rate, note doesn't get higher
 #define CLIMB_NOTE_MIN		    500		// min tone pitch in Hz for >0 climb
 #define CLIMB_NOTE_MAX 		   1600	  // max tone pitch in Hz for CLIMB_MAX (when vario peaks and starts holding a solid tone)
 #define CLIMB_NOTE_MAXMAX    2200	  // max tone pitch in Hz when vario is truly pegged, even in solid-tone mode
-#define CLIMB_PLAY_MAX		   1200 	// ms play per measure (at min climb)
-#define CLIMB_PLAY_MIN		    200   // ms play per measure (at max climb)
-#define CLIMB_REST_MAX       1000		// ms silence per measure (at min climb)
-#define CLIMB_REST_MIN	      100		// ms silence per measure (at max climb)
+#define CLIMB_PLAY_MAX		   60//1200 	// ms play per measure (at min climb)
+#define CLIMB_PLAY_MIN		    2//200   // ms play per measure (at max climb)
+#define CLIMB_REST_MAX       100//1000		// ms silence per measure (at min climb)
+#define CLIMB_REST_MIN	      2//100		// ms silence per measure (at max climb)
 
 // LiftyAir DEFINITIONS    (for air rising slower than your sinkrate, so net climbrate is negative, but not as bad as it would be in still air)
 #define LIFTYAIR_TONE_MIN	    180		// min pitch tone for lift air @ -(setting)m/s
@@ -58,10 +47,10 @@
 #define SINK_NOTE_MAX		      110   // lowest tone pitch for sink @ SINK_MAX (when vario bottoms out and starts holding a solid tone)
 #define SINK_NOTE_MAXMAX       70   // bottom tone pitch for sink (when vario is truly pegged, even in solid tone mode)
 
-#define SINK_PLAY_MIN		     1200   // ms play per measure (at min sink)
-#define SINK_PLAY_MAX		     2000 	// ms play per measure (at max sink)
-#define SINK_REST_MIN	       1000		// silence samples (at min sink)
-#define SINK_REST_MAX	       1000		// silence samples (at max sink)
+#define SINK_PLAY_MIN		     100//1200   // ms play per measure (at min sink)
+#define SINK_PLAY_MAX		     2//2000 	// ms play per measure (at max sink)
+#define SINK_REST_MIN	       100//1000		// silence samples (at min sink)
+#define SINK_REST_MAX	       2//1000		// silence samples (at max sink)
 
 
 void speaker_init(void);
@@ -74,7 +63,7 @@ void speaker_setVolume(unsigned char volume);
 void speaker_updateVarioNote(int16_t verticalRate);
 void speaker_updateClimbToneParameters(void);
 
-void speaker_playSound(unsigned char sound);
+void speaker_playSound(uint16_t * sound);
 
 void speaker_playsound_up(void);
 void speaker_playsound_down(void);
@@ -84,33 +73,13 @@ void onSpeakerTimer(void);
 void speaker_TEST(void);
 void speaker_playPiano(void);
 
-enum sound_tones {
-  fx_silence,
-	fx_increase,
-	fx_decrease,
-	fx_neutral,
-  fx_neutralLong,
-  fx_double,
-  fx_enter,
-  fx_exit,
-  fx_confirm,
-  fx_cancel,
-  fx_on,
-  fx_off,
-  fx_buttonpress,
-  fx_buttonhold,
-  fx_goingup,
-  fx_goingdown,
-  fx_octavesup,
-  fx_octavesdown
-};
 
-#define NOTE_B0 31      // will crash
-#define NOTE_C1 33      // will crash
-#define NOTE_CS1 35     // will crash
-#define NOTE_D1 37      // will crash
-#define NOTE_DS1 39     // will crash
-#define NOTE_E1 41      // Lowest note we can play without crashing for some reason
+#define NOTE_B0 31      // 
+#define NOTE_C1 33      // 
+#define NOTE_CS1 35     //    maybe retest these with the higher resolution pwm timer
+#define NOTE_D1 37      // 
+#define NOTE_DS1 39     // 
+#define NOTE_E1 41      // Lowest note we can play without crashing due to clock divider limits
 #define NOTE_F1 44
 #define NOTE_FS1 46
 #define NOTE_G1 49
@@ -194,5 +163,58 @@ enum sound_tones {
 #define NOTE_CS8 4435
 #define NOTE_D8 4699
 #define NOTE_DS8 4978
+
+//Tone definitions
+#define NOTE_END 1
+#define NOTE_NONE 0
+
+extern uint16_t fx_silence[];
+
+extern uint16_t fx_increase[];
+extern uint16_t fx_decrease[];
+extern uint16_t fx_neutral[];
+extern uint16_t fx_neutralLong[];
+extern uint16_t fx_double[];
+
+extern uint16_t fx_enter[];
+extern uint16_t fx_exit[];
+extern uint16_t fx_confirm[];
+extern uint16_t fx_cancel[];
+extern uint16_t fx_on[];
+extern uint16_t fx_off[];
+
+extern uint16_t fx_buttonpress[];
+extern uint16_t fx_buttonhold[];
+extern uint16_t fx_goingup[];
+extern uint16_t fx_goingdown[];
+extern uint16_t fx_octavesup[];
+extern uint16_t fx_octavesdown[];
+
+extern uint16_t single_note[];
+
+
+/*
+uint16_t * fx_silence;
+
+uint16_t * fx_increase;
+uint16_t * fx_decrease;
+uint16_t * fx_neutral;
+uint16_t * fx_neutralLong;
+uint16_t * fx_double;
+
+uint16_t * fx_enter;
+uint16_t * fx_exit;
+uint16_t * fx_confirm;
+uint16_t * fx_cancel;
+uint16_t * fx_on;
+uint16_t * fx_off;
+
+uint16_t * fx_buttonpress;
+uint16_t * fx_buttonhold;
+uint16_t * fx_goingup;
+uint16_t * fx_goingdown;
+uint16_t * fx_octavesup;
+uint16_t * fx_octavesdown;
+*/
 
 #endif /* SPEAKER_H_ */

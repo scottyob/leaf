@@ -6,19 +6,13 @@
 #ifndef display_h
 #define display_h
 
-#include <U8g2lib.h>
-#include "fonts.h"
-#include "gps.h"
-#include "leaf_SPI.h"
-//#include "fonts.h"
-
-
-#define LCD_BACKLIGHT     21  // can be used for backlight if desired (also broken out to header)
-
+#define LCD_BACKLIGHT    21  // can be used for backlight if desired (also broken out to header)
+#define LCD_RS           16
+#define LCD_RESET        17
 
 void GLCD_inst(byte data);
 void GLCD_data(byte data);
-void GLCD_init(void);
+//void GLCD_init(void);
 
 
 void display_init(void);

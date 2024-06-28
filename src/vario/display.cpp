@@ -4,17 +4,19 @@
  *
  */
 #include <Arduino.h>
+#include <U8g2lib.h>
+
 #include "display.h"
 #include "display_tests.h"
-#include "Leaf_SPI.h"
+#include "fonts.h"
 
+#include "Leaf_SPI.h"
 #include "gps.h"
 #include "baro.h"
 #include "power.h"
 
-#define GLCD_RS LCD_RS
-#define GLCD_RESET LCD_RESET
-
+//#define GLCD_RS LCD_RS
+//#define GLCD_RESET LCD_RESET
 
 // Display Testing Temp Vars
 float wind_angle = 1.57;
@@ -27,55 +29,20 @@ char string_satNum[] = "00";
 char string_gpsLat[] = "0000000000";
 char string_gpsLng[] = "0000000000";
 
-
-
 U8G2_ST7539_192X64_F_4W_HW_SPI u8g2(U8G2_R3, SPI_SS_LCD, LCD_RS, LCD_RESET);
-
-
 
 void display_init(void) {
   digitalWrite(SPI_SS_LCD, HIGH);
   u8g2.setBusClock(20000000);
+  Serial.print("u8g2 set clock. ");
   u8g2.begin();
+  Serial.print("u8g2 began. ");
   u8g2.setContrast(80);
+  Serial.print("u8g2 set contrast. ");
 
   pinMode(LCD_BACKLIGHT, OUTPUT);
-
+  Serial.println("u8g2 done. ");
 }
-
-
-
-
-// Initialize the GRAPHIC LCD
-// used for writing block data to test bmp display images ... won't save in final version
-void GLCD_init(void)
-{
-  pinMode(GLCD_RS, OUTPUT);
-	digitalWrite(GLCD_RESET, LOW);
-  delay(500);
-  digitalWrite(GLCD_RESET, HIGH);
-  delay(500);
-	GLCD_inst(0b11100010); //Reset
-  delay(20);
-  GLCD_inst(0b10101111); //Enable
-  delay(20);
-  //GLCD_inst(0b10000001); //set Contrast
-  //GLCD_inst(0b00001111); //contrast value
-  delay(20);
-  GLCD_inst(0b00000000);  //Column address LSB ->0
-  delay(20);
-  GLCD_inst(0b00010000);  //Column address MSB ->0
-  delay(20);
-  GLCD_inst(0b10110000);  //Page address ->0
-  delay(20);
-  GLCD_inst(0b10100110);  //Set inverse display->NO
-  delay(20);
-
-  for (int i=0; i<1536; i++){
-    GLCD_data(0b00000000);    //clear LCD
-  }
-}
-
 
 
 void display_battery_icon(uint16_t x, uint16_t y, uint8_t pct, bool charging) {
@@ -145,7 +112,6 @@ void display_test_bat_icon(void) {
 
 // draw satellite constellation starting in upper left x, y and box size (width = height)
 void display_satellites(uint16_t x, uint16_t y, uint16_t size) {
-  Serial.println("entering display_satellites");
   u8g2.firstPage();
   do {
     // Draw the background
@@ -221,7 +187,6 @@ void display_satellites(uint16_t x, uint16_t y, uint16_t size) {
     u8g2.drawStr(0, size + y + 40, "Heading: ");
     u8g2.drawStr(50, size + y + 40, gps.cardinal(gps.course.deg()));
   } while ( u8g2.nextPage() );
-  Serial.println("exiting display_satellites");
 }
 
 
@@ -445,13 +410,13 @@ delay(500);
 
 
 void GLCD_inst(byte data) {
-  digitalWrite(GLCD_RS, LOW);
-  GLCD_spiCommand(data);
+  digitalWrite(LCD_RS, LOW);
+  spi_writeGLCD(data);
 }
 
 void GLCD_data(byte data) {
-  digitalWrite(GLCD_RS, HIGH);
-  GLCD_spiCommand(data);
+  digitalWrite(LCD_RS, HIGH);
+  spi_writeGLCD(data);
 }
 
 
@@ -1181,4 +1146,37 @@ void u8g2_DrawPoly(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t 
 
 
 //void rotate_points()
+
+/* not needed anymore:
+
+// Initialize the GRAPHIC LCD
+// used for writing block data to test bmp display images ... won't save in final version
+void GLCD_init(void)
+{
+  pinMode(GLCD_RS, OUTPUT);
+	digitalWrite(GLCD_RESET, LOW); 
+  delay(100);
+  digitalWrite(GLCD_RESET, HIGH);  
+
+	GLCD_inst(0b11100010); //Reset
+  delay(20);
+  GLCD_inst(0b10101111); //Enable
+  delay(20);
+  //GLCD_inst(0b10000001); //set Contrast
+  //GLCD_inst(0b00001111); //contrast value
+  delay(20);  
+  GLCD_inst(0b00000000);  //Column address LSB ->0
+  delay(20);
+  GLCD_inst(0b00010000);  //Column address MSB ->0
+  delay(20);
+  GLCD_inst(0b10110000);  //Page address ->0
+  delay(20);
+  GLCD_inst(0b10100110);  //Set inverse display->NO
+  delay(20);
+
+  for (int i=0; i<1536; i++){
+    GLCD_data(0b00000000);    //clear LCD
+  }
+}
+*/
 

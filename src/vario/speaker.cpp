@@ -1,78 +1,40 @@
 #include "speaker.h"
 
+// Sound Effects 
+uint16_t fx_silence[] = {NOTE_END};
+
+uint16_t fx_increase[] = {NOTE_C4, NOTE_G4, NOTE_END};
+uint16_t fx_decrease[] = {NOTE_C4, NOTE_F3, NOTE_END};   //110 140, END_OF_TONE};
+uint16_t fx_neutral[] = {NOTE_C4, NOTE_C4, NOTE_END};    //110, 110, END_OF_TONE};
+uint16_t fx_neutralLong[] = {NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_END}; //  {110, 110, 110, 110, 110, 110, 110, 110,10, 110, 1110, 110, 110, 110, 110, 110, 110, 110, 110, 110, END_OF_TONE};
+uint16_t fx_double[] = {NOTE_C4, NOTE_NONE, NOTE_C4, NOTE_END};  //110, 0, 110, END_OF_TONE};
+
+uint16_t fx_enter[] = {NOTE_A4, NOTE_C4, NOTE_E4, NOTE_END};     //150, 120, 90, END_OF_TONE};
+uint16_t fx_exit[] = {NOTE_C5, NOTE_A5, NOTE_F4, NOTE_C4, NOTE_END};       //65, 90, 120, 150, END_OF_TONE};
+uint16_t fx_confirm[] = {200, 200, 140, 140, 170, 170, 110, 110, NOTE_END};
+uint16_t fx_cancel[] = {150, 200, 250, NOTE_END};
+uint16_t fx_on[] = {250, 200, 150, 100, 50, NOTE_END};
+uint16_t fx_off[] = {50, 100, 150, 200, 250, NOTE_END};
+
+uint16_t fx_buttonpress[] = {180, 150, 120, NOTE_END};
+uint16_t fx_buttonhold[] = {150, 200, 250, NOTE_END};
+uint16_t fx_goingup[] = {55, 54, 53, 52, 51, 50, 49, 47, 44, 39, NOTE_END};
+uint16_t fx_goingdown[] = {31, 31, 32, 33, 34, 35, 36, 38, 41, 46, NOTE_END};
+uint16_t fx_octavesup[] = {45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, NOTE_END};
+uint16_t fx_octavesdown[] = {31, 31, 40, 40, 45, 45, 65, 65, 90, 90, NOTE_END};
+
+uint16_t single_note[] = {0, NOTE_END};   // this is to allow playing single notes by changing random_note[0], while still having a NOTE_END terminator following.
+
+
+
 hw_timer_t *speaker_timer = NULL;
 
-//Tone definitions
-#define NOTE_END 1
-#define NOTE_NONE 0
-
-
-// Div = 320000
-// 500 = 2900 / 8 = 362
-// 250 = 1450     = 181
-
-// Div = 240000
-// 500 = 2230 / 8 = 278
-// 250 = 1450     = 181
-
-#define FX_NOTE_LENGTH  500
-#define SPKR_CLK_DIV 240000
-
-//Sound FX Tones
-uint16_t st_silence[] = {NOTE_END};
-
-uint16_t st_increase[] = {NOTE_C4, NOTE_G4, NOTE_END};
-uint16_t st_decrease[] = {NOTE_C4, NOTE_F3, NOTE_END};   //110 140, END_OF_TONE};
-uint16_t st_neutral[] = {NOTE_C4, NOTE_C4, NOTE_END};    //110, 110, END_OF_TONE};
-uint16_t st_neutralLong[] = {NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_END}; //  {110, 110, 110, 110, 110, 110, 110, 110,10, 110, 1110, 110, 110, 110, 110, 110, 110, 110, 110, 110, END_OF_TONE};
-uint16_t st_double[] = {NOTE_C4, NOTE_NONE, NOTE_C4, NOTE_END};  //110, 0, 110, END_OF_TONE};
-
-uint16_t st_enter[] = {NOTE_A4, NOTE_C4, NOTE_E4, NOTE_END};     //150, 120, 90, END_OF_TONE};
-uint16_t st_exit[] = {NOTE_C5, NOTE_A5, NOTE_F4, NOTE_C4, NOTE_END};       //65, 90, 120, 150, END_OF_TONE};
-uint16_t st_confirm[] = {200, 200, 140, 140, 170, 170, 110, 110, NOTE_END};
-uint16_t st_cancel[] = {150, 200, 250, NOTE_END};
-uint16_t st_on[] = {250, 200, 150, 100, 50, NOTE_END};
-uint16_t st_off[] = {50, 100, 150, 200, 250, NOTE_END};
-
-uint16_t st_buttonpress[] = {180, 150, 120, NOTE_END};
-uint16_t st_buttonhold[] = {150, 200, 250, NOTE_END};
-uint16_t st_goingup[] = {55, 54, 53, 52, 51, 50, 49, 47, 44, 39, NOTE_END};
-uint16_t st_goingdown[] = {31, 31, 32, 33, 34, 35, 36, 38, 41, 46, NOTE_END};
-uint16_t st_octavesup[] = {45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, NOTE_END};
-uint16_t st_octavesdown[] = {31, 31, 40, 40, 45, 45, 65, 65, 90, 90, NOTE_END};
-
-
-
-
-uint16_t* sound_fx_tones[] = {
-  st_silence,
-
-  st_increase,
-  st_decrease,
-  st_neutral,
-  st_neutralLong,
-  st_double,
-
-  st_enter,
-  st_exit,
-  st_confirm,
-  st_cancel,
-  st_on,
-  st_off,
-
-  st_buttonpress,
-  st_buttonhold,
-  st_goingup,
-  st_goingdown,
-  st_octavesup,
-  st_octavesdown,
-};
-
 // volatile pointer to the sound sample to play
- uint16_t* volatile snd_index;
+volatile uint16_t* snd_index;
 
 volatile uint16_t sound_varioNote = 0;			    // note to play for vario beeps
 volatile uint16_t sound_varioNoteLast = 0;		// last note played for vario beeps
+volatile uint16_t sound_varioNoteLastUpdate = 0;		// last note updated in climb analysis
 volatile uint16_t sound_varioPlayLength = CLIMB_PLAY_MAX;		// 
 volatile uint16_t sound_varioRestLength = CLIMB_REST_MAX;		// 
 
@@ -82,46 +44,24 @@ volatile bool sound_varioResting = 0;		              // are we resting (silence)
 volatile bool sound_currentlyPlaying = 0;         	// are we playing a sound?
 volatile bool sound_fx = 0;                      // track if we have any sound effects to play (button presses, etc)
 
-uint16_t random_note[] = {0, NOTE_END};   // this is to allow playing single notes by changing random_note[0], while still having a NOTE_END terminator following.
 
 void speaker_init(void)
 {
-  //configure pinouts and PWM channel
+  //configure speaker pinout and PWM channel
   pinMode(SPEAKER_PIN, OUTPUT);
-  pinMode(SPEAKER_VOLA, OUTPUT);
-  pinMode(SPEAKER_VOLB, OUTPUT);
-
-  ledcSetup(PWM_CHANNEL, 1000, 8);
-  ledcAttachPin(SPEAKER_PIN, PWM_CHANNEL);
+  ledcAttach(SPEAKER_PIN, 1000, 10);
 
 	//set Volume to proper default setting
-	//speaker_setVolume(VOLUME);
-
-  //setup speaker timer interrupt to track each "beat" of sound
-	speaker_timer = timerBegin(1, SPKR_CLK_DIV, true);            // timer#, clock divider, count up -- this just configures, but doesn't start.   NOTE: timerEnd() de-configures.
-  timerAttachInterrupt(speaker_timer, &onSpeakerTimer, true);   // timer, ISR call, rising edge                                                  NOTE: timerDetachInterrupt() does the opposite
-  timerAlarmWrite(speaker_timer, 1000, true);                   // timer, value, reload
-  //timerAlarmEnable(speaker_timer);
-
-  speaker_enableTimer();
-  Serial.println("enable timer - calling enable() in init");
-
-	snd_index = st_silence;
-
-	//speaker_updateClimbToneParameters();
- 
+  pinMode(SPEAKER_VOLA, OUTPUT);
+  pinMode(SPEAKER_VOLB, OUTPUT);
+	//speaker_setVolume(VOLUME);      // use saved user prefs
   speaker_setVolume(1);  
 
-}
-
-void speaker_enableTimer(void) {
-  timerAlarmEnable(speaker_timer);
-  Serial.println("enable timer - enable timer function");
-}
-
-void speaker_disableTimer(void) {
-  timerAlarmDisable(speaker_timer);	
-  Serial.println("disable timer - disable timer function");
+  //setup speaker timer interrupt to track each "beat" of sound
+	speaker_timer = timerBegin(SPEAKER_TIMER_FREQ);            
+  timerAttachInterrupt(speaker_timer, &onSpeakerTimer);          // timer, ISR call          NOTE: timerDetachInterrupt() does the opposite
+  
+	snd_index = fx_silence;  
 }
 
 void speaker_setVolume(unsigned char volume) {
@@ -148,18 +88,22 @@ void speaker_setVolume(unsigned char volume) {
 }
 
 
-void speaker_playSound(unsigned char sound)
+void speaker_playSound(uint16_t * sound)
 {	
-	snd_index = sound_fx_tones[sound];
+	snd_index = sound;
   Serial.print("setting snd_index to: ");
-  Serial.println(*snd_index);
+  Serial.print(*snd_index);
+  Serial.print(" @ ");
+  Serial.println(millis());
   sound_fx = 1;
+  onSpeakerTimer();
 }
 
 void speaker_playNote(uint16_t note) {
-  random_note[0] = note;
-  snd_index = random_note;
+  single_note[0] = note;
+  snd_index = single_note;
   sound_fx = 1;
+  onSpeakerTimer();
 }
 
 unsigned char climbToneSpread;
@@ -199,6 +143,8 @@ void speaker_updateClimbToneParameters(void)
 
 void speaker_updateVarioNote(int16_t verticalRate)
 {
+  sound_varioNoteLastUpdate = sound_varioNote;
+
   if(verticalRate > CLIMB_AUDIO_THRESHOLD) {
     // first clamp to thresholds if climbRate is over the max
     if (verticalRate >= CLIMB_MAX) {
@@ -226,12 +172,26 @@ void speaker_updateVarioNote(int16_t verticalRate)
   } else {
     sound_varioNote = 0;
   }
+
   Serial.print("Update Function -- Note: ");
   Serial.print(sound_varioNote);
   Serial.print(" Play: ");
   Serial.print(sound_varioPlayLength);
   Serial.print(" Rest: ");
   Serial.println(sound_varioRestLength);
+  //Serial.println("END OF UPDATE VARIO NOTE --> this is a whole bunch of text to see if additional serial printing is causing the interrupt routine to fail on the watchdog timer.  woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop ");
+  Serial.println(millis());
+
+  // start the vario beeps if there's something to play, and we haven't been playing, and there are no FX playing
+  if (sound_varioNote) {
+    if (sound_varioNoteLastUpdate == 0) {
+      if (!sound_fx) onSpeakerTimer(); // if there's somethign to play
+    }
+  }
+  
+  
+
+
 
 
   /*
@@ -321,57 +281,56 @@ ISR: do_this_when_time_expires() {
 
 */
 
-// Sound driver
+// Speaker Driver
 void IRAM_ATTR onSpeakerTimer() {
-  //first disable the alarm that got us here, until we're ready for the next one
-  timerAlarmDisable(speaker_timer);
-  Serial.println("disable timer - top of interrupt");
+  //Serial.print("ENTER ISR: ");
+  timerWrite(speaker_timer, 0);  // reset timer as we enter interrupt
 
-  //prioritize sound effects from buttons etc before we get to vario beeps
+  //prioritize sound effects from UI & buttons etc before we get to vario beeps
   if (sound_fx) {								
-    Serial.println("entering sound_fx in interrupt");    
+    Serial.print("FX: "); Serial.print(*snd_index); Serial.print(" @ "); Serial.println(millis());	
 		if (*snd_index != NOTE_END) {
-			if (*snd_index != sound_fxNoteLast) ledcWriteTone(PWM_CHANNEL, *snd_index);   // only change pwm if it's a different note, otherwise we get a little audio blip between the same notes
+			if (*snd_index != sound_fxNoteLast) ledcWriteTone(SPEAKER_PIN, *snd_index);   // only change pwm if it's a different note, otherwise we get a little audio blip between the same notes           
       sound_fxNoteLast = *snd_index;
-      timerAlarmWrite(speaker_timer, FX_NOTE_LENGTH, true); // start timer for play period
-      timerAlarmEnable(speaker_timer);
-      Serial.println("enable timer - in bewteen FX tones");			
-
-      Serial.print("Index Tone: ");
-      Serial.print(*snd_index);
-      Serial.print(" Length: ");
-      Serial.print(FX_NOTE_LENGTH);
-      Serial.println(" finished sound_fx in interrupt");
-
       snd_index++;
+      timerWrite(speaker_timer, 0);                           // start at 0
+      timerAlarm(speaker_timer, FX_NOTE_LENGTH, false, 0);    // set timer for play period (don't reload; we'll trigger back into this ISR when time is up)
+            
 		} else {									// Else, we're at END_OF_TONE
-      Serial.println("disable timer - end of FX");
-      ledcWriteTone(PWM_CHANNEL, 0);    
-			timerAlarmDisable(speaker_timer);
+      Serial.println("FX NOTE END");
+      ledcWriteTone(SPEAKER_PIN, 0);    			
 			sound_fx = 0;
       sound_fxNoteLast = 0;
+
+      //next, play vario sounds if any
+      if (sound_varioNote > 0) {
+        timerWrite(speaker_timer, 0);                           // start at 0
+        timerAlarm(speaker_timer, 500, false, 0);    // set timer for play period (don't reload; we'll trigger back into this ISR when time is up)
+      }
 		}    
   } else if (sound_varioNote > 0) {
+    //Serial.print("Vario: "); Serial.print(sound_varioNote); Serial.print(" @ "); Serial.print(millis());
     // Handle the beeps and rests of a vario sound "measure"
     if (sound_varioResting) {
-      ledcWriteTone(PWM_CHANNEL, 0);                // "play" silence since we're resting between beeps
+      //Serial.println("  VAR_REST");
+      ledcWriteTone(SPEAKER_PIN, 0);                              // "play" silence since we're resting between beeps
       sound_varioNoteLast = 0;
-      sound_varioResting = false;                      // next time through we want to play sound
-      timerAlarmWrite(speaker_timer, sound_varioRestLength, true); // start timer for the rest period
-      timerAlarmEnable(speaker_timer);              // ...and go!
-      Serial.println("enable timer - vario Rest");			
+      sound_varioResting = false;                                 // next time through we want to play sound
+      
+      timerWrite(speaker_timer, 0);                               // start at 0
+      timerAlarm(speaker_timer, sound_varioRestLength, false, 0); // set timer for play period (don't reload; we'll trigger back into this ISR when time is up)	
     } else {
-      if (sound_varioNote != sound_varioNoteLast) ledcWriteTone(PWM_CHANNEL, sound_varioNote);  // play the note, but only if different, otherwise we get a little audio blip between the same successive notes (happens when vario is pegged and there's no rest period between)
+      //Serial.println("  VAR_BEEP");
+      if (sound_varioNote != sound_varioNoteLast) ledcWriteTone(SPEAKER_PIN, sound_varioNote);  // play the note, but only if different, otherwise we get a little audio blip between the same successive notes (happens when vario is pegged and there's no rest period between)
       sound_varioNoteLast = sound_varioNote;
-      if (sound_varioRestLength) sound_varioResting = true;   // next time through we want to rest (play silence), unless climb is maxed out (ie, rest length == 0)
-      timerAlarmWrite(speaker_timer, sound_varioPlayLength, true); // start timer for play period
-      timerAlarmEnable(speaker_timer);
-      Serial.println("enable timer - vario beep");			
+      if (sound_varioRestLength) sound_varioResting = true;       // next time through we want to rest (play silence), unless climb is maxed out (ie, rest length == 0)
+      timerWrite(speaker_timer, 0);                               // start at 0
+      timerAlarm(speaker_timer, sound_varioPlayLength, false, 0); // set timer for play period (don't reload; we'll trigger back into this ISR when time is up)			
     }
   } else {
-    ledcWriteTone(PWM_CHANNEL, 0);  // play silence (if timer is configured for auto-reload, we have to do this here because sound_varioNote might have been set to 0 while we were beeping, and then we'll keep beeping)
-    Serial.println("didn't do anything in ISR");
-  }
+    //Serial.println("ISR NO SOUND");
+    ledcWriteTone(SPEAKER_PIN, 0);  // play silence (if timer is configured for auto-reload, we have to do this here because sound_varioNote might have been set to 0 while we were beeping, and then we'll keep beeping)  
+  }  
 /*
 
   
@@ -502,3 +461,4 @@ if (Serial.available() > 0) {
     if (fx) speaker_playNote(fx);    
   }
 }
+
