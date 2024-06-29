@@ -220,7 +220,8 @@ void loop() {
 
   switch (display_page) {
     case 0:
-      gps_test_sats();
+      full_system_test();
+      //gps_test_sats();
       //gps_test();
       break;
     case 1:
@@ -229,7 +230,7 @@ void loop() {
       //display_test();      
       //power_test();
       if (display_do_tracker) {
-        full_system_test();
+        //full_system_test();
         //display_test_real_3();
         //SDcard_test();
         //display_do_tracker = 0;
@@ -268,15 +269,18 @@ void loop() {
 }
 
 void full_system_test() {
-  delay(100);
+  //delay(100);
   // update baro sensor
   taskman_baro = baro_update(taskman_baro);
   if (taskman_baro == 0) taskman_baro = 1;
-  speaker_updateVarioNote(baro_getClimbRate());
+  
+  for (int i=0; i<300000; i++) {
+    speaker_updateVarioNote(baro_getClimbRate());
+  }
+  speaker_debugPrint();
+
   // update display
   display_thermal_page();
-
-
 
   // allow setting volume by sending a 0, 1, 2, 3 character over Serial  
   if (Serial.available() > 0) {

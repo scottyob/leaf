@@ -179,46 +179,83 @@ void speaker_updateVarioNote(int16_t verticalRate) {
 void speaker_updateVarioNoteSample(int16_t verticalRate) {
   sound_varioNoteLastUpdate = sound_varioNote;
 
+  uint16_t sound_varioNoteTEMP;
+  uint16_t sound_vario_play_samplesTEMP;
+  uint16_t sound_vario_rest_samplesTEMP;
+
   if(verticalRate > CLIMB_AUDIO_THRESHOLD) {
     // first clamp to thresholds if climbRate is over the max
     if (verticalRate >= CLIMB_MAX) {
-      sound_varioNote = verticalRate * (CLIMB_NOTE_MAX - CLIMB_NOTE_MIN) / CLIMB_MAX + CLIMB_NOTE_MIN;
-      if (sound_varioNote > CLIMB_NOTE_MAXMAX) sound_varioNote = CLIMB_NOTE_MAXMAX;
-      sound_vario_play_samples = CLIMB_PLAY_SAMPLES_MIN;
-      sound_vario_rest_samples = 0;    // just hold a continuous tone, no rest in between
+      sound_varioNoteTEMP = verticalRate * (CLIMB_NOTE_MAX - CLIMB_NOTE_MIN) / CLIMB_MAX + CLIMB_NOTE_MIN;
+      if (sound_varioNoteTEMP > CLIMB_NOTE_MAXMAX) sound_varioNoteTEMP = CLIMB_NOTE_MAXMAX;
+      sound_vario_play_samplesTEMP = CLIMB_PLAY_SAMPLES_MIN;
+      sound_vario_rest_samplesTEMP = 0;    // just hold a continuous tone, no rest in between
     } else {
-      sound_varioNote = verticalRate * (CLIMB_NOTE_MAX - CLIMB_NOTE_MIN) / CLIMB_MAX + CLIMB_NOTE_MIN;
-      sound_vario_play_samples = CLIMB_PLAY_SAMPLES_MAX - (verticalRate * (CLIMB_PLAY_SAMPLES_MAX - CLIMB_PLAY_SAMPLES_MIN) / CLIMB_MAX);
-      sound_vario_rest_samples = CLIMB_REST_SAMPLES_MAX - (verticalRate * (CLIMB_REST_SAMPLES_MAX - CLIMB_REST_SAMPLES_MIN) / CLIMB_MAX);
+      sound_varioNoteTEMP = verticalRate * (CLIMB_NOTE_MAX - CLIMB_NOTE_MIN) / CLIMB_MAX + CLIMB_NOTE_MIN;
+      sound_vario_play_samplesTEMP = CLIMB_PLAY_SAMPLES_MAX - (verticalRate * (CLIMB_PLAY_SAMPLES_MAX - CLIMB_PLAY_SAMPLES_MIN) / CLIMB_MAX);
+      sound_vario_rest_samplesTEMP = CLIMB_REST_SAMPLES_MAX - (verticalRate * (CLIMB_REST_SAMPLES_MAX - CLIMB_REST_SAMPLES_MIN) / CLIMB_MAX);
     }
   } else if (verticalRate < SINK_ALARM) {    
     // first clamp to thresholds if sinkRate is over the max
     if (verticalRate <= SINK_MAX) {
-      sound_varioNote = SINK_NOTE_MIN - verticalRate * (SINK_NOTE_MIN - SINK_NOTE_MAX) / SINK_MAX;
-      if (sound_varioNote < SINK_NOTE_MAXMAX || sound_varioNote > SINK_NOTE_MAX) sound_varioNote = SINK_NOTE_MAXMAX;  // the second condition (|| > SINK_NOTE_MAX) is to prevent uint16 wrap-around to a much higher number
-      sound_vario_play_samples = SINK_PLAY_SAMPLES_MAX;
-      sound_vario_rest_samples = 0;    // just hold a continuous tone, no pulses
+      sound_varioNoteTEMP = SINK_NOTE_MIN - verticalRate * (SINK_NOTE_MIN - SINK_NOTE_MAX) / SINK_MAX;
+      if (sound_varioNoteTEMP < SINK_NOTE_MAXMAX || sound_varioNoteTEMP > SINK_NOTE_MAX) sound_varioNoteTEMP = SINK_NOTE_MAXMAX;  // the second condition (|| > SINK_NOTE_MAX) is to prevent uint16 wrap-around to a much higher number
+      sound_vario_play_samplesTEMP = SINK_PLAY_SAMPLES_MAX;
+      sound_vario_rest_samplesTEMP = 0;    // just hold a continuous tone, no pulses
     } else {
-      sound_varioNote = SINK_NOTE_MIN - verticalRate * (SINK_NOTE_MIN - SINK_NOTE_MAX) / SINK_MAX;
-      sound_vario_play_samples = SINK_PLAY_SAMPLES_MIN + (verticalRate * (SINK_PLAY_SAMPLES_MAX - SINK_PLAY_SAMPLES_MIN) / SINK_MAX);
-      sound_vario_rest_samples = SINK_REST_SAMPLES_MIN + (verticalRate * (SINK_REST_SAMPLES_MAX - SINK_REST_SAMPLES_MIN) / SINK_MAX);
+      sound_varioNoteTEMP = SINK_NOTE_MIN - verticalRate * (SINK_NOTE_MIN - SINK_NOTE_MAX) / SINK_MAX;
+      sound_vario_play_samplesTEMP = SINK_PLAY_SAMPLES_MIN + (verticalRate * (SINK_PLAY_SAMPLES_MAX - SINK_PLAY_SAMPLES_MIN) / SINK_MAX);
+      sound_vario_rest_samplesTEMP = SINK_REST_SAMPLES_MIN + (verticalRate * (SINK_REST_SAMPLES_MAX - SINK_REST_SAMPLES_MIN) / SINK_MAX);
     }
   } else {
     sound_varioNote = 0;
   }
 
-  Serial.print("Update Sample Function -- Note: ");
-  Serial.print(sound_varioNote);
-  Serial.print(" Play: ");
-  Serial.print(sound_varioPlayLength);
-  Serial.print(" Rest: ");
-  Serial.println(sound_varioRestLength);
-  //Serial.println("END OF UPDATE VARIO NOTE --> this is a whole bunch of text to see if additional serial printing is causing the interrupt routine to fail on the watchdog timer.  woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop ");
-  Serial.println(millis());
+  //timerStop(speaker_timer);
+  cli();
+  sound_varioNote = sound_varioNoteTEMP;
+  sound_vario_play_samples = sound_vario_play_samplesTEMP;
+  sound_vario_rest_samples = sound_vario_rest_samplesTEMP;
+  sei();
+  //timerStart(speaker_timer);
+  
+
+
+  //speaker_debugPrint();
 
 }
 
+int microsLast = 0;
+int millisLast = 0;
   
+void speaker_debugPrint() {
+  int timeNowMillis = millis();
+  int timeNowMicros = micros();
+
+  Serial.print(timeNowMillis);
+  Serial.print(" : ");
+  Serial.print(timeNowMillis-millisLast);
+  microsLast = timeNowMicros;
+  millisLast = timeNowMillis;
+
+  Serial.print("  SPKR UPDT -- Note: ");
+  Serial.print(sound_varioNote);
+  Serial.print(" Play: ");
+
+  if (FIXED_SAMPLE_APPROACH) Serial.print(sound_vario_play_samples);
+  else Serial.print(sound_varioPlayLength);
+
+  Serial.print(" Rest: ");
+  
+  if (FIXED_SAMPLE_APPROACH) Serial.print(sound_vario_rest_samples);
+  else Serial.print(sound_varioRestLength);
+
+  Serial.println(" !");
+  //Serial.println("END OF UPDATE VARIO NOTE --> this is a whole bunch of text to see if additional serial printing is causing the interrupt routine to fail on the watchdog timer.  woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop ");
+
+
+}
+
 
 void speaker_updateVarioNoteAdjustable(int16_t verticalRate)
 {
@@ -252,14 +289,9 @@ void speaker_updateVarioNoteAdjustable(int16_t verticalRate)
     sound_varioNote = 0;
   }
 
-  Serial.print("Update Adjustable Function -- Note: ");
-  Serial.print(sound_varioNote);
-  Serial.print(" Play: ");
-  Serial.print(sound_varioPlayLength);
-  Serial.print(" Rest: ");
-  Serial.println(sound_varioRestLength);
-  //Serial.println("END OF UPDATE VARIO NOTE --> this is a whole bunch of text to see if additional serial printing is causing the interrupt routine to fail on the watchdog timer.  woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop woop ");
-  Serial.println(millis());
+
+
+  //speaker_debugPrint();
 
   // start the vario beeps if there's something to play, and we haven't been playing, and there are no FX playing
   if (sound_varioNote) {

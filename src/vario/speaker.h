@@ -5,7 +5,7 @@
 
 
 // for fixed sample-length timer (approach #1)
-#define SPEAKER_SAMPLE_LENGTH   50    // ms per sound 'sample' (i.e. like the length of a quarter note) 
+#define SPEAKER_SAMPLE_LENGTH   15    // ms per sound 'sample' (i.e. like the length of a quarter note) 
 #define FX_NOTE_SAMPLE_COUNT     5      // number of samples to play 
 
 
@@ -14,7 +14,7 @@
 #define SPEAKER_TIMER_FREQ 1000   // Hz
 
 //Pinout for Leaf V3.2.0
-#define SPEAKER_PIN       7
+#define SPEAKER_PIN       41 //7
 #define SPEAKER_VOLA      8
 #define SPEAKER_VOLB      9
 
@@ -96,7 +96,7 @@ void speaker_playsound_down(void);
 
 void speaker_TEST(void);
 void speaker_playPiano(void);
-
+void speaker_debugPrint(void);
 
 #define NOTE_B0 31      // 
 #define NOTE_C1 33      // 
