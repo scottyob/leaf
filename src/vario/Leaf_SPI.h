@@ -19,6 +19,8 @@
 #define SPI_SS_LCD       15
 #define SPI_SS_BARO      18
 
+void spi_checkFlag(uint8_t interruptNumber);
+
 void     spi_init(void);
 void     spi_writeGLCD(byte data);
 void     spi_writeIMUByte(byte address, byte data);

@@ -4,6 +4,23 @@
 
 static const int spiClk = 1000000; 
 
+uint8_t SPI_FLAG = 0;
+
+void spi_checkFlag(uint8_t interruptNumber) {
+  if (SPI_FLAG) {
+    switch(SPI_FLAG) {
+      case 1: Serial.print("1"); break;
+      case 2: Serial.print("2"); break;
+      case 3: Serial.print("3"); break;
+    }
+    Serial.print(" From ");
+    if (interruptNumber == 1)
+      Serial.println("main timer");
+    else if (interruptNumber == 2)
+      Serial.println("speaker timer");
+  }
+}
+
 void spi_init(void) {
   pinMode(SPI_SS_IMU, OUTPUT);
   pinMode(SPI_SS_LCD, OUTPUT);
@@ -67,9 +84,11 @@ uint32_t spi_writeBaroCommand(byte data) {
   uint32_t val = 0;
 
   SPI.beginTransaction(SPISettings(spiClk, MSBFIRST, SPI_MODE0));
+  SPI_FLAG = 1;
   digitalWrite(SPI_SS_BARO, LOW);
   val = SPI.transfer(data);     
   digitalWrite(SPI_SS_BARO, HIGH);
+  SPI_FLAG = 0;
   SPI.endTransaction();
   
   return val;
@@ -83,6 +102,7 @@ uint16_t spi_readBaroCalibration(unsigned char PROMaddress) {
 	command += (PROMaddress << 1);		// PROM read command is 1 0 1 0 ad2 ad1 ad0 0
   
   SPI.beginTransaction(SPISettings(spiClk, MSBFIRST, SPI_MODE0));
+  SPI_FLAG = 2;
   digitalWrite(SPI_SS_BARO, LOW); //pull SS slow to prep other end for transfer
   
   SPI.transfer(command);
@@ -91,6 +111,7 @@ uint16_t spi_readBaroCalibration(unsigned char PROMaddress) {
 
   //Serial.println(data);
   digitalWrite(SPI_SS_BARO, HIGH); //pull ss high to signify end of data transfer
+  SPI_FLAG = 0;
   SPI.endTransaction();
 
 	return value;
@@ -106,6 +127,7 @@ uint32_t spi_readBaroADC(void) {
   uint32_t valueL = 0;					// This will be the final 24-bit output from the ADC
   
   SPI.beginTransaction(SPISettings(spiClk, MSBFIRST, SPI_MODE0));
+  SPI_FLAG = 3;
   digitalWrite(SPI_SS_BARO, LOW); //pull SS slow to prep other end for transfer
   
   SPI.transfer(0b00000000);
@@ -115,6 +137,7 @@ uint32_t spi_readBaroADC(void) {
 
   //Serial.println(data);
   digitalWrite(SPI_SS_BARO, HIGH); //pull ss high to signify end of data transfer
+  SPI_FLAG = 0;
   SPI.endTransaction();
 
   return valueL;

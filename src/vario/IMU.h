@@ -23,6 +23,8 @@
 
 
 void imu_init(void);
+void imu_update(void);
+
 void imu_test(void);
 
 #endif

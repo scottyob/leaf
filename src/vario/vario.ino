@@ -12,46 +12,91 @@
 #include "speaker.h"
 #include "SDcard.h"
 
-
 // Pinout for ESP32
-#define AVAIL_GPIO_0       0  // unused, broken out to header
-#define AVAIL_GPIO_21     21  // unused, broken out to header (also used as LCD backlight if desired)
-#define AVAIL_GPIO_41     41  // unused, broken out to header
-
-
-uint8_t display_page = 0;
-uint8_t display_do_tracker = 1;
+  #define AVAIL_GPIO_0       0  // unused, broken out to header
+  #define AVAIL_GPIO_21     21  // unused, broken out to header (also used as LCD backlight if desired)
+  #define AVAIL_GPIO_39     39  // unused, broken out to header
 
 // keep track of what turned us on (usb plug or user power button), so we know what to initialize and display
-uint8_t bootUpState;
+  uint8_t bootUpState;
 
+// Main system event/task timer
+  hw_timer_t *task_timer = NULL;
+  #define TASK_TIMER_FREQ 1000  // run at 1000Hz 
+  #define TASK_TIMER_LENGTH 10  // trigger the ISR every 10ms
+  void onTaskTimer(void);
 
-// Main Loop & Task Manager
-/*
-The main loop perioritizes processesing any data in the serial buffer so as not to miss any NMEA GPS characters.  
-The main loop will continue looping & processing serial data until all NMEA sentences have been captured.
-Then, if there is no more serial data, any other remaining tasks will be processed.
-Once all tasks are done, and if the serial UART is quiet, then the processor will go to sleep.
+  // Counters for system task timer
+  char counter_10ms_block = 0;
+  char counter_100ms_block = 0;
 
-Every 10ms, driven by an interrupt timer, the system will wake up, set flags for which tasks are needed, and then run the main loop (i.e., pick up in the loop where it left off when it went to sleep)
-
-TODO: In addition to the timer-driven interrupt, we may consider also setting wake-up interrupts for the pushbuttons, the GPS 1PPS signal, and perhaps others.
-*/
-
+// flag if the GPS serial port is done sending data for awhile
+  bool gps_is_quiet = 0;
 
 // Trackers for Task Manager Queue.  Default to tasks being needed, so they execute upon startup
-char taskman_buttons = 1;   // poll & process buttons
-char taskman_baro = 1;      // (1) Process on-chip ADC pressure, (2) read pressure and process on-chip ADC temperature, (3) calculate, filter, and store values
-char taskman_imu = 1;       // read sensors and update values
-char taskman_gps = 1;       // process any NMEA strings and update values
-char taskman_lcd = 1;       // update display
-char taskman_power = 1;     // check battery, check auto-turn-off, etc
-char taskman_logging = 1;   // check auto-start, increment timers, update log file, etc
-char taskman_setTasks = 1;  // the task of setting tasks -- usually set by timer-driven interrupt
+  char taskman_setTasks = 1;  // the task of setting tasks -- usually set by timer-driven interrupt
 
-// Counters for system task timer
-char counter_10ms_block = 0;
-char counter_100ms_block = 0;
+  char taskman_buttons = 1;   // poll & process buttons
+  char taskman_baro = 1;      // (1) preprocess on-chip ADC pressure, (2) read pressure and preprocess on-chip ADC temperature, (3) read temp and calulate true Alt, (4) filter Alt, update climb, and store values etc
+  char taskman_imu = 1;       // read sensors and update values
+  char taskman_gps = 1;       // process any NMEA strings and update values
+  char taskman_display = 1;   // update display
+  char taskman_power = 1;     // check battery, check auto-turn-off, etc
+  char taskman_logging = 1;   // check auto-start, increment timers, update log file, etc
+
+
+// temp testing stuff
+  uint8_t display_page = 0;
+  uint8_t display_do_tracker = 1;
+  #define TESTING_LOOP false
+
+
+
+
+/////////////////////////////////////////////////
+//             SETUP              ///////////////
+/////////////////////////////////////////////////
+void setup() {
+
+  // Start USB Serial Debugging Port
+    Serial.begin(115200);
+    delay(1000);
+    Serial.println("Starting Setup");
+
+  // Initialize buttons and power first so we can check what state we're powering up in (i.e., if a button powered us on or being plugged in to USB or something else)
+    buttons_init();     Serial.println("Finished buttons");
+    bootUpState = power_init(); Serial.println("Finished Power");
+
+  // Then initialize speaker so we can play sound to user confirming startup (so they know they can let go of the power button)
+    speaker_init();     Serial.println("Finished Speaker");
+    speaker_playSound(fx_enter);
+
+  // Then initialize the rest of the system
+    display_init();     Serial.println("Finished display");   // u8g2 library initializes SPI bus for itself, so this can come before spi_init()
+    //TODO: show loading / splash Screen?
+    spi_init();         Serial.println("Finished SPI");
+    //GLCD_init();        Serial.println("Finished GLCD");    // test SPI object to write directly to LCD (instead of using u8g2 library -- note it IS possible to have both enabled at once)
+    baro_init();        Serial.println("Finished Baro");
+    imu_init();         Serial.println("Finished IMU");
+    gps_init();         Serial.println("Finished GPS");    
+    SDcard_init();      Serial.println("Finished SDcard");
+  
+  //Start Main System Timer for Interrupt Events (this will tell Main Loop to set tasks every interrupt cycle)
+    task_timer = timerBegin(TASK_TIMER_FREQ);            
+    timerAttachInterrupt(task_timer, &onTaskTimer); // timer, ISR call          NOTE: timerDetachInterrupt() does the opposite
+    timerAlarm(task_timer, TASK_TIMER_LENGTH, true, 0);      // auto reload timer ever time we've counted a sample length
+
+  // All done!
+    Serial.println("Finished Setup");
+}
+
+// Main Timer Interrupt
+void IRAM_ATTR onTaskTimer() {
+  //do stuff every alarm cycle (default 10ms)
+  taskman_setTasks = 1; // next time through main loop, set tasks to do!
+  // wakeup();  // go back to main loop and keep processing stuff that needs doing!
+  spi_checkFlag(1);
+}
 
 
 
@@ -59,149 +104,125 @@ char counter_100ms_block = 0;
 /////////////////////////////////////////////////
 // Main Loop for Processing Tasks ///////////////
 /////////////////////////////////////////////////
+/*
+The main loop perioritizes processesing any data in the serial buffer so as not to miss any NMEA GPS characters.  
+When the serial buffer is empty, the main loop will move on to processing any other remaining tasks.
 
-void main_timer_loop() {    
-  if (taskman_setTasks) {   // if we're running through this loop for the first time in 10ms (since the last timer driven interrupt)
-    setTasks();             // then set necessary tasks
+The gps serial port is considered 'quiet' if we received the last character of the last NMEA sentence.  We shouldn't expect more sentences for awhile (~1 second GPS updates)
+If the serial port is quiet, and all tasks are done, then the processor will go to sleep for the remainder of the 10ms time block.
+Every 10ms, driven by an interrupt timer, the system will wake up, set flags for which tasks are needed, and then return to running the main loop.
+
+TODO: In addition to the timer-driven interrupt, we may consider also setting wake-up interrupts for the pushbuttons, the GPS 1PPS signal, and perhaps others.
+*/
+
+void loop() {
+  if (TESTING_LOOP) main_loop_test();
+  else main_loop_real();
+}
+
+uint32_t millisBegin;
+
+void main_loop_real() {    
+  if (taskman_setTasks) {   // check flag set by timer interrupt.  We only do this once every 10ms
+    millisBegin = millis();   // save the timestamp when we enter this 10ms block... we'll need to be done within 10ms!
+    Serial.println(millisBegin);
+    setTasks();             // set necessary tasks for this 10ms block
     taskman_setTasks = 0;   // we don't need to do this again until the next 10ms timer interrupt
   }
 
-  //if (serial is available) uart_is_quiet = process_serial_stuff(); // serial is high priority so we don't overflow the buffer, first check this if available
-  //else { taskManager(); }                                          // otherwise do other remaining tasks
-  //if (uart_is_quiet) goToSleep();                 
-  // else, run this loop again and keep processing the serial buffer until we're done with all the NMEA sentences this cycle
+  // do necessary tasks
+  taskManager(); 
+
+ 
+  
+  // then process serial buffer for the remained of this time blockfirst process serial buffer
+  if (millis() < millisBegin+8) {
+    gps_is_quiet = gps_read_buffer();   // this will loop while data is available in the buffer and return when it's all emptied.
+  }
+
+  
+  
+  //if (gps_is_quiet) goToSleep();                 
+  //else, run this loop again and keep processing the serial buffer until we're done with all the NMEA sentences this cycle
+
+  //TODO: if gps serial buffer can fill while processor is sleeping, then we don't need to wait for serial port to be quiet
 }
 
 
-void setTasks(void) {  
+void setTasks(void) {    
   // increment time counters
-  if(++counter_10ms_block = 10) {
+  if(++counter_10ms_block >= 10) {
     counter_10ms_block = 0;           // every 10 periods of 10ms, go back to 0 (100ms total)
-    if (++counter_100ms_block = 10) {
-      counter_100ms_block = 0;        // every 10 periods of 100ms, go back to 0 (1sec total)
+    if (++counter_100ms_block >= 10) {
+      counter_100ms_block = 0;        // every 10 periods of 100ms, go back to 0 (1sec total)      
     }
   }
 
-  // TODO: check buttons here (every 10ms)
+  // tasks to complete every 10ms
+  taskman_buttons = 1;
 
-  // set additional tasks to complete, broken down into 10ms block cycles.  (embedded if() statements allow for tasks every second)
+  // set additional tasks to complete, broken down into 10ms block cycles.  (embedded if() statements allow for tasks every second, spaced out on different 100ms blocks)
   switch (counter_10ms_block) {
     case 0:
-      taskman_baro = 1;  // update baro every 50ms on the 0th and 5th blocks
-
-      // cycle through tasks needed less often (every 500ms - 1000ms)
-      if (counter_100ms_block == 0) taskman_gps = 1;                              // every second: gps
-      if (counter_100ms_block == 1) taskman_power = 1;                            // every second: power checks      
-      if (counter_100ms_block == 2) taskman_logging = 1;                          // every second: logging
-      if (counter_100ms_block == 3 || counter_100ms_block == 8) taskman_lcd = 1;  // every half-second LCD
+      taskman_baro = 1;  // begin updating baro every 50ms on the 0th and 5th blocks
       break;
     case 1:
-      // FYI: baro step 2 will update here
+      taskman_baro = 2;
       break;
     case 2:
-      // FYI: baro step 3 will update here
+      taskman_baro = 3;
       break;
     case 3:
-      // FYI: baro step 4 will update here
+      taskman_baro = 4;
       break;
     case 4:
       taskman_imu = 1;  // update accel every 100ms during the 4th block
       break;
     case 5:
-      taskman_baro = 1;  // update baro every 50ms on the 0th and 5th blocks
+      taskman_baro = 1;  // begin updating baro every 50ms on the 0th and 5th blocks
       break;
     case 6:
-      // FYI: baro step 2 will update here
+      taskman_baro = 2;
       break;
     case 7:
-      // FYI: baro step 3 will update here
+      taskman_baro = 3;
       break;
     case 8:
-      // FYI: baro step 4 will update here
+      taskman_baro = 4;
       break;
     case 9:
+      
+      // Tasks every second complete here in the 9th 10ms block.  Pick a unique 100ms block for each task to space things out
+      if (counter_100ms_block == 0) taskman_gps = 1;                              // every second: gps
+      if (counter_100ms_block == 1) taskman_power = 1;                            // every second: power checks      
+      if (counter_100ms_block == 2) taskman_logging = 1;                          // every second: logging
+
+      // Update LCD every half-second on the 3rd and 8th 100ms blocks
+      if (counter_100ms_block == 3 || counter_100ms_block == 8) taskman_display = 1;  // every half-second: LCD update
       break;      
   }
 }
 
 
 
-char process_serial_stuff() {
-  char finished_sending = 0;
-  //grab_stuff_from_serial_buffer();
-  //process_serial_GPS_NMEA_strings();
-  //if (GPS_is_done_with_its_strings) finished_sending = 1;
-  return finished_sending;
-}
-
-
-
 // execute necessary tasks while we're awake and have things to do
-void taskManager(void) {
-  /*
-  if (taskman_buttons) buttons_update();
-  if (taskman_baro) taskman_baro = baro_update(taskman_baro);    // update baro, using the appropriate step number
-  if (taskman_imu) imu_update();
-  if (taskman_gps) gps_update();
-  if (taskman_lcd) lcd_update();
-  if (taskman_power) power_update();
-  if (taskman_logging) logging_update();
-  */
+void taskManager(void) {    
+
+  if (taskman_buttons) { buttons_update(); taskman_buttons = 0; }
+  if (taskman_baro)    { baro_update(taskman_baro); taskman_baro = 0; }    // update baro, using the appropriate step number
+  if (taskman_imu)     { imu_update();     taskman_imu = 0; }
+  if (taskman_gps)     { gps_update();     taskman_gps = 0; }
+  if (taskman_power)   { power_update();   taskman_power = 0; }
+//if (taskman_logging) { logging_update(); taskman_logging = 0; }
+  if (taskman_display) { display_update(); taskman_display = 0; }  
 }
 
-
-// Main Timer Setup and interrupt event
-hw_timer_t *Timer0_Cfg = NULL;
-
-void IRAM_ATTR Timer0_ISR() {
-  //do stuff every alarm cycle (default 10ms)
-  taskman_setTasks = 1; // next time through main loop, set tasks to do!
-  // wakeup();  // go back to main loop and keep processing stuff that needs doing!
-}
-
-
-
-/*****************************
-**          SETUP           **
-*****************************/
-void setup() {
-
-// Start USB Serial Debugging Port
-  Serial.begin(115200);
-  delay(1000);
-  Serial.println("Starting Setup");
-  /*
-  //Start Main System Timer for Interrupt Events
-    Timer0_Cfg = timerBegin(0, 80, true);                 // Prescaler of 80, so 80Mhz drops to 1Mhz
-    timerAttachInterrupt(Timer0_Cfg, &Timer0_ISR, true);  // Attach interrupt to handle alarm events
-    timerAlarmWrite(Timer0_Cfg, 100000, true);            // Set alarm to go every 100,000 ticks (every 0.1 seconds)
-    timerAlarmEnable(Timer0_Cfg);                         // Enable alarm & timer
-  */
-
-  // Initialize buttons and power first so we can check what state we're powering up in (i.e., if a button powered us on or being plugged in to USB or something else)
-  buttons_init();  Serial.println("Finished buttons");
-  bootUpState = power_init(); Serial.println("Finished Power");
-  
-
-  display_init();     Serial.println("Finished display");
-  spi_init();         Serial.println("Finished SPI");
-  //GLCD_init();        Serial.println("Finished GLCD");
-  baro_init();        Serial.println("Finished Baro");
-  imu_init();         Serial.println("Finished IMU");
-  gps_init();         Serial.println("Finished GPS");
-  speaker_init();     Serial.println("Finished Speaker");
-  SDcard_init();      Serial.println("Finished SDcard");
-
-  speaker_playSound(fx_enter);      // play sound quickly so user knows they can let go of the power button
-
-  Serial.println("Finished Setup");
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void loop() {
+void main_loop_test() {
 
   uint8_t button = buttons_check();
   uint8_t button_state = buttons_get_state();
@@ -220,9 +241,9 @@ void loop() {
 
   switch (display_page) {
     case 0:
-      full_system_test();
+      //full_system_test();
       //gps_test_sats();
-      //gps_test();
+      gps_test();
       break;
     case 1:
   
@@ -230,7 +251,7 @@ void loop() {
       //display_test();      
       //power_test();
       if (display_do_tracker) {
-        //full_system_test();
+        full_system_test();
         //display_test_real_3();
         //SDcard_test();
         //display_do_tracker = 0;
@@ -269,14 +290,14 @@ void loop() {
 }
 
 void full_system_test() {
-  //delay(100);
+  delay(500);
   // update baro sensor
   taskman_baro = baro_update(taskman_baro);
   if (taskman_baro == 0) taskman_baro = 1;
   
-  for (int i=0; i<300000; i++) {
+  //for (int i=0; i<300000; i++) {
     speaker_updateVarioNote(baro_getClimbRate());
-  }
+  //}
   speaker_debugPrint();
 
   // update display

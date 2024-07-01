@@ -15,8 +15,6 @@
 #define CMD_CONVERT_PRESSURE	0b01001000
 #define CMD_CONVERT_TEMP		0b01011000
 
-// Sensor Data filter values
-#define PfilterSize		6			// pressure alt filter values (minimum 1, max 10)
 
 
 /* 
@@ -50,19 +48,14 @@ uint32_t baro_readADC(void);
 
 void baro_convertPressure(unsigned char cmd);
 void baro_convertTemperature(unsigned char cmd);
-
 int32_t baro_calculateAlt(void);
-
-void baro_updateClimb(void);
-
 void baro_filterALT(void);
-void baro_filterVARIO(void);
-
-void baro_flightLog(void);  
+void baro_updateClimb(void);
+void baro_debugPrint(void);
+void baro_flightLog(void); 
+void baro_filterCLIMB(void);
 
 void baro_test(void);
-
-
 
 int32_t baro_getAlt (void);
 int16_t baro_getClimbRate (void);

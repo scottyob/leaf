@@ -1,5 +1,5 @@
 #include "speaker.h"
-
+#include "Leaf_SPI.h"
 // use this to switch between method 1 (fixed sample length approach) and method 2 (adjustable timer length)
 #define FIXED_SAMPLE_APPROACH true
 
@@ -211,13 +211,14 @@ void speaker_updateVarioNoteSample(int16_t verticalRate) {
     sound_varioNote = 0;
   }
 
-  //timerStop(speaker_timer);
-  cli();
+  // stop the timer to copy values, to ensure the ISR doesn't trigger in the middle of these steps
+  timerStop(speaker_timer);
+  //cli();
   sound_varioNote = sound_varioNoteTEMP;
   sound_vario_play_samples = sound_vario_play_samplesTEMP;
   sound_vario_rest_samples = sound_vario_rest_samplesTEMP;
-  sei();
-  //timerStart(speaker_timer);
+  //sei();
+  timerStart(speaker_timer);
   
 
 
@@ -394,17 +395,18 @@ ISR: do_this_when_time_expires() {
 
 // Speaker Driver for method 1 (fixed sample length)
 void IRAM_ATTR onSpeakerTimerSample() {
+  //spi_checkFlag(2);
   //Serial.print("ENTER ISR: ");
   
   //prioritize sound effects from UI & buttons etc before we get to vario beeps
   if (sound_fx) {								
-    Serial.print("FX: "); Serial.print(*snd_index); Serial.print(" @ "); Serial.println(millis());	
+    //Serial.print("FX: "); Serial.print(*snd_index); Serial.print(" @ "); Serial.println(millis());	
 		if (*snd_index != NOTE_END) {
 			if (*snd_index != sound_fxNoteLast) ledcWriteTone(SPEAKER_PIN, *snd_index);   // only change pwm if it's a different note, otherwise we get a little audio blip between the same notes           
+      sound_fxNoteLast = *snd_index;      //save last note and move on to next
 
       //if we've played this note for enough samples
-      if (++sound_fx_sample_count >= FX_NOTE_SAMPLE_COUNT) {
-        sound_fxNoteLast = *snd_index;      //save last note and move on to next
+      if (++sound_fx_sample_count >= FX_NOTE_SAMPLE_COUNT) {        
         snd_index++;
         sound_fx_sample_count = 0;          //and reset sample count    
       }   

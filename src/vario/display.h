@@ -16,6 +16,9 @@ void GLCD_data(byte data);
 
 
 void display_init(void);
+void display_update(void);
+
+
 void display_satellites(uint16_t x, uint16_t y, uint16_t size);
 
 void display_battery_icon(uint16_t x, uint16_t y, uint8_t battery_pct);

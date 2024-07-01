@@ -39,6 +39,10 @@ extern struct gps_sat_info sats[MAX_SATELLITES];
 
 
 void gps_init(void);
+char gps_read_buffer(void);
+void gps_update(void);
+
+
 void gps_test(void);
 void gps_test_sats(void);
 

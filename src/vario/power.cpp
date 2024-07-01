@@ -43,6 +43,12 @@ uint8_t power_init(void) {
   return ON_USB_NO_BATT;
 }
 
+void power_update() {
+  //TODO: fill this in
+  // stuff like checking batt state, checking auto-off, etc
+}
+
+
 
 uint32_t ADC_value;
 

@@ -152,6 +152,11 @@ float fakeSpeed = 0;
 float fakeSpeedIncrement = 3;
 float fakeCourse = 0;
 
+void gps_update() {
+  //TODO: fill this in
+
+}
+
 void gps_updateFakeNumbers() {
   fakeCourse += 5;
   if (fakeCourse >= 360) fakeCourse = 0;
@@ -212,7 +217,14 @@ uint8_t gps_getTurn() {
 }
 
 
-void gps_test_sats(void) {
+char gps_read_buffer() {
+  while (gpsPort.available() > 0) {
+    gps.encode(gpsPort.read());
+  }
+  return 0;
+}
+
+void gps_test_sats() {
   // Timing test to see if serial buffer size increase works
   delay(0);
 

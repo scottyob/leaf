@@ -3,62 +3,79 @@
  *
  */
 #include "baro.h"
+#include "speaker.h"
 #include "LinearRegression.h"
 
-// User Settings for Vario Performance
-#define VARIO_SENSITIVITY 3
-#define CLIMB_AVERAGE 1
 
-// global variables
-int32_t TEMP = 0;
-int32_t TEMPfiltered = 0;
 
-int32_t PRESSURE = 0;
-int32_t PRESSUREfiltered = 0;
+// Filter values to average/smooth out the baro sensor
 
-int32_t P_ALT = 0;
-int32_t P_ALTfiltered = 0;
-int32_t P_ALTregression = 0;
-int32_t P_ALTinitial = 0;
-int32_t lastAlt = 0;
+  // User Settings for Vario
+  #define ALTITUDE_FILTER_VALS_PREF 10                    // user setting for how many altitude samples to filter over, from 1 to 20
+  #define ALTITUDE_FILTER_VALS_MAX  20
+  int32_t altitudeFilterVals[ALTITUDE_FILTER_VALS_MAX+1]; // use [0] as the index / bookmark
 
-int32_t AltFilterReadings[10];
+  // LinearRegression to average out noisy sensor readings
+  LinearRegression<ALTITUDE_FILTER_VALS_PREF> alt_lr;
 
-int16_t CLIMB_RATE = 0;
-int16_t CLIMB_RATEfiltered = 0;
-int32_t VARIO_RATEfiltered = 0;
+  #define CLIMB_FILTER_VALS_PREF    10                    // how many climb rate values to average over 
+  #define CLIMB_FILTER_VALS_MAX     20
+  int16_t climbFilterVals[CLIMB_FILTER_VALS_MAX+1];       // use [0] as the index / bookmark
 
-int16_t varioVals[25];
-int16_t climbVals[31];
-int16_t climbSecVals[9];
+  // probably gonna delete these
+    #define VARIO_SENSITIVITY 3 // not sure what this is yet :)
+    #define CLIMB_AVERAGE 1
+    #define PfilterSize		6			// pressure alt filter values (minimum 1, max 10)
+    int16_t varioVals[25];
+    int16_t climbVals[31];
+    int16_t climbSecVals[9];
+
+
+
+// Baro Values
+  int16_t CLIMB_RATE = 0;
+  int16_t CLIMB_RATEfiltered = 0;
+  
+  
+  int32_t VARIO_RATEfiltered = 0;
+
+  int32_t TEMP = 0;
+  int32_t TEMPfiltered = 0;
+
+  int32_t PRESSURE = 0;
+  int32_t PRESSUREfiltered = 0;
+
+  int32_t P_ALT = 0;
+  int32_t P_ALTfiltered = 0;
+  int32_t P_ALTregression = 0;
+  int32_t P_ALTinitial = 0;
+  int32_t lastAlt = 0;
 
 // Sensor Calibration Values (stored in chip PROM; must be read at startup before performing baro calculations)
-uint16_t C_SENS;
-uint16_t C_OFF;
-uint16_t C_TCS;
-uint16_t C_TCO;
-uint16_t C_TREF;
-uint16_t C_TEMPSENS;
+  uint16_t C_SENS;
+  uint16_t C_OFF;
+  uint16_t C_TCS;
+  uint16_t C_TCO;
+  uint16_t C_TREF;
+  uint16_t C_TEMPSENS;
 
 // Digital read-out values
-uint32_t D1_P;								//  digital pressure value (D1 in datasheet)
-uint32_t D2_T;								//  digital temp value (D2 in datasheet) 
-uint32_t D1_Pfiltered;
-uint32_t D2_Tfiltered;
+  uint32_t D1_P;								//  digital pressure value (D1 in datasheet)
+  uint32_t D2_T;								//  digital temp value (D2 in datasheet) 
+  uint32_t D1_Pfiltered;
+  uint32_t D2_Tfiltered;
 
 // Temperature Calculations
-int32_t dT;
+  int32_t dT;
 
 // Compensation Values
-int64_t OFF1;        // Offset at actual temperature
-int64_t SENS1;       // Sensitivity at actual temperature
-// Extra compensation values for lower temperature ranges
-int32_t TEMP2;
-int64_t OFF2;
-int64_t SENS2;
+  int64_t OFF1;        // Offset at actual temperature
+  int64_t SENS1;       // Sensitivity at actual temperature
+  // Extra compensation values for lower temperature ranges
+  int32_t TEMP2;
+  int64_t OFF2;
+  int64_t SENS2;
 
-// LinearRegression to average out noisy sensor readings
-LinearRegression<10> alt_lr;
 
 
 //*******************************************
@@ -71,13 +88,16 @@ int32_t change = 1;
 
 
 int32_t baro_getAlt(void) {  
-  return fakeAlt;  
+  return P_ALTfiltered;  
 }
 
+// actual climb rate, for display on screen numerically, and saving in flight log
 int16_t baro_getClimbRate(void) {
-  return fakeClimbRate;
+  //return fakeClimbRate;
+  return CLIMB_RATEfiltered;
 }
 
+// climb rate for vario var visuals and perhaps sound.  This is separate in case we want to average/filter it differently
 int16_t baro_getVarioBar(void) {
   return fakeVarioRate;
 }
@@ -250,7 +270,7 @@ void baro_init(void)
 	// initialize averaging arrays
 	for (i=0;i<31;i++) {
 		if (i<25) varioVals[i] = 0;
-		if (i<9) climbSecVals[i]=0;
+		if (i<9) climbSecVals[i]=0;    
 		climbVals[i] = 0;
 	}
 
@@ -273,8 +293,14 @@ void baro_init(void)
 	baro_update(3);  
 	P_ALTfiltered = P_ALT;			// filtered value should start with first reading
 	lastAlt = P_ALTfiltered;		// assume we're stationary to start (previous Alt = Current ALt, so climb rate is zero)
-	P_ALTinitial = P_ALTfiltered;	// also save first value to use as starting point
+	P_ALTinitial = P_ALTfiltered;	// also save first value to use as starting point (launch)
   P_ALTregression = P_ALTfiltered;
+
+  // load the filter with our current start-up altitude
+  for (int i = 1; i <= ALTITUDE_FILTER_VALS_MAX; i++) {
+    altitudeFilterVals[i] = P_ALT;
+  }
+
 
   fakeAlt = altitude_values[altitude_values[0]];
   lastAlt = fakeAlt;
@@ -314,9 +340,10 @@ char baro_update(char process_step) {
       P_ALT = baro_calculateAlt();            // calculate Pressure Altitude in cm
       break;
     case 4:
-      baro_filterALT();							          // filter pressure value
+      baro_filterALT();							          // filter pressure alt value
 	    baro_updateClimb();							        // update and filter climb rate
       baro_flightLog();                       // store any values in FlightLog as needed.  TODO: should this be every second or somewhere else?
+      //baro_debugPrint();
       break;   
   }
   if(++process_step > 4) process_step = 0;  // prep for the next step in the process (if we just did step 4, we're done so set to 0.  Elsewhere, Interrupt timer will set to 1 again eventually)  
@@ -324,6 +351,138 @@ char baro_update(char process_step) {
 }
 
 
+int32_t baro_calculateAlt() {
+	// calculate temperature (in 100ths of degrees C, from -4000 to 8500)
+	  dT = D2_T - ((int32_t)C_TREF)*256;
+	  TEMP = 2000 + (((int64_t)dT)*((int64_t)C_TEMPSENS))  /  pow(2,23);
+
+  // low temperature compensation adjustments
+    TEMP2 = 0;
+    OFF2 = 0;
+    SENS2 = 0;
+    if (TEMP < 2000) {      
+      TEMP2 = pow((int64_t)dT,2) / pow(2,31);
+      OFF2  = 5*pow((TEMP - 2000),2) / 2;
+      SENS2 = 5*pow((TEMP - 2000),2) / 4; 
+    }
+
+    // very low temperature compensation adjustments
+    if (TEMP < -1500) {          
+      OFF2  = OFF2 + 7 * pow((TEMP + 1500),2);
+      SENS2 = SENS2 + 11 * pow((TEMP +1500),2) / 2; 
+    }
+
+    TEMP = TEMP - TEMP2;
+    OFF1 = OFF1 - OFF2;
+    SENS1 = SENS1 - SENS2;
+
+	//Filter Temp if necessary due to noise in values
+    TEMPfiltered = TEMP;    //TODO: actually filter if needed
+		
+  // calculate temperature compensated pressure (in 100ths of mbars)
+    OFF1  = (int64_t)C_OFF*pow(2,16) + (((int64_t)C_TCO) * dT)/pow(2,7);
+    SENS1 = (int64_t)C_SENS*pow(2,15) + ((int64_t)C_TCS * dT) /pow(2,8);
+    PRESSURE = ((uint64_t)D1_P * SENS1 / (int64_t)pow(2,21) - OFF1)/pow(2,15);
+
+	// calculate pressure altitude in cm
+	  return 4433100.0*(1.0-pow((float)PRESSURE/101325.0,(.190264)));
+}
+
+uint8_t fakeAltCounter = 0;
+
+void baro_filterALT(void) {  
+
+  // new way with regression:
+    alt_lr.update((double)millis(), (double)P_ALT);
+    LinearFit fit = alt_lr.fit();
+    P_ALTregression = linear_value(&fit, (double)millis());
+
+  
+  //old way with averaging last N values equally:
+    P_ALTfiltered = 0;
+    int8_t filterBookmark = altitudeFilterVals[0];       // start at the saved spot in the filter array
+    int8_t filterIndex = filterBookmark;                 // and create an index to track all the values we need for averaging
+
+    altitudeFilterVals[filterBookmark] = P_ALT;          // load in the new value at the bookmarked spot
+    if (++filterBookmark >= ALTITUDE_FILTER_VALS_MAX)    // increment bookmark for next time
+      filterBookmark = 1;                                // wrap around the array for next time if needed
+    altitudeFilterVals[0] = filterBookmark;              // and save the bookmark for next time
+
+    // sum up all the values from this spot and previous, for the correct number of samples (user pref)
+    for (int i = 0; i < ALTITUDE_FILTER_VALS_PREF; i++) {
+      P_ALTfiltered += altitudeFilterVals[filterIndex];   
+      filterIndex--;
+      if (filterIndex <= 0) filterIndex = ALTITUDE_FILTER_VALS_MAX; // wrap around the array
+    }
+    P_ALTfiltered /= ALTITUDE_FILTER_VALS_PREF; // divide to get the average
+  
+
+  // temp testing stuff  
+    fakeAlt = altitude_values[altitude_values[0]];
+    if(++fakeAltCounter >=10) {
+      fakeAltCounter = 0;
+      altitude_values[0] = altitude_values[0] + 1;
+      if (altitude_values[0] == 144) altitude_values[0] = 1;
+      //baro_updateClimb();
+    }
+
+}
+
+
+
+// Update Climb
+void baro_updateClimb() {
+	//TODO: incorporate ACCEL for added precision/accuracy
+	CLIMB_RATE = (P_ALTfiltered - lastAlt) * 20;	// climb is updated every 1/20 second, so climb rate is cm change per 1/20sec * 20
+  lastAlt = P_ALTfiltered;								      // store last alt value for next time
+
+  //filter climb rate
+    CLIMB_RATEfiltered = 0;
+    int8_t filterBookmark = climbFilterVals[0];       // start at the saved spot in the filter array
+    int8_t filterIndex = filterBookmark;              // and create an index to track all the values we need for averaging
+
+    climbFilterVals[filterBookmark] = CLIMB_RATE;     // load in the new value at the bookmarked spot
+    if (++filterBookmark >= CLIMB_FILTER_VALS_MAX)    // increment bookmark for next time
+      filterBookmark = 1;                             // wrap around the array for next time if needed
+    climbFilterVals[0] = filterBookmark;              // and save the bookmark for next time
+
+    // sum up all the values from this spot and previous, for the correct number of samples (user pref)
+    for (int i = 0; i < CLIMB_FILTER_VALS_PREF; i++) {
+      CLIMB_RATEfiltered += climbFilterVals[filterIndex];   
+      filterIndex--;
+      if (filterIndex <= 0) filterIndex = CLIMB_FILTER_VALS_MAX; // wrap around the array
+    }
+    CLIMB_RATEfiltered /= CLIMB_FILTER_VALS_PREF; // divide to get the average
+  
+
+
+
+  //fakeClimbRate = (fakeAlt - lastAlt) / 6;      // test value changes every 2 seconds, so climbrate needs to be halved
+  //lastAlt = fakeAlt;
+	
+	//baro_filterCLIMB();									        // filter vario rate and climb rate displays
+	
+  speaker_updateVarioNoteSample(CLIMB_RATEfiltered);
+}
+
+void baro_debugPrint() {
+  Serial.print("D1_P:");
+  Serial.print(D1_P);
+  Serial.print(", D2_T:");
+  Serial.print(D2_T);         //has been zero, perhaps because GPS serial buffer processing delayed the ADC prep for reading this from baro chip
+  Serial.print(", ALT:");
+  Serial.print(P_ALT);
+  Serial.print(", FILTERED:");
+  Serial.print(P_ALTfiltered);
+  Serial.print(", REGRESSED:");
+  Serial.print(P_ALTregression);
+  Serial.print(", TEMP:");
+  Serial.print(TEMP);
+  Serial.print(", CLIMB:");
+  Serial.print(CLIMB_RATE + P_ALTinitial);
+  Serial.print(", CLIMB_FILTERED:");
+  Serial.println(CLIMB_RATEfiltered + P_ALTinitial);
+}
 
 
 
@@ -347,91 +506,8 @@ void baro_flightLog(void) {
 
 
 
-// Update Climb
-void baro_updateClimb(void)
-{
-	//TODO: incorporate ACCEL for added precision/accuracy
-	//CLIMB_RATE = (P_ALTfiltered - lastAlt) * 20;				    // climb is updated every 1/20 second, so climb rate is cm change per 1/20sec * 20
-  //lastAlt = P_ALTfiltered;								// store last alt value for next time
 
-  fakeClimbRate = (fakeAlt - lastAlt) / 2;    // test value changes every 2 seconds, so climbrate needs to be halved
-  lastAlt = fakeAlt;
-	
-	baro_filterVARIO();									// filter vario rate and climb rate displays
-	//speaker_updateClimbTone();
-}
-
-
-int32_t baro_calculateAlt(void)
-{
-	// calculate temperature (in 100ths of degrees C, from -4000 to 8500)
-	  dT = D2_T - ((int32_t)C_TREF)*256;
-	  TEMP = 2000 + (((int64_t)dT)*((int64_t)C_TEMPSENS))  /  pow(2,23);
-
-  // low temperature compensation adjustments
-    TEMP2 = 0;
-    OFF2 = 0;
-    SENS2 = 0;
-    if (TEMP < 2000) {      
-     TEMP2 = pow((int64_t)dT,2) / pow(2,31);
-      OFF2  = 5*pow((TEMP - 2000),2) / 2;
-      SENS2 = 5*pow((TEMP - 2000),2) / 4; 
-    }
-
-    // very low temperature compensation adjustments
-    if (TEMP < -1500) {          
-      OFF2  = OFF2 + 7 * pow((TEMP + 1500),2);
-      SENS2 = SENS2 + 11 * pow((TEMP +1500),2) / 2; 
-    }
-
-    TEMP = TEMP - TEMP2;
-    OFF1 = OFF1 - OFF2;
-    SENS1 = SENS1 - SENS2;
-
-	//Filter Temp if necessary due to noise in values
-    TEMPfiltered = TEMP;    //TODO: actually filter if needed
-		
-  // calculate temperature compensated pressure (in 100ths of mbars)
-	OFF1  = (int64_t)C_OFF*pow(2,16) + (((int64_t)C_TCO) * dT)/pow(2,7);
-	SENS1 = (int64_t)C_SENS*pow(2,15) + ((int64_t)C_TCS * dT) /pow(2,8);
-	PRESSURE = ((uint64_t)D1_P * SENS1 / (int64_t)pow(2,21) - OFF1)/pow(2,15);
-
-	// calculate pressure altitude in cm
-	return 4433100.0*(1.0-pow((float)PRESSURE/101325.0,(.190264)));
-}
-
-
-void baro_filterALT(void) {  
-
-  // new way with regression:
-  alt_lr.update((double)millis(), (double)P_ALT);
-  LinearFit fit = alt_lr.fit();
-  P_ALTregression = linear_value(&fit, (double)millis());
-
-  //old way with averaging last N values equally:
-  for(int i=9; i>0; i--) {
-    AltFilterReadings[i] = AltFilterReadings[i-1]; // move every reading down one
-  }
-
-  AltFilterReadings[0] = P_ALT;                   // Put new reading at the head of the array
-
-  P_ALTfiltered = 0;
-
-  for (int i = 0; i<PfilterSize; i++) {
-  P_ALTfiltered += AltFilterReadings[i];
-  }
-
-  P_ALTfiltered /= PfilterSize;
-
-	//P_ALTfiltered = (P_ALTfiltered * (PfilterSize - 1) + P_ALT) / PfilterSize;   	// filter by weighting old values higher
-
-  fakeAlt = altitude_values[altitude_values[0]];
-  altitude_values[0] = altitude_values[0] + 1;
-  if (altitude_values[0] == 144) altitude_values[0] = 1;
-}
-
-
-void baro_filterVARIO(void)
+void baro_filterCLIMB(void)
 {
 	uint32_t sum = 0;
 	unsigned char i = 0;

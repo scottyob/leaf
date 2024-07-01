@@ -44,6 +44,10 @@ void display_init(void) {
   Serial.println("u8g2 done. ");
 }
 
+void display_update() {
+  display_thermal_page();
+}
+
 
 void display_battery_icon(uint16_t x, uint16_t y, uint8_t pct, bool charging) {
 

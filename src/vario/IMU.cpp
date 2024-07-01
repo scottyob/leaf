@@ -8,7 +8,7 @@
 #include "IMU.h"
 #include "Leaf_SPI.h"
 
-void imu_init(void) {
+void imu_init() {
 
   pinMode(IMU_INTERRUPT, INPUT);
 
@@ -36,7 +36,7 @@ void imu_init(void) {
     
 }
 
-void imu_test(void) {
+void imu_test() {
   delay(100);
   for(int i = 45; i<51; i++) {
     Serial.print(spi_readIMUByte(i));        
@@ -45,4 +45,6 @@ void imu_test(void) {
   Serial.println("");
 }
 
-
+void imu_update() {
+  //TODO: fill this in
+}

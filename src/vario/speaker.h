@@ -5,8 +5,8 @@
 
 
 // for fixed sample-length timer (approach #1)
-#define SPEAKER_SAMPLE_LENGTH   15    // ms per sound 'sample' (i.e. like the length of a quarter note) 
-#define FX_NOTE_SAMPLE_COUNT     5      // number of samples to play 
+#define SPEAKER_SAMPLE_LENGTH   50      // ms per sound 'sample' (i.e. like the length of a quarter note) 
+#define FX_NOTE_SAMPLE_COUNT     10      // number of samples to play per FX Note
 
 
 // for time-adjusted timer (approach #2)
@@ -14,7 +14,7 @@
 #define SPEAKER_TIMER_FREQ 1000   // Hz
 
 //Pinout for Leaf V3.2.0
-#define SPEAKER_PIN       41 //7
+#define SPEAKER_PIN       7 //7
 #define SPEAKER_VOLA      8
 #define SPEAKER_VOLB      9
 

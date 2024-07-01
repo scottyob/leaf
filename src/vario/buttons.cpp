@@ -34,7 +34,10 @@ void buttons_init(void) {
   pinMode(BUTTON_PIN_LEFT, INPUT_PULLDOWN);
   pinMode(BUTTON_PIN_RIGHT, INPUT_PULLDOWN);
   pinMode(BUTTON_PIN_CENTER, INPUT_PULLDOWN);
+}
 
+void buttons_update(void) {
+  // TODO: fill this in to handle button pushes with respect to display interface
 }
 
 uint8_t buttons_get_state(void) {
@@ -44,6 +47,8 @@ uint8_t buttons_get_state(void) {
 uint8_t buttons_get_hold_count(void) {
   return button_hold_counter;
 }
+
+
 
 
 // the recurring call to see if user is pressing buttons.  Handles debounce and button state changes
