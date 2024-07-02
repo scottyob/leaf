@@ -46,6 +46,7 @@ uint8_t power_init(void) {
 void power_update() {
   //TODO: fill this in
   // stuff like checking batt state, checking auto-off, etc
+
 }
 
 

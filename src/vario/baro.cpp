@@ -355,7 +355,7 @@ char baro_update(char process_step) {
       baro_filterALT();							              // filter pressure alt value
 	    baro_updateClimb();							            // update and filter climb rate
       baro_flightLog();                           // store any values in FlightLog as needed.  TODO: should this be every second or somewhere else?
-      baro_debugPrint();
+      //baro_debugPrint();
       break;   
   }
   if(++process_step > 4) process_step = 0;  // prep for the next step in the process (if we just did step 4, we're done so set to 0.  Elsewhere, Interrupt timer will set to 1 again eventually)  

@@ -8,6 +8,9 @@
  */
 #include <Arduino.h>
 #include "buttons.h"
+#include "power.h"
+#include "display.h"
+#include "speaker.h"
 
 //button debouncing 
 uint8_t button_debounce_last = NONE;
@@ -38,6 +41,16 @@ void buttons_init(void) {
 
 void buttons_update(void) {
   // TODO: fill this in to handle button pushes with respect to display interface
+  uint8_t which_button = buttons_check();
+  if (which_button == CENTER) {
+    if (buttons_get_state() == HELD) {
+      display_clear();
+      speaker_playSound(fx_exit);
+      delay(600);
+      power_turn_off();
+      while(1); // freeze here until user lets go of button
+    }
+  }
 }
 
 uint8_t buttons_get_state(void) {
@@ -189,4 +202,5 @@ uint8_t buttons_debounce(uint8_t button) {
   }
   return BOUNCE;
 }
+
 

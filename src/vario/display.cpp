@@ -48,6 +48,9 @@ void display_update() {
   display_thermal_page();
 }
 
+void display_clear() {
+  u8g2.clear();
+}
 
 void display_battery_icon(uint16_t x, uint16_t y, uint8_t pct, bool charging) {
 
