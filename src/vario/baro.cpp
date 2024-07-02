@@ -11,17 +11,15 @@
 // Filter values to average/smooth out the baro sensor
 
   // User Settings for Vario
-  #define ALTITUDE_FILTER_VALS_PREF 10                    // user setting for how many altitude samples to filter over, from 1 to 20
-  #define ALTITUDE_FILTER_VALS_MAX  20
-  int32_t altitudeFilterVals[ALTITUDE_FILTER_VALS_MAX+1]; // use [0] as the index / bookmark
-
+  #define FILTER_VALS_MAX           20                    // total array size max; for both altitude and climb 
+  #define ALTITUDE_FILTER_VALS_PREF 20                    // user setting for how many altitude samples to filter over, from 1 to 20
+  #define CLIMB_FILTER_VALS_PREF    20                    // how many climb rate values to average over 
+  int32_t altitudeFilterVals[FILTER_VALS_MAX+1]; // use [0] as the index / bookmark
+  int16_t climbFilterVals[FILTER_VALS_MAX+1];       // use [0] as the index / bookmark
+  
   // LinearRegression to average out noisy sensor readings
   LinearRegression<ALTITUDE_FILTER_VALS_PREF> alt_lr;
-
-  #define CLIMB_FILTER_VALS_PREF    10                    // how many climb rate values to average over 
-  #define CLIMB_FILTER_VALS_MAX     20
-  int16_t climbFilterVals[CLIMB_FILTER_VALS_MAX+1];       // use [0] as the index / bookmark
-
+  
   // probably gonna delete these
     #define VARIO_SENSITIVITY 3 // not sure what this is yet :)
     #define CLIMB_AVERAGE 1
@@ -61,7 +59,9 @@
 
 // Digital read-out values
   uint32_t D1_P;								//  digital pressure value (D1 in datasheet)
+  uint32_t D1_Plast = 1000;     //  save previous value to use if we ever get a mis-read from the baro sensor (initialize with a non zero starter value)
   uint32_t D2_T;								//  digital temp value (D2 in datasheet) 
+  uint32_t D2_Tlast = 1000;     //  save previous value to use if we ever get a mis-read from the baro sensor (initialize with a non zero starter value)
   uint32_t D1_Pfiltered;
   uint32_t D2_Tfiltered;
 
@@ -266,47 +266,55 @@ int32_t altitude_values[] = {
 //Initialize the baro sensor
 void baro_init(void)
 {
-	unsigned char i=0;
-	// initialize averaging arrays
-	for (i=0;i<31;i++) {
-		if (i<25) varioVals[i] = 0;
-		if (i<9) climbSecVals[i]=0;    
-		climbVals[i] = 0;
-	}
+  
+  // probably don't need these
+        unsigned char i=0;
+      // initialize averaging arrays
+        for (i=0;i<31;i++) {
+          if (i<25) varioVals[i] = 0;
+          if (i<9) climbSecVals[i]=0;    
+          climbVals[i] = 0;
+        }
 
 	// reset baro sensor for initialization
-  baro_reset();
+    baro_reset();
+    delay(2);
 
 	// read calibration values
-	C_SENS = spi_readBaroCalibration(1);
-	C_OFF = spi_readBaroCalibration(2);
-	C_TCS = spi_readBaroCalibration(3);
-	C_TCO = spi_readBaroCalibration(4);
-	C_TREF = spi_readBaroCalibration(5);
-	C_TEMPSENS = spi_readBaroCalibration(6);
+    C_SENS = spi_readBaroCalibration(1);
+    C_OFF = spi_readBaroCalibration(2);
+    C_TCS = spi_readBaroCalibration(3);
+    C_TCO = spi_readBaroCalibration(4);
+    C_TREF = spi_readBaroCalibration(5);
+    C_TEMPSENS = spi_readBaroCalibration(6);
 
 	// after initialization, get first baro sensor reading to populate values
-	baro_update(1);  
-	delay(10);					// wait for baro sensor to process
-	baro_update(2);  
-	delay(10);					// wait for baro sensor to process
-	baro_update(3);  
-	P_ALTfiltered = P_ALT;			// filtered value should start with first reading
-	lastAlt = P_ALTfiltered;		// assume we're stationary to start (previous Alt = Current ALt, so climb rate is zero)
-	P_ALTinitial = P_ALTfiltered;	// also save first value to use as starting point (launch)
-  P_ALTregression = P_ALTfiltered;
+    baro_update(1);  
+    delay(10);					// wait for baro sensor to process
+    baro_update(2);  
+    delay(10);					// wait for baro sensor to process
+    baro_update(3);  
+    Serial.println(P_ALT);
+    lastAlt = P_ALT;		          // assume we're stationary to start (previous Alt = Current ALt, so climb rate is zero)
+    P_ALTfiltered = P_ALT;			  // filtered value should start with first reading
+    P_ALTinitial = P_ALT;	        // also save first value to use as starting point (launch)
+    P_ALTregression = P_ALT;
 
   // load the filter with our current start-up altitude
-  for (int i = 1; i <= ALTITUDE_FILTER_VALS_MAX; i++) {
-    altitudeFilterVals[i] = P_ALT;
-  }
-
-
-  fakeAlt = altitude_values[altitude_values[0]];
-  lastAlt = fakeAlt;
+    for (int i = 1; i <= FILTER_VALS_MAX; i++) {
+      altitudeFilterVals[i] = P_ALT;
+      climbFilterVals[i] = 0;
+    }
+    // and set bookmark index to 1
+    altitudeFilterVals[0] = 1;
+    climbFilterVals[0] = 1;
+  
+  
+  //fakeAlt = altitude_values[altitude_values[0]];
+  //lastAlt = fakeAlt;
 
 	baro_update(4);  
-
+  Serial.println(P_ALT);
 
 
   //alt_lr.update((double)millis(), (double)P_ALTinitial);
@@ -326,24 +334,28 @@ char baro_update(char process_step) {
   
 	switch (process_step) {
     case 0:
-      return process_step;                    // if baro_update is called on step 0, do nothing, and return step 0.
+      return process_step;                        // if baro_update is called on step 0, do nothing, and return step 0.
       break;
     case 1:
-      spi_writeBaroCommand(CMD_CONVERT_PRESSURE);  // Prep baro sensor ADC to read raw pressure value (then come back for step 2 in ~10ms)      
+      spi_writeBaroCommand(CMD_CONVERT_PRESSURE); // Prep baro sensor ADC to read raw pressure value (then come back for step 2 in ~10ms)      
       break;
     case 2:
-      D1_P = spi_readBaroADC();              // Read raw pressure value  
-      spi_writeBaroCommand(CMD_CONVERT_TEMP);      // Prep baro sensor ADC to read raw temperature value (then come back for step 3 in ~10ms)
+      D1_P = spi_readBaroADC();                   // Read raw pressure value  
+      if (D1_P == 0) D1_P = D1_Plast;             // use the last value if we get a misread
+      else D1_Plast = D1_P;                       // otherwise save this value for next time if needed
+      spi_writeBaroCommand(CMD_CONVERT_TEMP);     // Prep baro sensor ADC to read raw temperature value (then come back for step 3 in ~10ms)
       break;
     case 3:
-      D2_T = spi_readBaroADC();						  // read digital temp data
-      P_ALT = baro_calculateAlt();            // calculate Pressure Altitude in cm
+      D2_T = spi_readBaroADC();						        // read digital temp data
+      if (D2_T == 0) D2_T = D2_Tlast;             // use the last value if we get a misread
+      else D2_Tlast = D2_T;                       // otherwise save this value for next time if needed
+      P_ALT = baro_calculateAlt();                // calculate Pressure Altitude in cm
       break;
     case 4:
-      baro_filterALT();							          // filter pressure alt value
-	    baro_updateClimb();							        // update and filter climb rate
-      baro_flightLog();                       // store any values in FlightLog as needed.  TODO: should this be every second or somewhere else?
-      //baro_debugPrint();
+      baro_filterALT();							              // filter pressure alt value
+	    baro_updateClimb();							            // update and filter climb rate
+      baro_flightLog();                           // store any values in FlightLog as needed.  TODO: should this be every second or somewhere else?
+      baro_debugPrint();
       break;   
   }
   if(++process_step > 4) process_step = 0;  // prep for the next step in the process (if we just did step 4, we're done so set to 0.  Elsewhere, Interrupt timer will set to 1 again eventually)  
@@ -404,7 +416,7 @@ void baro_filterALT(void) {
     int8_t filterIndex = filterBookmark;                 // and create an index to track all the values we need for averaging
 
     altitudeFilterVals[filterBookmark] = P_ALT;          // load in the new value at the bookmarked spot
-    if (++filterBookmark >= ALTITUDE_FILTER_VALS_MAX)    // increment bookmark for next time
+    if (++filterBookmark >= FILTER_VALS_MAX)    // increment bookmark for next time
       filterBookmark = 1;                                // wrap around the array for next time if needed
     altitudeFilterVals[0] = filterBookmark;              // and save the bookmark for next time
 
@@ -412,7 +424,7 @@ void baro_filterALT(void) {
     for (int i = 0; i < ALTITUDE_FILTER_VALS_PREF; i++) {
       P_ALTfiltered += altitudeFilterVals[filterIndex];   
       filterIndex--;
-      if (filterIndex <= 0) filterIndex = ALTITUDE_FILTER_VALS_MAX; // wrap around the array
+      if (filterIndex <= 0) filterIndex = FILTER_VALS_MAX; // wrap around the array
     }
     P_ALTfiltered /= ALTITUDE_FILTER_VALS_PREF; // divide to get the average
   
@@ -442,7 +454,7 @@ void baro_updateClimb() {
     int8_t filterIndex = filterBookmark;              // and create an index to track all the values we need for averaging
 
     climbFilterVals[filterBookmark] = CLIMB_RATE;     // load in the new value at the bookmarked spot
-    if (++filterBookmark >= CLIMB_FILTER_VALS_MAX)    // increment bookmark for next time
+    if (++filterBookmark >= FILTER_VALS_MAX)    // increment bookmark for next time
       filterBookmark = 1;                             // wrap around the array for next time if needed
     climbFilterVals[0] = filterBookmark;              // and save the bookmark for next time
 
@@ -450,7 +462,7 @@ void baro_updateClimb() {
     for (int i = 0; i < CLIMB_FILTER_VALS_PREF; i++) {
       CLIMB_RATEfiltered += climbFilterVals[filterIndex];   
       filterIndex--;
-      if (filterIndex <= 0) filterIndex = CLIMB_FILTER_VALS_MAX; // wrap around the array
+      if (filterIndex <= 0) filterIndex = FILTER_VALS_MAX; // wrap around the array
     }
     CLIMB_RATEfiltered /= CLIMB_FILTER_VALS_PREF; // divide to get the average
   
@@ -466,22 +478,26 @@ void baro_updateClimb() {
 }
 
 void baro_debugPrint() {
+  /*
   Serial.print("D1_P:");
   Serial.print(D1_P);
   Serial.print(", D2_T:");
   Serial.print(D2_T);         //has been zero, perhaps because GPS serial buffer processing delayed the ADC prep for reading this from baro chip
+  */
+  Serial.print("LastAlt:");
+  Serial.print(lastAlt);// - P_ALTinitial);
   Serial.print(", ALT:");
-  Serial.print(P_ALT);
+  Serial.print(P_ALT);// - P_ALTinitial);
   Serial.print(", FILTERED:");
-  Serial.print(P_ALTfiltered);
+  Serial.print(P_ALTfiltered);// - P_ALTinitial);
   Serial.print(", REGRESSED:");
-  Serial.print(P_ALTregression);
-  Serial.print(", TEMP:");
-  Serial.print(TEMP);
+  Serial.print(P_ALTregression);// - P_ALTinitial);
+  //Serial.print(", TEMP:");
+  //Serial.print(TEMP);
   Serial.print(", CLIMB:");
-  Serial.print(CLIMB_RATE + P_ALTinitial);
+  Serial.print(CLIMB_RATE);
   Serial.print(", CLIMB_FILTERED:");
-  Serial.println(CLIMB_RATEfiltered + P_ALTinitial);
+  Serial.println(CLIMB_RATEfiltered);
 }
 
 

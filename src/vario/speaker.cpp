@@ -412,7 +412,6 @@ void IRAM_ATTR onSpeakerTimerSample() {
       }   
 
 		} else {									// Else, we're at END_OF_TONE
-      Serial.println("FX NOTE END");
       ledcWriteTone(SPEAKER_PIN, 0);    			
 			sound_fx = 0;
       sound_fxNoteLast = 0;      

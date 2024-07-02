@@ -70,7 +70,7 @@ void setup() {
   // Then initialize speaker so we can play sound to user confirming startup (so they know they can let go of the power button)
     speaker_init();     Serial.println("Finished Speaker");
     speaker_playSound(fx_enter);
-
+    
   // Then initialize the rest of the system
     display_init();     Serial.println("Finished display");   // u8g2 library initializes SPI bus for itself, so this can come before spi_init()
     //TODO: show loading / splash Screen?
@@ -125,7 +125,7 @@ uint32_t millisBegin;
 void main_loop_real() {    
   if (taskman_setTasks) {   // check flag set by timer interrupt.  We only do this once every 10ms
     millisBegin = millis();   // save the timestamp when we enter this 10ms block... we'll need to be done within 10ms!
-    Serial.println(millisBegin);
+    //Serial.println(millisBegin);
     setTasks();             // set necessary tasks for this 10ms block
     taskman_setTasks = 0;   // we don't need to do this again until the next 10ms timer interrupt
   }
@@ -207,7 +207,6 @@ void setTasks(void) {
 
 // execute necessary tasks while we're awake and have things to do
 void taskManager(void) {    
-
   if (taskman_buttons) { buttons_update(); taskman_buttons = 0; }
   if (taskman_baro)    { baro_update(taskman_baro); taskman_baro = 0; }    // update baro, using the appropriate step number
   if (taskman_imu)     { imu_update();     taskman_imu = 0; }

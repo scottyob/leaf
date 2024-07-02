@@ -6,7 +6,7 @@
 
 // for fixed sample-length timer (approach #1)
 #define SPEAKER_SAMPLE_LENGTH   50      // ms per sound 'sample' (i.e. like the length of a quarter note) 
-#define FX_NOTE_SAMPLE_COUNT     10      // number of samples to play per FX Note
+#define FX_NOTE_SAMPLE_COUNT     3      // number of samples to play per FX Note
 
 
 // for time-adjusted timer (approach #2)
