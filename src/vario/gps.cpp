@@ -8,6 +8,12 @@
 #include "gps.h"
 
 
+// Setup GPS
+#define gpsPort Serial0         // This is the hardware communication port (UART0) for GPS Rx and Tx lines.  We use the default ESP32S3 pins so no need to set them specifically
+#define GPSBaud 115200
+//#define GPSSerialBufferSize 2048
+TinyGPSPlus gps;                // The TinyGPSPlus object (this is the software class that stores all the GPS info and functions)
+
 const char enableGGA [] PROGMEM = "$PAIR062,0,1";   // enable GGA message every 1 second
 const char enableGSV [] PROGMEM = "PAIR062,3,4";    // enable GSV message every 1 second
 const char enableRMC [] PROGMEM = "PAIR062,4,1";    // enable RMC message every 1 second
@@ -16,12 +22,6 @@ const char disableGLL [] PROGMEM = "$PAIR062,1,0";  // disable message
 const char disableGSA [] PROGMEM = "$PAIR062,2,0";  // disable message
 const char disableVTG [] PROGMEM = "$PAIR062,5,0";  // disable message
 
-
-// Setup GPS
-#define gpsPort Serial0         // This is the hardware communication port (UART0) for GPS Rx and Tx lines.  We use the default ESP32S3 pins so no need to set them specifically
-#define GPSBaud 115200
-//#define GPSSerialBufferSize 2048
-TinyGPSPlus gps;                // The TinyGPSPlus object (this is the software class that stores all the GPS info and functions)
 
 // Satellite tracking
 struct gps_sat_info sats[MAX_SATELLITES];          // GLOBAL GPS satellite info
@@ -154,8 +154,20 @@ float fakeCourse = 0;
 
 void gps_update() {
   //TODO: fill this in
-
+  Serial.print("Valid: ");
+  Serial.print(gps.course.isValid());
+  Serial.print(" Course: ");
+  Serial.print(gps.course.deg());  
+  Serial.print(", Speed: ");
+  Serial.print(gps.speed.mph());  
+  Serial.print(",    AltValid: ");
+  Serial.print(gps.altitude.isValid());
+  Serial.print(", GPS_alt: ");
+  Serial.println(gps.altitude.meters()); 
 }
+
+
+
 
 void gps_updateFakeNumbers() {
   fakeCourse += 5;
@@ -217,9 +229,20 @@ uint8_t gps_getTurn() {
 }
 
 
+bool gps_read_buffer_once() {
+  if (gpsPort.available()) {    
+    gps.encode(gpsPort.read());
+    return true;
+  } else {
+    return false;
+  }
+}
+
 char gps_read_buffer() {
   while (gpsPort.available() > 0) {
-    gps.encode(gpsPort.read());
+    char a = gpsPort.read();
+    gps.encode(a);
+    Serial.print(a);
   }
   return 0;
 }
@@ -230,8 +253,8 @@ void gps_test_sats() {
 
 
   // Dispatch incoming characters
-  while (gpsPort.available() > 0) {
-    gps.encode(gpsPort.read());
+//  while (gpsPort.available() > 0) {
+//    gps.encode(gpsPort.read());
     if (totalGPGSVMessages.isUpdated()) {
       for (int i=0; i<4; ++i) {
         int no = atoi(satNumber[i].value());
@@ -289,7 +312,7 @@ void gps_test_sats() {
           sats[i].active = false;
       }      
     }
-  }
+  //}
 }
 
 

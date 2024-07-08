@@ -13,6 +13,14 @@
 /*
 u8g2_font_12x6LED_tf    12px tall - Narrow variable width font for text like waypoint names and menu options
 u8g2_font_bytesize_tr   12px tall - bigger/more robust than above, but slightly wider and can fit less text per length
+
+// leaf_8x14    8+1 wide x 14 tall - fixed width numbers and units for vario fields.  Narrow punctuation : . , etc to save space
+// leaf 6x12    6+1 wide x 12 tall - fixed width numbers and units for vario fields.  Narrow punctuation : . , etc to save space
+// leaf_7x10    7+1 wide, 10px tall, numerals and <NESW> exclusively for heading field
+// leaf_5x8     5+1 wide, 8px tall, numbers only for now
+// leaf_5h      5px tall, 3~5 pix wide.  For the smallest of text, like field labels
+// leaf_icons
+
 */
 
 

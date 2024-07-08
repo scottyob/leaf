@@ -31,6 +31,8 @@ char string_gpsLng[] = "0000000000";
 
 U8G2_ST7539_192X64_F_4W_HW_SPI u8g2(U8G2_R3, SPI_SS_LCD, LCD_RS, LCD_RESET);
 
+uint8_t display_page = page_thermal;
+
 void display_init(void) {
   digitalWrite(SPI_SS_LCD, HIGH);
   u8g2.setBusClock(20000000);
@@ -44,8 +46,27 @@ void display_init(void) {
   Serial.println("u8g2 done. ");
 }
 
+void display_page_turn (uint8_t action) {
+  if (action == page_home) display_page = page_thermal;
+  else if (action == page_next) display_page++;
+  else if (action == page_prev) display_page--;
+
+  if (display_page == page_last) display_page = 0;
+  else if (display_page > page_last) display_page = page_last - 1;
+}
+
+
 void display_update() {
-  display_thermal_page();
+  switch (display_page) {
+    case page_thermal:
+      display_thermal_page();
+      break;
+    case page_sats:
+      gps_test_sats();
+      break;
+    
+  }
+  
 }
 
 void display_clear() {
@@ -121,7 +142,33 @@ void display_test_bat_icon(void) {
 void display_satellites(uint16_t x, uint16_t y, uint16_t size) {
   u8g2.firstPage();
   do {
-    // Draw the background
+
+    // temp display of speed and heading and all that.
+      // speed
+        u8g2.setFont(leaf_6x12);
+        u8g2.setCursor(0,20);
+        u8g2.print(gps.speed.mph(), 1);
+        u8g2.setFont(leaf_5h);
+        u8g2.drawStr(0, 7, "mph");
+
+      // heading
+        u8g2.setFont(leaf_6x12);
+        u8g2.setCursor(0,40);
+        u8g2.print(gps.course.deg(), 0);
+        u8g2.setCursor(30,40);
+        u8g2.print(gps.cardinal(gps.course.deg()));
+        u8g2.setFont(leaf_5h);
+        u8g2.drawStr(0, 27, "Heading");
+
+      // altitude
+        u8g2.setFont(leaf_6x12);
+        u8g2.setCursor(0,60);
+        u8g2.print(gps.altitude.meters());
+        u8g2.setFont(leaf_5h);
+        u8g2.drawStr(0, 47, "alt");
+
+
+    // Draw the satellite background
     u8g2.setDrawColor(0);
     u8g2.drawBox(x, y, size, size);   // clear the box drawing area
     u8g2.setDrawColor(1);
@@ -183,16 +230,18 @@ void display_satellites(uint16_t x, uint16_t y, uint16_t size) {
    
     //draw other GPS stuff just for testing purposes
     u8g2.drawStr(0, size + y + 10, "Lat: ");
-    u8g2.drawStr(20, size + y + 10, itoa(gps.location.lat(), string_gpsLat, 10));
+    u8g2.setCursor(20, size + y + 10);
+    u8g2.print(gps.location.lat());
 
     u8g2.drawStr(0, size + y + 20, "Lon: ");
-    u8g2.drawStr(20, size + y + 20, itoa(gps.location.lng(), string_gpsLng, 10));
+    u8g2.setCursor(20, size + y + 20);
+    u8g2.print(gps.location.lng(), 10);
 
     //u8g2.drawStr(0, size + y + 30, "Speed: ");
     //u8g2.drawStr(50, size + y + 30, gps.speed());
 
-    u8g2.drawStr(0, size + y + 40, "Heading: ");
-    u8g2.drawStr(50, size + y + 40, gps.cardinal(gps.course.deg()));
+    u8g2.drawStr(0, size + y + 30, "Heading: ");
+    u8g2.drawStr(50, size + y + 30, gps.cardinal(gps.course.deg()));
   } while ( u8g2.nextPage() );
 }
 
@@ -751,7 +800,7 @@ void display_thermal_page() {
 
   u8g2.firstPage();
   do { 
-    uint8_t x = display_speed(0,12);
+    uint8_t x = display_speed(0,12);    // grab resulting x cursor value (if speed has 2 or 3 digits, things will shift over)
     display_headingTurn(x+3, 10);
     display_alt(17, 26, leaf_8x14, baro_getAlt());
     display_altAboveLaunch(17, 50, baro_getAlt() - 120000);

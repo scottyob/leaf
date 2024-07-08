@@ -21,6 +21,8 @@
 #include <TinyGPSPlus.h>
 #include "display.h"
 
+
+
 //Pinout for Leaf V3.2.0
 #define GPS_BACKUP_EN     42  // Enable GPS backup power.  Generally always-on, except able to be turned off for a full GPS reset if needed
 // pins 43-44 are GPS UART, already enabled by default as "Serial0"
@@ -40,6 +42,7 @@ extern struct gps_sat_info sats[MAX_SATELLITES];
 
 void gps_init(void);
 char gps_read_buffer(void);
+bool gps_read_buffer_once(void);
 void gps_update(void);
 
 

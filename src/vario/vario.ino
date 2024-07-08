@@ -46,7 +46,7 @@
 
 
 // temp testing stuff
-  uint8_t display_page = 0;
+  //uint8_t display_page = 0;
   uint8_t display_do_tracker = 1;
   #define TESTING_LOOP false
 
@@ -134,14 +134,22 @@ void main_loop_real() {
   taskManager(); 
 
  
-  
-  // then process serial buffer for the remained of this time blockfirst process serial buffer
-  if (millis() < millisBegin+8) {
-    gps_is_quiet = gps_read_buffer();   // this will loop while data is available in the buffer and return when it's all emptied.
-  }
+  // GPS Serial Buffer Read
+    // First version that won't return until buffer is empty: 
+      /*
+        // then process serial buffer for the remained of this time blockfirst process serial buffer
+        if (millis() < millisBegin+8) {
+          gps_is_quiet = gps_read_buffer();   // this will loop while data is available in the buffer and return when it's all emptied.
+        }
+      */
+    
+    // New version that won't go another character if our 10ms block is up:      
+      // stop reading if buffer returns empty, OR, if our 10ms time block is up (because interrupt fired and set setTasks to true)
+      bool gps_buffer_full = true;
+      while (gps_buffer_full && !taskman_setTasks) {   
+        gps_buffer_full = gps_read_buffer_once();
+      }
 
-  
-  
   //if (gps_is_quiet) goToSleep();                 
   //else, run this loop again and keep processing the serial buffer until we're done with all the NMEA sentences this cycle
 
@@ -226,6 +234,8 @@ void main_loop_test() {
   uint8_t button = buttons_check();
   uint8_t button_state = buttons_get_state();
 
+
+/*
   if (button_state == PRESSED) {
     if (button == LEFT || button == UP) {      
       if (display_page > 0) display_page--;
@@ -286,6 +296,7 @@ void main_loop_test() {
       power_turn_off();
       break;
   }
+  */
 }
 
 void full_system_test() {

@@ -14,7 +14,9 @@ void GLCD_inst(byte data);
 void GLCD_data(byte data);
 //void GLCD_init(void);
 
-
+enum display_page_actions {page_home, page_prev, page_next};
+enum display_pages {page_sats, page_thermal, page_nav, page_menu, page_testing, page_last};
+void display_page_turn (uint8_t action);
 void display_init(void);
 void display_update(void);
 void display_clear(void);

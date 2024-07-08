@@ -42,14 +42,51 @@ void buttons_init(void) {
 void buttons_update(void) {
   // TODO: fill this in to handle button pushes with respect to display interface
   uint8_t which_button = buttons_check();
+  uint8_t button_state = buttons_get_state();
+
+  switch (which_button) {
+    case CENTER:
+      switch (button_state) {
+        case HELD:
+          display_clear();
+          speaker_playSound(fx_exit);
+          delay(600);
+          power_turn_off();
+          while(1); // freeze here until user lets go of button
+          break;
+        case RELEASED:
+          display_page_turn(page_home);
+          break;
+      }      
+      break;
+    case RIGHT:
+      if (button_state == PRESSED) {
+        display_page_turn(page_next);
+        speaker_playSound(fx_increase);
+      }
+      break;
+    case LEFT:
+      if (button_state == PRESSED) {
+        display_page_turn(page_prev);
+        speaker_playSound(fx_decrease);
+      }
+      break;
+    case UP:
+      if (button_state == PRESSED) {
+        speaker_incVolume();
+        speaker_playSound(fx_increase);
+      }
+      break;
+    case DOWN:
+      if (button_state == PRESSED) {
+        speaker_decVolume();
+        speaker_playSound(fx_decrease);
+      }
+      break;
+  }
+
   if (which_button == CENTER) {
-    if (buttons_get_state() == HELD) {
-      display_clear();
-      speaker_playSound(fx_exit);
-      delay(600);
-      power_turn_off();
-      while(1); // freeze here until user lets go of button
-    }
+    
   }
 }
 

@@ -3,6 +3,8 @@
 // use this to switch between method 1 (fixed sample length approach) and method 2 (adjustable timer length)
 #define FIXED_SAMPLE_APPROACH true
 
+uint8_t speakerVolume = 1;
+
 // Sound Effects 
 uint16_t fx_silence[] = {NOTE_END};
 
@@ -93,7 +95,19 @@ void speaker_init(void)
 	snd_index = fx_silence;  
 }
 
+void speaker_incVolume() {
+  if (++speakerVolume > 3) speakerVolume = 3;
+  speaker_setVolume(speakerVolume);
+}
+
+void speaker_decVolume() {
+  if (speakerVolume == 0) {} //do nothing
+  else speakerVolume--;
+  speaker_setVolume(speakerVolume);
+}
+
 void speaker_setVolume(unsigned char volume) {
+  speakerVolume = volume;
 	switch (volume) {
 		case 0:     // No Volume -- disable piezo speaker driver
       digitalWrite(SPEAKER_VOLA, 0);

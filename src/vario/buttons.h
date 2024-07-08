@@ -21,7 +21,7 @@
 */
 
 enum buttons {NONE, UP, DOWN, LEFT, RIGHT, CENTER, BOUNCE};
-enum button_state {NO_STATE, PRESSED, RELEASED, HELD, HELD_LONG};
+enum button_states {NO_STATE, PRESSED, RELEASED, HELD, HELD_LONG};
 
 void buttons_init(void);
 
