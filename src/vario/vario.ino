@@ -11,6 +11,7 @@
   #include "baro.h"
   #include "IMU.h"
   #include "speaker.h"
+  #include "log.h"
 
 
 // Pinout for ESP32 Leaf V2

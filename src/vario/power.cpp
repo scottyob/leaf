@@ -93,25 +93,19 @@ void power_wake_peripherals() {
 }
 
 void power_switchToOnState() {
+  power_latch_on();
   Serial.println("switch_to_on_state");  
   powerOnState = POWER_ON;
   power_wake_peripherals();
 }
 
-void power_switchToChargeState() {
-  Serial.println("switch_to_charge_state"); 
-  power_sleep_peripherals();
-}
-
 void power_shutdown() {
   Serial.println("power_shutdown"); 
   // TODO: maybe show shutting down screen?
-  // TODO: saving logs and system data
+  // TODO: saving logs and system data  
   power_sleep_peripherals();
   delay(100);
   power_latch_off();  
-  delay(50);
-
   // go to POWER_OFF_USB state, in case device was shut down while plugged into USB, then we can show necessary charging updates etc
   powerOnState = POWER_OFF_USB;
 }

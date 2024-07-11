@@ -48,6 +48,7 @@
   int32_t P_ALTregression = 0;
   int32_t P_ALTinitial = 0;
   int32_t lastAlt = 0;
+  int32_t P_ALT_launch = 0; // value to store for beginning of flight.  At first, this is the altitude when the vario is turned on.  If the flight timer is started, then the altitude is reset to current when timer starts.
 
 // Sensor Calibration Values (stored in chip PROM; must be read at startup before performing baro calculations)
   uint16_t C_SENS;
@@ -87,20 +88,37 @@ int16_t fakeVarioRate = 0;
 int32_t change = 1;
 
 
-int32_t baro_getAlt(void) {  
+int32_t baro_getTemp() {
+  return TEMPfiltered;
+}
+
+int32_t baro_getAlt() {  
   return P_ALTfiltered;  
 }
 
 // actual climb rate, for display on screen numerically, and saving in flight log
-int16_t baro_getClimbRate(void) {
+int16_t baro_getClimbRate() {
   //return fakeClimbRate;
   return CLIMB_RATEfiltered;
 }
 
 // climb rate for vario var visuals and perhaps sound.  This is separate in case we want to average/filter it differently
-int16_t baro_getVarioBar(void) {
+int16_t baro_getVarioBar() {
   return fakeVarioRate;
 }
+
+void baro_resetLaunchAlt() {
+  P_ALT_launch = baro_getAlt();
+}
+
+int32_t baro_getAltAboveLaunch() {
+  return baro_getAlt() - P_ALT_launch;
+}
+
+int32_t baro_getAltAtLaunch() {
+  return P_ALT_launch;
+}
+
 
 void baro_updateFakeNumbers(void) {
   fakeAlt = (float)(100 * change);
@@ -299,6 +317,7 @@ void baro_init(void)
     P_ALTfiltered = P_ALT;			  // filtered value should start with first reading
     P_ALTinitial = P_ALT;	        // also save first value to use as starting point (launch)
     P_ALTregression = P_ALT;
+    P_ALT_launch = P_ALT;         // save the starting value 
 
   // load the filter with our current start-up altitude
     for (int i = 1; i <= FILTER_VALS_MAX; i++) {
@@ -354,7 +373,6 @@ char baro_update(char process_step) {
     case 4:
       baro_filterALT();							              // filter pressure alt value
 	    baro_updateClimb();							            // update and filter climb rate
-      baro_flightLog();                           // store any values in FlightLog as needed.  TODO: should this be every second or somewhere else?
       //baro_debugPrint();
       break;   
   }
@@ -500,25 +518,6 @@ void baro_debugPrint() {
   Serial.println(CLIMB_RATEfiltered);
 }
 
-
-
-
-
-void baro_flightLog(void) {
-
-/*
-	//save values for logbook
-	if (VARIO_RATEfiltered > 0 && VARIO_RATEfiltered > logbook_CLIMB) {
-		logbook_CLIMB = VARIO_RATEfiltered;
-	} else if (VARIO_RATEfiltered < 0 && VARIO_RATEfiltered < logbook_SINK) {
-		logbook_SINK = VARIO_RATEfiltered;
-	}
-	if ((P_ALTfiltered + ALT_OFFSET) > logbook_ALT_max) {
-		logbook_ALT_max = (P_ALTfiltered + ALT_OFFSET);
-	}
-  */
-
-}
 
 
 

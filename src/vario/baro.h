@@ -52,14 +52,21 @@ int32_t baro_calculateAlt(void);
 void baro_filterALT(void);
 void baro_updateClimb(void);
 void baro_debugPrint(void);
-void baro_flightLog(void); 
 void baro_filterCLIMB(void);
 
 void baro_test(void);
 
+int32_t baro_getTemp(void);
+
 int32_t baro_getAlt (void);
+int32_t baro_getAltAtLaunch (void);
+int32_t baro_getAltAboveLaunch(void);
+void baro_resetLaunchAlt(void);
+
 int16_t baro_getClimbRate (void);
 int16_t baro_getVarioBar (void);
+
+
 
 void baro_updateFakeNumbers(void);
 

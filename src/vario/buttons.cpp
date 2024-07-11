@@ -53,6 +53,7 @@ void buttons_update(void) {
         if (button_state == HELD && button_hold_counter == 1) {          
           display_clear();          
           display_setPage(page_thermal);
+          speaker_playSound(fx_enter);
           power_switchToOnState();
         }
         break;
@@ -87,8 +88,8 @@ void buttons_update(void) {
               speaker_playSound(fx_exit);
               delay(600);
               power_shutdown();
-              display_setPage(page_charging);
-              //while(1); // freeze here until user lets go of button
+              while(buttons_inspectPins() == CENTER) {} // freeze here until user lets go of power button
+              display_setPage(page_charging);              
             }
             break;
           case RELEASED:
