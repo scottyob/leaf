@@ -2,10 +2,12 @@
 #include <SPI.h>
 #include "Leaf_SPI.h"
 
-static const int spiClk = 1000000; 
+static const int spiClk = 1000000; //TODO: see if we can speed up clock
 
+
+
+//TODO: erase this testing function 
 uint8_t SPI_FLAG = 0;
-
 void spi_checkFlag(uint8_t interruptNumber) {
   if (SPI_FLAG) {
     switch(SPI_FLAG) {

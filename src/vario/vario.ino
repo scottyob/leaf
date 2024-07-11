@@ -1,30 +1,35 @@
-#include <Arduino.h>
-#include <HardwareSerial.h>
 
-#include "buttons.h"
-#include "power.h"
-#include "Leaf_SPI.h"
-#include "SDcard.h"
-#include "display.h"
-#include "gps.h"
-#include "baro.h"
-#include "IMU.h"
-#include "speaker.h"
-#include "SDcard.h"
+// includes
+  #include <Arduino.h>
+  #include <HardwareSerial.h>
+  #include "buttons.h"
+  #include "power.h"
+  #include "Leaf_SPI.h"
+  #include "SDcard.h"
+  #include "display.h"
+  #include "gps.h"
+  #include "baro.h"
+  #include "IMU.h"
+  #include "speaker.h"
 
-// Pinout for ESP32
+
+// Pinout for ESP32 Leaf V2
   #define AVAIL_GPIO_0       0  // unused, broken out to header
   #define AVAIL_GPIO_21     21  // unused, broken out to header (also used as LCD backlight if desired)
   #define AVAIL_GPIO_39     39  // unused, broken out to header
-
-// keep track of what turned us on (usb plug or user power button), so we know what to initialize and display
-  uint8_t bootUpState;
 
 // Main system event/task timer
   hw_timer_t *task_timer = NULL;
   #define TASK_TIMER_FREQ 1000  // run at 1000Hz 
   #define TASK_TIMER_LENGTH 10  // trigger the ISR every 10ms
   void onTaskTimer(void);
+
+// Standby system timer (when on USB power and charging battery, but otherwise "off" (i.e., soft off))
+  hw_timer_t *charge_timer = NULL;
+  #define CHARGE_TIMER_FREQ 1000    // run at 40Hz 
+  #define CHARGE_TIMER_LENGTH 500  // trigger the ISR every 1s
+  void onChargeTimer(void);
+  char chargeman_doTasks = 1;
 
   // Counters for system task timer
   char counter_10ms_block = 0;
@@ -44,6 +49,8 @@
   char taskman_power = 1;     // check battery, check auto-turn-off, etc
   char taskman_logging = 1;   // check auto-start, increment timers, update log file, etc
 
+// track current power on state to detect changes (if user turns device on or off while USB is plugged in, device can still run even when "off")
+  uint8_t currentPowerOnState = POWER_OFF;
 
 // temp testing stuff
   //uint8_t display_page = 0;
@@ -63,32 +70,23 @@ void setup() {
     delay(1000);
     Serial.println("Starting Setup");
 
-  // Initialize buttons and power first so we can check what state we're powering up in (i.e., if a button powered us on or being plugged in to USB or something else)
-    buttons_init();     Serial.println("Finished buttons");
-    bootUpState = power_init(); Serial.println("Finished Power");
+  // turn on and handle all device initialization
+    power_bootUp(); 
 
-  // Then initialize speaker so we can play sound to user confirming startup (so they know they can let go of the power button)
-    speaker_init();     Serial.println("Finished Speaker");
-    speaker_playSound(fx_enter);
-    
-  // Then initialize the rest of the system
-    display_init();     Serial.println("Finished display");   // u8g2 library initializes SPI bus for itself, so this can come before spi_init()
-    //TODO: show loading / splash Screen?
-    spi_init();         Serial.println("Finished SPI");
-    //GLCD_init();        Serial.println("Finished GLCD");    // test SPI object to write directly to LCD (instead of using u8g2 library -- note it IS possible to have both enabled at once)
-    baro_init();        Serial.println("Finished Baro");
-    imu_init();         Serial.println("Finished IMU");
-    gps_init();         Serial.println("Finished GPS");    
-    SDcard_init();      Serial.println("Finished SDcard");
-  
   //Start Main System Timer for Interrupt Events (this will tell Main Loop to set tasks every interrupt cycle)
     task_timer = timerBegin(TASK_TIMER_FREQ);            
     timerAttachInterrupt(task_timer, &onTaskTimer); // timer, ISR call          NOTE: timerDetachInterrupt() does the opposite
     timerAlarm(task_timer, TASK_TIMER_LENGTH, true, 0);      // auto reload timer ever time we've counted a sample length
 
+  //Start Charge System Timer for Interrupt Events (this will tell Main Loop to do tasks every interrupt cycle)
+    charge_timer = timerBegin(CHARGE_TIMER_FREQ);            
+    timerAttachInterrupt(charge_timer, &onChargeTimer); // timer, ISR call          NOTE: timerDetachInterrupt() does the opposite
+    timerAlarm(charge_timer, CHARGE_TIMER_LENGTH, true, 0);      // auto reload timer ever time we've counted a sample length
+
   // All done!
     Serial.println("Finished Setup");
 }
+
 
 // Main Timer Interrupt
 void IRAM_ATTR onTaskTimer() {
@@ -99,6 +97,12 @@ void IRAM_ATTR onTaskTimer() {
 }
 
 
+// Charge Timer Interrupt
+void IRAM_ATTR onChargeTimer() {
+  //do stuff every alarm cycle (default 10ms)
+  chargeman_doTasks = 1; // next time through main loop, set tasks to do!
+  // wakeup();  // go back to main loop and keep processing stuff that needs doing!
+}
 
 
 /////////////////////////////////////////////////
@@ -115,16 +119,31 @@ Every 10ms, driven by an interrupt timer, the system will wake up, set flags for
 TODO: In addition to the timer-driven interrupt, we may consider also setting wake-up interrupts for the pushbuttons, the GPS 1PPS signal, and perhaps others.
 */
 
+// LOOP NOTES:
+// when re-entering POWER_ON state, be sure to start from tasks #1, so baro ADC can be re-prepped before reading
+
 void loop() {
   if (TESTING_LOOP) main_loop_test();
-  else main_loop_real();
+  else if (powerOnState == POWER_ON) main_ON_loop();
+  else if (powerOnState == POWER_OFF_USB) main_CHARGE_loop();
+  else Serial.print("FAILED MAIN LOOP HANDLER");
 }
 
-uint32_t millisBegin;
+void main_CHARGE_loop() {
+  if (chargeman_doTasks) {
+    display_setPage(page_charging);
+    display_update();       // update display based on battery charge state etc
+    buttons_update();       // check buttons for any presses (user can turn ON from charging state)
+    chargeman_doTasks = 0;  // done with tasks this timer cycle
+  } else {
+    // sleep
+  }
+}
 
-void main_loop_real() {    
+//uint32_t millisBegin;
+void main_ON_loop() {    
   if (taskman_setTasks) {   // check flag set by timer interrupt.  We only do this once every 10ms
-    millisBegin = millis();   // save the timestamp when we enter this 10ms block... we'll need to be done within 10ms!
+    //millisBegin = millis();   // save the timestamp when we enter this 10ms block... we'll need to be done within 10ms!
     //Serial.println(millisBegin);
     setTasks();             // set necessary tasks for this 10ms block
     taskman_setTasks = 0;   // we don't need to do this again until the next 10ms timer interrupt
@@ -132,23 +151,13 @@ void main_loop_real() {
 
   // do necessary tasks
   taskManager(); 
-
  
   // GPS Serial Buffer Read
-    // First version that won't return until buffer is empty: 
-      /*
-        // then process serial buffer for the remained of this time blockfirst process serial buffer
-        if (millis() < millisBegin+8) {
-          gps_is_quiet = gps_read_buffer();   // this will loop while data is available in the buffer and return when it's all emptied.
-        }
-      */
-    
-    // New version that won't go another character if our 10ms block is up:      
-      // stop reading if buffer returns empty, OR, if our 10ms time block is up (because interrupt fired and set setTasks to true)
-      bool gps_buffer_full = true;
-      while (gps_buffer_full && !taskman_setTasks) {   
-        gps_buffer_full = gps_read_buffer_once();
-      }
+    // stop reading if buffer returns empty, OR, if our 10ms time block is up (because main timer interrupt fired and set setTasks to true)
+    bool gps_buffer_full = true;
+    while (gps_buffer_full && !taskman_setTasks) {   
+      gps_buffer_full = gps_read_buffer_once();
+    }
 
   //if (gps_is_quiet) goToSleep();                 
   //else, run this loop again and keep processing the serial buffer until we're done with all the NMEA sentences this cycle

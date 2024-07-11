@@ -34,6 +34,7 @@ U8G2_ST7539_192X64_F_4W_HW_SPI u8g2(U8G2_R3, SPI_SS_LCD, LCD_RS, LCD_RESET);
 uint8_t display_page = page_thermal;
 
 void display_init(void) {
+  pinMode(SPI_SS_LCD, OUTPUT);
   digitalWrite(SPI_SS_LCD, HIGH);
   u8g2.setBusClock(20000000);
   Serial.print("u8g2 set clock. ");
@@ -46,7 +47,7 @@ void display_init(void) {
   Serial.println("u8g2 done. ");
 }
 
-void display_page_turn (uint8_t action) {
+void display_turnPage(uint8_t action) {
   if (action == page_home) display_page = page_thermal;
   else if (action == page_next) display_page++;
   else if (action == page_prev) display_page--;
@@ -55,6 +56,13 @@ void display_page_turn (uint8_t action) {
   else if (display_page > page_last) display_page = page_last - 1;
 }
 
+void display_setPage(uint8_t action) {
+  display_page = action;
+}
+
+uint8_t display_getPage() {
+  return display_page;
+}
 
 void display_update() {
   switch (display_page) {
@@ -64,79 +72,492 @@ void display_update() {
     case page_sats:
       gps_test_sats();
       break;
-    
-  }
-  
+    case page_charging:
+      display_charging_page();
+      break;
+  }  
 }
 
 void display_clear() {
   u8g2.clear();
 }
 
-void display_battery_icon(uint16_t x, uint16_t y, uint8_t pct, bool charging) {
 
-  uint8_t w =  7;
-  uint8_t h = 12;  
 
-  u8g2.setDrawColor(1);      
-  u8g2.drawFrame(x,y+1,w,h-1);               // main battery box
-  u8g2.drawLine(x+w/3, y, x+w-w/3-1, y);     // little +nib tip
-  uint16_t fill = (h-2)*pct/100;
-  u8g2.drawBox(x+1, y+h-fill-1, w-2, fill);  // fill up to capacity
+void GLCD_inst(byte data) {
+  digitalWrite(LCD_RS, LOW);
+  spi_writeGLCD(data);
+}
 
-  if(charging) {                             // draw lightning bolt if charging
-    for (int i = 0; i<7; i++) {
-      if ( (y+3+i) >= (y+h-fill-1) ) u8g2.setDrawColor(0); //invert lightning bolt where battery level is filled
-      u8g2.drawPixel(x+w/2,y+3+i);
-      if (i==2) u8g2.drawPixel(x+w/2-1,y+3+i);
-      if (i==3) {u8g2.drawPixel(x+w/2-1,y+3+i); u8g2.drawPixel(x+w/2+1,y+3+i);}
-      if (i==4) u8g2.drawPixel(x+w/2+1,y+3+i);
-    }
-    u8g2.setDrawColor(1); //end invert    
+void GLCD_data(byte data) {
+  digitalWrite(LCD_RS, HIGH);
+  spi_writeGLCD(data);
+}
+
+
+char speed[] = "132";
+char windSpeed[] = "28";
+char turn = 1;
+uint16_t windDir = 235;
+int16_t varioBar_climbRate = -100;     // cm/s  (i.e. m/s * 100)
+int8_t climbChange = 10;
+
+
+char altitude[] = "23,857\"";
+char altAbvLaunch[] = "4,169";
+char glide[] = "10.4";
+char distFlown[] = "34.5";
+char glideToWypt[] = " 6.5";
+char timeToWypt[] = "12:34";
+char distToWypt[] = "42.7";
+char waypoint[] = "Marshall-LZ";
+char temp[] = "102";
+char accel[] = "2.1g";
+char altAbvLZ[] = "1,987";
+char climbRate[] = "+1385";
+char clockTime[] = "12:57pm";
+char timer[] = "1:23:45";
+float dirToWypt = -.25;
+
+
+
+/*
+
+float gps_getSpeed_kph() { return gps.speed.kmph(); }
+float gps_getSpeed_mph() { return gps.speed.mph(); }
+float gps_getCourseDeg() { return gps.course.deg(); }
+float gps_getAltMeters() { return gps.altitude.meters(); }
+
+*/
+
+
+
+void display_update_temp_vars() {
+  dirToWypt += .005;
+  wind_angle -= .0075;
+
+  varioBar_climbRate += climbChange;  
+  if  (varioBar_climbRate > 1100) {
+    climbChange *= -1;
+    varioBar_climbRate = 1090;
+  } else if (varioBar_climbRate < -1100) {
+    climbChange *= -1;
+    varioBar_climbRate = -1090;
   }
 }
 
-void display_test_bat_icon(void) {
-  uint8_t x = 1;
-  uint8_t y = 1;
-  uint8_t pct = 0;
-  uint8_t w =  7;
-  uint8_t h = 12; 
-  bool charging = 1;
 
 
-  u8g2.firstPage();
-  do {
-    for (int i=0; i<51; i++) {
-      u8g2.setDrawColor(1);      
-      u8g2.drawFrame(x,y+1,w,h-1);           // main battery box
-      u8g2.drawLine(x+w/3, y, x+w-w/3-1, y); // little +nib tip
-      uint16_t fill = (h-2)*pct/100;
-      u8g2.drawBox(x+1, y+h-fill-1, w-2, fill);  // fill up to capacity
+/********************************************************************************************/
+// Display Components
+// Individual fields that can be called from many different pages, and/or placed in different positions
 
-      // draw lightning bolt if charging
-      if(charging) {
-        for (int i = 0; i<7; i++) {
-          if ( (y+3+i) >= (y+h-fill-1) ) u8g2.setDrawColor(0); //invert lightning bolt where battery level is filled
-          u8g2.drawPixel(x+w/2,y+3+i);
-          if (i==2) u8g2.drawPixel(x+w/2-1,y+3+i);
-          if (i==3) {u8g2.drawPixel(x+w/2-1,y+3+i); u8g2.drawPixel(x+w/2+1,y+3+i);}
-          if (i==4) u8g2.drawPixel(x+w/2+1,y+3+i);
+    uint8_t display_speed(uint8_t cursor_x, uint8_t cursor_y) {    
+      uint16_t displaySpeed = gps_getSpeed_mph() + 0.5;   // add half so we effectively round when truncating from float to int.
+      if (displaySpeed >= 1000) displaySpeed = 999;       // cap display value at 3 digits
+
+      if (displaySpeed < 10) cursor_x += 6; // leave a space if only 1 digit
+      u8g2.setCursor(cursor_x, cursor_y);
+
+      u8g2.setFont(leaf_6x12);
+      u8g2.print(displaySpeed);
+      if (displaySpeed < 100) cursor_x = 13;
+      else cursor_x = 19;
+      return cursor_x;    // keep track of whether we printed a 3 digit or 2 digit speed value
+    }
+
+    void display_headingTurn(uint8_t cursor_x, uint8_t cursor_y) {
+      u8g2.setCursor(cursor_x, cursor_y);
+      u8g2.setFont(leaf_7x10);
+
+      //Left turn arrow if needed
+      char displayTurn = '=' + gps_getTurn();   // in the 7x10 font, '=' is the "no turn" center state; 3 chars to each side are incresing amounts of turn arrow
+      if (displayTurn < '=') u8g2.print(displayTurn);  
+
+      // Cardinal heading direction  
+      const char *displayHeadingCardinal = gps_getCourseCardinal();  
+      if      (strlen(displayHeadingCardinal) == 1) u8g2.setCursor(cursor_x + 16, cursor_y);
+      else if (strlen(displayHeadingCardinal) == 2) u8g2.setCursor(cursor_x + 12, cursor_y);
+      else                                          u8g2.setCursor(cursor_x +  8, cursor_y);
+
+      u8g2.print(displayHeadingCardinal);
+
+      //Right turn arrow if needed
+      u8g2.setCursor(cursor_x + 32, cursor_y);
+      if (displayTurn > '=') u8g2.print(displayTurn);  
+    }
+
+
+    void display_alt(uint8_t cursor_x, uint8_t cursor_y, const uint8_t *font, int32_t displayAlt) {      
+      if (/*ft unit preference*/ false) displayAlt = displayAlt *100 / 3048; // convert cm to ft
+      else displayAlt /= 100;    //convert from cm to m
+
+      u8g2.setCursor(cursor_x, cursor_y);  
+      u8g2.setFont(font);
+      uint8_t fontWidth = 9; // char width plus space  
+      if (font == leaf_8x14) fontWidth = 9;
+      else if (font == leaf_6x12) fontWidth = 7;
+      else if (font == leaf_5h) fontWidth = 6;  
+      
+      if (displayAlt < 0) {
+        u8g2.print('-');
+        displayAlt *= -1;
+        if (displayAlt > 9999) displayAlt = 9999;        // max string size if negative
+      } else if (displayAlt > 99999) displayAlt = 99999; // max string size if positive
+
+      uint8_t digits = 0;
+      bool keepZeros = 0;
+
+      // Thousands piece
+      if (displayAlt > 999) {    
+        digits = displayAlt/1000;
+        displayAlt -= (1000 * digits); // keep the last 3 digits
+        keepZeros = 1;                            // keep leading zeros for rest of digits since we printed something in thousands place
+        if (digits < 10) u8g2.setCursor(cursor_x + fontWidth, cursor_y);
+        u8g2.print(digits);    
+        u8g2.print(',');    
+      }
+      // rest of the number
+      u8g2.setCursor(cursor_x += (2*fontWidth+3), cursor_y);    // the +3 is for the comma  
+      if (keepZeros) {     
+        for (int i = 100; i > 0; i /= 10) {
+          digits = displayAlt/i;
+          displayAlt -= (digits * i);
+          u8g2.print(digits);
+          u8g2.setCursor(cursor_x += fontWidth, cursor_y);
         }
-        u8g2.setDrawColor(1); //end invert
+      } else { // no leading zeros for altitudes less than 1000
+        if (displayAlt < 100) cursor_x += fontWidth;
+        if (displayAlt <  10) cursor_x += fontWidth;
+        u8g2.setCursor(cursor_x, cursor_y);
+        u8g2.print(displayAlt);
+      }      
+    }
+
+    void display_varioBar(uint8_t varioBarFrame_top, uint8_t varioBarFrame_length, uint8_t varioBarFrame_width, int16_t displayBarClimbRate) {
+      int16_t varioBar_climbRateMax = 500;   // this is the bar height, but because we can fill then empty the bar, we can show twice this climb value
+      int16_t varioBar_climbRateMin = -500;  // again, bar height, so we can show twice this sink value
+
+      uint8_t varioBarFrame_mid = varioBarFrame_top+varioBarFrame_length/2;
+      
+      u8g2.drawFrame(0, varioBarFrame_top, varioBarFrame_width, varioBarFrame_length);
+      
+      //u8g2.setDrawColor(0);       
+      //u8g2.drawBox(1, varioBarFrame_top+1, varioBarFrame_length-2, varioBarFrame_width-2);    //only needed if varioBar overlaps something else
+      //u8g2.setDrawColor(1); 
+
+      // Fill varioBar
+      uint8_t varioBarFill_top = varioBarFrame_top+1;    
+      uint8_t varioBarFill_bot = varioBarFrame_top+varioBarFrame_length-2;
+      uint8_t varioBarFill_top_length = varioBarFrame_mid - varioBarFill_top+1;
+      uint8_t varioBarFill_bot_length = varioBarFill_bot-varioBarFrame_mid+1;
+
+      int16_t varioBarFill_pixels = 0;
+      uint8_t varioBarFill_start = 1;
+      uint8_t varioBarFill_end = 1;
+
+      if (displayBarClimbRate > 2 * varioBar_climbRateMax || displayBarClimbRate < 2 * varioBar_climbRateMin) {
+        // do nothing, the bar is maxxed out which looks empty
         
+      } else if (displayBarClimbRate > varioBar_climbRateMax) {      
+        // fill top half inverted
+        varioBarFill_pixels = varioBarFill_top_length * (displayBarClimbRate - varioBar_climbRateMax) / varioBar_climbRateMax;
+        varioBarFill_start = varioBarFill_top;
+        varioBarFill_end   = varioBarFrame_mid - varioBarFill_pixels;
+
+      } else if (displayBarClimbRate < varioBar_climbRateMin) {      
+        // fill bottom half inverted
+        varioBarFill_pixels = varioBarFill_bot_length * (displayBarClimbRate - varioBar_climbRateMin) / varioBar_climbRateMin;
+        varioBarFill_start = varioBarFrame_mid + varioBarFill_pixels;
+        varioBarFill_end   = varioBarFill_bot;      
+        
+      } else if (displayBarClimbRate < 0) {      
+        // fill bottom half positive
+        varioBarFill_pixels = varioBarFill_bot_length * (displayBarClimbRate) / varioBar_climbRateMin;      
+        varioBarFill_start = varioBarFrame_mid;
+        varioBarFill_end   = varioBarFrame_mid + varioBarFill_pixels;      
+        
+      } else {      
+        // fill top half positive
+        varioBarFill_pixels = varioBarFill_top_length * (displayBarClimbRate) / varioBar_climbRateMax;      
+        varioBarFill_start = varioBarFrame_mid - varioBarFill_pixels;      
+        varioBarFill_end   = varioBarFrame_mid;
       }
 
-      x += 10;
-      pct += 2;
-      if (x >= 63-w) {
-        x = 1;
-        y += h+2;
-      }  
+      u8g2.drawBox(1, varioBarFill_start, 12, varioBarFill_end - varioBarFill_start + 1);
+      
+      // Tick marks on varioBar 
+      uint8_t tickSpacing = varioBarFill_top_length / 5;  // start with top half tick spacing
+      uint8_t line_y = varioBarFrame_top;
+
+      for (int i = 1; i <= 9; i ++) {
+        if (i == 5) {
+          // at midpoint, switch to bottom half 
+          line_y = varioBarFrame_mid;
+          tickSpacing = varioBarFill_bot_length / 5;
+        } else {
+          // draw a tick-mark line
+          line_y += tickSpacing;
+          if (line_y >= varioBarFill_start && line_y <= varioBarFill_end) {
+            u8g2.setDrawColor(0);
+          } else {
+            u8g2.setDrawColor(1);
+          }
+          u8g2.drawLine(1, line_y, 6, line_y);
+        }
+      }
     }
-  } while ( u8g2.nextPage() );
-  delay(100);
+
+    void display_climbRatePointerBox(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t triSize, int16_t displayClimbRate) {
+      bool climbInFPM = false;
+      float climbInMS = 0;
+      u8g2.setDrawColor(1);  
+      u8g2.drawBox(x, y, w, h);
+      u8g2.drawTriangle(x-triSize, y+h/2, x-1, y+h/2-triSize, x-1, y+h/2+triSize);
+        
+      u8g2.setCursor(x, y += 16);   //scoot cursor down for bottom justified font
+      u8g2.setFont(leaf_8x14);
+      uint8_t fontWidth = 9;        // character size plus space
+      u8g2.setDrawColor(0);
+
+      if (displayClimbRate > 0) u8g2.print('+');
+      else if (displayClimbRate < 0) {
+        u8g2.print('-');
+        displayClimbRate *= -1; // keep positive part
+      }
+      x += fontWidth;
+
+      if (climbInFPM) {
+        displayClimbRate = displayClimbRate * 197 / 100;    // convert from cm/s to fpm
+        if (displayClimbRate < 1000) x += fontWidth;
+        if (displayClimbRate < 100 ) x += fontWidth;
+        if (displayClimbRate < 10  ) x += fontWidth;
+        u8g2.setCursor(x, y);
+        u8g2.print(displayClimbRate);
+      } else {
+        displayClimbRate = (displayClimbRate + 5) / 10;     // lose one decimal place and round off in the process
+        climbInMS = (float)displayClimbRate/10;             // convert to float for ease of printing with the decimal in place
+        if (climbInMS < 10  ) x += fontWidth;
+        u8g2.setCursor(x, y);
+        u8g2.print(climbInMS, 1);
+      }
+      u8g2.setDrawColor(1);   // always set back to 1 if we've been using 0, just in case the next draw function forgets  
+    }
+
+    void display_altAboveLaunch(uint8_t x, uint8_t y, int32_t aboveLaunchAlt) {
+      u8g2.setCursor(x, y - 16);
+      u8g2.setFont(leaf_5h);
+      u8g2.print("Above Launch");
+      display_alt(x, y, leaf_6x12, aboveLaunchAlt);
+    }
+
+
+    void display_battIcon(uint8_t x, uint8_t y) {
+      /*  
+          / batt charging (not full)
+          0 batt at 0%
+          1 batt at 10%
+          --etc--
+          9 batt at 90%
+          : batt at 100%
+          ; batt charging (full)
+      */
+      uint8_t battPercent = power_getBattLevel(0);
+      uint16_t battMV = power_getBattLevel(1);
+      uint16_t battADC = power_getBattLevel(2);
+      char battIcon = '0' + (battPercent+5)/10;
+      if (power_getBattCharging()) {
+        if (battPercent >= 100) battIcon = ';';
+        else battIcon = '/';
+      }
+
+
+      u8g2.setCursor(x, y);
+      u8g2.setFont(leaf_icons); 
+      u8g2.print(battIcon);
+      /*  
+      Serial.print("percent: ");
+      Serial.print(battPercent);
+      Serial.print(" icon: ");
+      Serial.print((char)battIcon);
+      Serial.print(" milivolts: ");
+      Serial.print(battMV);
+      Serial.print(" ADC: ");
+      Serial.println(battADC);
+      */
+      u8g2.setFont(leaf_6x12);
+      u8g2.setCursor(x, y+=15);
+      u8g2.print(battPercent);
+      u8g2.setCursor(x, y+=15);
+      u8g2.print(battMV);
+      u8g2.setCursor(x, y+=15);
+      u8g2.print(battADC);
+    }
+
+    uint8_t batt_percent_testing = 0;
+    uint8_t batt_charging_testing = 1;
+    int8_t batt_testing_direction = 1;
+
+    void display_batt_charging_fullscreen() {
+
+      // position of battery
+        uint8_t x = 32; // center of battery left/right
+        uint8_t y = 20; // top of battery nib
+
+      // size of battery
+        uint8_t w = 60;//60;
+        uint8_t h = 120;//140;
+        uint8_t t = 2;    // wall thickness
+      
+      // Battery Canister
+        u8g2.setDrawColor(1);
+        u8g2.drawRBox(x-w/5, y-1, w/5*2, w/3, w/22);               // battery tip nub
+        u8g2.drawRBox(x-(w/2), y+w/20, w, h, w/15);               // main rectangle outline
+        u8g2.setDrawColor(0);
+        u8g2.drawRBox(x-(w/2)+t, y+w/20+t, w-2*t, h-2*t, w/15-t);   // empty internal volume
+
+      // Battery Capacity Fill
+        uint8_t battPercent = power_getBattLevel(0);
+
+        /*
+        battPercent = batt_percent_testing;
+        batt_percent_testing += batt_testing_direction;
+        if (batt_percent_testing >= 100) {
+          batt_testing_direction = -1;
+          batt_charging_testing = 0;
+        } else if (batt_percent_testing == 0) {
+          batt_testing_direction = 1;
+          batt_charging_testing = 1;
+        }
+        */
+
+        uint8_t fill_h = (h-4*t)*battPercent/100;
+        uint8_t fill_y = (y+w/20+2*t)+((h-4*t) - fill_h); // (starting position to allow for line thickness etc) + ( (100% height) - (actual height) )
+        u8g2.setDrawColor(1);
+        u8g2.drawBox(x-(w/2)+2*t, fill_y, w-4*t, fill_h);//, w/8-t/2);
+
+      // Charging bolt
+      if (power_getBattCharging()) { //batt_charging_testing) {
+        uint8_t bolt_x1 = w*6/100;      //  4
+        uint8_t bolt_x2 = w*7/100;      //  6
+        uint8_t bolt_x3 = w*21/100;     // 17
+        uint8_t bolt_y1 = h*3/100;      //  2
+        uint8_t bolt_y2 = h*25/100;     // 19
+        uint8_t bolt_y = y+h/2;     // center of bolt in y direction
+
+        u8g2.setDrawColor(0);
+        u8g2.drawTriangle(x+bolt_x1, bolt_y+bolt_y1, x+bolt_x2, bolt_y-bolt_y2, x-bolt_x3, bolt_y+bolt_y1);
+        u8g2.drawTriangle(x-bolt_x1, bolt_y-bolt_y1, x-bolt_x2, bolt_y+bolt_y2, x+bolt_x3, bolt_y-bolt_y1);
+
+        for (int i = 0; i < 4; i++) {
+          if (i == 0) {           x--; }  // drag the bolt outline around to make it thicker
+          if (i == 1) { bolt_y++;      }  // 
+          if (i == 2) { bolt_y--; x++; }  // 
+          if (i == 3) { bolt_y++;      }  //
+
+          u8g2.setDrawColor(1);
+          u8g2.drawLine(x-bolt_x3, bolt_y+bolt_y1, x+bolt_x2, bolt_y-bolt_y2);
+          u8g2.drawLine(x+bolt_x1, bolt_y-bolt_y1, x+bolt_x2, bolt_y-bolt_y2);
+          u8g2.drawLine(x+bolt_x1, bolt_y-bolt_y1, x+bolt_x3, bolt_y-bolt_y1);
+          u8g2.drawLine(x-bolt_x2, bolt_y+bolt_y2, x+bolt_x3, bolt_y-bolt_y1);
+          u8g2.drawLine(x-bolt_x2, bolt_y+bolt_y2, x-bolt_x1, bolt_y+bolt_y1);
+          u8g2.drawLine(x-bolt_x3, bolt_y+bolt_y1, x-bolt_x1, bolt_y+bolt_y1);
+        }
+      }
+
+      uint16_t battMV = power_getBattLevel(1);
+      uint16_t battADC = power_getBattLevel(2);
+
+      y += h+3;
+      x = 18;
+
+      u8g2.setFont(leaf_6x12);
+      u8g2.setCursor(x, y+=15);
+      u8g2.print(battPercent);
+      u8g2.print('%');
+
+      u8g2.setCursor(x, y+=15);
+      u8g2.print(battMV);
+      u8g2.setCursor(x, y+=15);
+      u8g2.print(battADC);
+    }
+
+
+
+
+/*********************************************************************************
+**   CHARGING PAGE    ************************************************************
+*********************************************************************************/
+void display_charging_page() {
+  
+  u8g2.firstPage();
+  do { 
+
+    display_batt_charging_fullscreen();
+
+
+    u8g2.setFont(leaf_6x12);
+    u8g2.setCursor(18, 14);  
+    if      (power_getInputCurrent() == 0)  u8g2.print("100mA");
+    else if (power_getInputCurrent() == 1)  u8g2.print("500mA");
+    else if (power_getInputCurrent() == 2)  u8g2.print("8100mA");
+    else if (power_getInputCurrent() == 3)  u8g2.print("OFF");
+    
+    
+
+  } while ( u8g2.nextPage() ); 
+  
 }
+
+/*********************************************************************************
+**    NAV PAGE        ************************************************************
+*********************************************************************************/
+void display_nav_page() {
+  baro_updateFakeNumbers();
+  gps_updateFakeNumbers();
+
+  u8g2.firstPage();
+  do { 
+    uint8_t x = display_speed(0,12);
+    display_headingTurn(x+3, 10);
+    display_alt(17, 26, leaf_8x14, baro_getAlt());
+
+  } while ( u8g2.nextPage() ); 
+  
+}
+
+/*********************************************************************************
+**    THERMAL PAGE        ********************************************************
+*********************************************************************************/
+void display_thermal_page() {
+  //baro_updateFakeNumbers();
+  gps_updateFakeNumbers();
+  display_update_temp_vars();
+
+  u8g2.firstPage();
+  do { 
+    uint8_t x = display_speed(0,12);    // grab resulting x cursor value (if speed has 2 or 3 digits, things will shift over)
+    display_headingTurn(x+3, 10);
+    display_alt(17, 26, leaf_8x14, baro_getAlt());
+    display_altAboveLaunch(17, 50, baro_getAlt() - 120000);
+    display_varioBar(13, 111, 14, baro_getClimbRate());
+    display_climbRatePointerBox(14, 59, 50, 17, 6, baro_getClimbRate());     // x, y, w, h, triangle size
+    
+    display_battIcon(20, 90);
+
+    u8g2.setFont(leaf_6x12);
+    u8g2.setCursor(40, 90);    
+    u8g2.print(power_getInputCurrent());
+
+    u8g2.drawBox(0,154,64,38);
+
+  } while ( u8g2.nextPage() ); 
+  
+}
+
+/*********************************************************************************
+**    SATELLITES          ********************************************************
+*********************************************************************************/
 
 // draw satellite constellation starting in upper left x, y and box size (width = height)
 void display_satellites(uint16_t x, uint16_t y, uint16_t size) {
@@ -244,6 +665,15 @@ void display_satellites(uint16_t x, uint16_t y, uint16_t size) {
     u8g2.drawStr(50, size + y + 30, gps.cardinal(gps.course.deg()));
   } while ( u8g2.nextPage() );
 }
+
+
+
+
+
+
+/****************************/
+//      TESTING STUFF       /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/****************************/
 
 
 void display_test(void) {  
@@ -399,6 +829,7 @@ void display_test(void) {
 }
 
 
+
 void display_test_big(uint8_t test_page) {
   
 //Serial.println("starting LCD stuff");
@@ -465,355 +896,6 @@ delay(500);
 }
 
 
-void GLCD_inst(byte data) {
-  digitalWrite(LCD_RS, LOW);
-  spi_writeGLCD(data);
-}
-
-void GLCD_data(byte data) {
-  digitalWrite(LCD_RS, HIGH);
-  spi_writeGLCD(data);
-}
-
-
-char speed[] = "132";
-char windSpeed[] = "28";
-char turn = 1;
-uint16_t windDir = 235;
-int16_t varioBar_climbRate = -100;     // cm/s  (i.e. m/s * 100)
-int8_t climbChange = 10;
-
-
-char altitude[] = "23,857\"";
-char altAbvLaunch[] = "4,169";
-char glide[] = "10.4";
-char distFlown[] = "34.5";
-char glideToWypt[] = " 6.5";
-char timeToWypt[] = "12:34";
-char distToWypt[] = "42.7";
-char waypoint[] = "Marshall-LZ";
-char temp[] = "102";
-char accel[] = "2.1g";
-char altAbvLZ[] = "1,987";
-char climbRate[] = "+1385";
-char clockTime[] = "12:57pm";
-char timer[] = "1:23:45";
-float dirToWypt = -.25;
-
-
-
-/*
-
-float gps_getSpeed_kph() { return gps.speed.kmph(); }
-float gps_getSpeed_mph() { return gps.speed.mph(); }
-float gps_getCourseDeg() { return gps.course.deg(); }
-float gps_getAltMeters() { return gps.altitude.meters(); }
-
-*/
-
-
-
-uint8_t display_speed(uint8_t cursor_x, uint8_t cursor_y) {    
-  uint16_t displaySpeed = gps_getSpeed_mph() + 0.5;   // add half so we effectively round when truncating from float to int.
-  if (displaySpeed >= 1000) displaySpeed = 999;       // cap display value at 3 digits
-
-  if (displaySpeed < 10) cursor_x += 6; // leave a space if only 1 digit
-  u8g2.setCursor(cursor_x, cursor_y);
-
-  u8g2.setFont(leaf_6x12);
-  u8g2.print(displaySpeed);
-  if (displaySpeed < 100) cursor_x = 13;
-  else cursor_x = 19;
-  return cursor_x;    // keep track of whether we printed a 3 digit or 2 digit speed value
-}
-
-void display_headingTurn(uint8_t cursor_x, uint8_t cursor_y) {
-  u8g2.setCursor(cursor_x, cursor_y);
-  u8g2.setFont(leaf_7x10);
-
-  //Left turn arrow if needed
-  char displayTurn = '=' + gps_getTurn();   // in the 7x10 font, '=' is the "no turn" center state; 3 chars to each side are incresing amounts of turn arrow
-  if (displayTurn < '=') u8g2.print(displayTurn);  
-
-  // Cardinal heading direction  
-  const char *displayHeadingCardinal = gps_getCourseCardinal();  
-  if      (strlen(displayHeadingCardinal) == 1) u8g2.setCursor(cursor_x + 16, cursor_y);
-  else if (strlen(displayHeadingCardinal) == 2) u8g2.setCursor(cursor_x + 12, cursor_y);
-  else                                          u8g2.setCursor(cursor_x +  8, cursor_y);
-
-  u8g2.print(displayHeadingCardinal);
-
-  //Right turn arrow if needed
-  u8g2.setCursor(cursor_x + 32, cursor_y);
-  if (displayTurn > '=') u8g2.print(displayTurn);  
-}
-
-
-void display_alt(uint8_t cursor_x, uint8_t cursor_y, const uint8_t *font, int32_t displayAlt) {      
-  if (/*ft unit preference*/ false) displayAlt = displayAlt *100 / 3048; // convert cm to ft
-  else displayAlt /= 100;    //convert from cm to m
-
-  u8g2.setCursor(cursor_x, cursor_y);  
-  u8g2.setFont(font);
-  uint8_t fontWidth = 9; // char width plus space  
-  if (font == leaf_8x14) fontWidth = 9;
-  else if (font == leaf_6x12) fontWidth = 7;
-  else if (font == leaf_5h) fontWidth = 6;  
-  
-  if (displayAlt < 0) {
-    u8g2.print('-');
-    displayAlt *= -1;
-    if (displayAlt > 9999) displayAlt = 9999;        // max string size if negative
-  } else if (displayAlt > 99999) displayAlt = 99999; // max string size if positive
-
-  uint8_t digits = 0;
-  bool keepZeros = 0;
-
-  // Thousands piece
-  if (displayAlt > 999) {    
-    digits = displayAlt/1000;
-    displayAlt -= (1000 * digits); // keep the last 3 digits
-    keepZeros = 1;                            // keep leading zeros for rest of digits since we printed something in thousands place
-    if (digits < 10) u8g2.setCursor(cursor_x + fontWidth, cursor_y);
-    u8g2.print(digits);    
-    u8g2.print(',');    
-  }
-  // rest of the number
-  u8g2.setCursor(cursor_x += (2*fontWidth+3), cursor_y);    // the +3 is for the comma  
-  if (keepZeros) {     
-    for (int i = 100; i > 0; i /= 10) {
-      digits = displayAlt/i;
-      displayAlt -= (digits * i);
-      u8g2.print(digits);
-      u8g2.setCursor(cursor_x += fontWidth, cursor_y);
-    }
-  } else { // no leading zeros for altitudes less than 1000
-    if (displayAlt < 100) cursor_x += fontWidth;
-    if (displayAlt <  10) cursor_x += fontWidth;
-    u8g2.setCursor(cursor_x, cursor_y);
-    u8g2.print(displayAlt);
-  }      
-}
-
-
-
-void display_varioBar(uint8_t varioBarFrame_top, uint8_t varioBarFrame_length, uint8_t varioBarFrame_width, int16_t displayBarClimbRate) {
-  int16_t varioBar_climbRateMax = 500;   // this is the bar height, but because we can fill then empty the bar, we can show twice this climb value
-  int16_t varioBar_climbRateMin = -500;  // again, bar height, so we can show twice this sink value
-
-  uint8_t varioBarFrame_mid = varioBarFrame_top+varioBarFrame_length/2;
-  
-  u8g2.drawFrame(0, varioBarFrame_top, varioBarFrame_width, varioBarFrame_length);
-  
-  //u8g2.setDrawColor(0);       
-  //u8g2.drawBox(1, varioBarFrame_top+1, varioBarFrame_length-2, varioBarFrame_width-2);    //only needed if varioBar overlaps something else
-  //u8g2.setDrawColor(1); 
-
-  // Fill varioBar
-  uint8_t varioBarFill_top = varioBarFrame_top+1;    
-  uint8_t varioBarFill_bot = varioBarFrame_top+varioBarFrame_length-2;
-  uint8_t varioBarFill_top_length = varioBarFrame_mid - varioBarFill_top+1;
-  uint8_t varioBarFill_bot_length = varioBarFill_bot-varioBarFrame_mid+1;
-
-  int16_t varioBarFill_pixels = 0;
-  uint8_t varioBarFill_start = 1;
-  uint8_t varioBarFill_end = 1;
-
-  if (displayBarClimbRate > 2 * varioBar_climbRateMax || displayBarClimbRate < 2 * varioBar_climbRateMin) {
-    // do nothing, the bar is maxxed out which looks empty
-    
-  } else if (displayBarClimbRate > varioBar_climbRateMax) {      
-    // fill top half inverted
-    varioBarFill_pixels = varioBarFill_top_length * (displayBarClimbRate - varioBar_climbRateMax) / varioBar_climbRateMax;
-    varioBarFill_start = varioBarFill_top;
-    varioBarFill_end   = varioBarFrame_mid - varioBarFill_pixels;
-
-  } else if (displayBarClimbRate < varioBar_climbRateMin) {      
-    // fill bottom half inverted
-    varioBarFill_pixels = varioBarFill_bot_length * (displayBarClimbRate - varioBar_climbRateMin) / varioBar_climbRateMin;
-    varioBarFill_start = varioBarFrame_mid + varioBarFill_pixels;
-    varioBarFill_end   = varioBarFill_bot;      
-    
-  } else if (displayBarClimbRate < 0) {      
-    // fill bottom half positive
-    varioBarFill_pixels = varioBarFill_bot_length * (displayBarClimbRate) / varioBar_climbRateMin;      
-    varioBarFill_start = varioBarFrame_mid;
-    varioBarFill_end   = varioBarFrame_mid + varioBarFill_pixels;      
-    
-  } else {      
-    // fill top half positive
-    varioBarFill_pixels = varioBarFill_top_length * (displayBarClimbRate) / varioBar_climbRateMax;      
-    varioBarFill_start = varioBarFrame_mid - varioBarFill_pixels;      
-    varioBarFill_end   = varioBarFrame_mid;
-  }
-
-  u8g2.drawBox(1, varioBarFill_start, 12, varioBarFill_end - varioBarFill_start + 1);
-  
-  // Tick marks on varioBar 
-  uint8_t tickSpacing = varioBarFill_top_length / 5;  // start with top half tick spacing
-  uint8_t line_y = varioBarFrame_top;
-
-  for (int i = 1; i <= 9; i ++) {
-    if (i == 5) {
-      // at midpoint, switch to bottom half 
-      line_y = varioBarFrame_mid;
-      tickSpacing = varioBarFill_bot_length / 5;
-    } else {
-      // draw a tick-mark line
-      line_y += tickSpacing;
-      if (line_y >= varioBarFill_start && line_y <= varioBarFill_end) {
-        u8g2.setDrawColor(0);
-      } else {
-        u8g2.setDrawColor(1);
-      }
-      u8g2.drawLine(1, line_y, 6, line_y);
-    }
-  }
-}
-
-void display_climbRatePointerBox(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t triSize, int16_t displayClimbRate) {
-  bool climbInFPM = false;
-  float climbInMS = 0;
-  u8g2.setDrawColor(1);  
-  u8g2.drawBox(x, y, w, h);
-  u8g2.drawTriangle(x-triSize, y+h/2, x-1, y+h/2-triSize, x-1, y+h/2+triSize);
-    
-  u8g2.setCursor(x, y += 16);   //scoot cursor down for bottom justified font
-  u8g2.setFont(leaf_8x14);
-  uint8_t fontWidth = 9;        // character size plus space
-  u8g2.setDrawColor(0);
-
-  if (displayClimbRate > 0) u8g2.print('+');
-  else if (displayClimbRate < 0) {
-    u8g2.print('-');
-    displayClimbRate *= -1; // keep positive part
-  }
-  x += fontWidth;
-
-  if (climbInFPM) {
-    displayClimbRate = displayClimbRate * 197 / 100;    // convert from cm/s to fpm
-    if (displayClimbRate < 1000) x += fontWidth;
-    if (displayClimbRate < 100 ) x += fontWidth;
-    if (displayClimbRate < 10  ) x += fontWidth;
-    u8g2.setCursor(x, y);
-    u8g2.print(displayClimbRate);
-  } else {
-    displayClimbRate = (displayClimbRate + 5) / 10;     // lose one decimal place and round off in the process
-    climbInMS = (float)displayClimbRate/10;             // convert to float for ease of printing with the decimal in place
-    if (climbInMS < 10  ) x += fontWidth;
-    u8g2.setCursor(x, y);
-    u8g2.print(climbInMS, 1);
-  }
-  u8g2.setDrawColor(1);   // always set back to 1 if we've been using 0, just in case the next draw function forgets  
-}
-
-void display_altAboveLaunch(uint8_t x, uint8_t y, int32_t aboveLaunchAlt) {
-  u8g2.setCursor(x, y - 16);
-  u8g2.setFont(leaf_5h);
-  u8g2.print("Above Launch");
-  display_alt(x, y, leaf_6x12, aboveLaunchAlt);
-}
-
-
-void display_battIcon(uint8_t x, uint8_t y) {
-  /*  
-      / batt charging (not full)
-      0 batt at 0%
-      1 batt at 10%
-      --etc--
-      9 batt at 90%
-      : batt at 100%
-      ; batt charging (full)
-  */
-  uint8_t battPercent = power_getBattLevel(0);
-  uint16_t battMV = power_getBattLevel(1);
-  uint16_t battADC = power_getBattLevel(2);
-  char battIcon = '0' + (battPercent+5)/10;
-  if (power_getBattCharging()) {
-    if (battPercent >= 100) battIcon = ';';
-    else battIcon = '/';
-  }
-
-
-  u8g2.setCursor(x, y);
-  u8g2.setFont(leaf_icons);
- 
- 
-  u8g2.print(battIcon);
-  /*  
-  Serial.print("percent: ");
-  Serial.print(battPercent);
-  Serial.print(" icon: ");
-  Serial.print((char)battIcon);
-  Serial.print(" milivolts: ");
-  Serial.print(battMV);
-  Serial.print(" ADC: ");
-  Serial.println(battADC);
-  */
-  u8g2.setFont(leaf_6x12);
-  u8g2.setCursor(x, y+=15);
-  u8g2.print(battPercent);
-  u8g2.setCursor(x, y+=15);
-  u8g2.print(battMV);
-  u8g2.setCursor(x, y+=15);
-  u8g2.print(battADC);
-}
-
-void display_update_temp_vars() {
-  dirToWypt += .005;
-  wind_angle -= .0075;
-
-  varioBar_climbRate += climbChange;  
-  if  (varioBar_climbRate > 1100) {
-    climbChange *= -1;
-    varioBar_climbRate = 1090;
-  } else if (varioBar_climbRate < -1100) {
-    climbChange *= -1;
-    varioBar_climbRate = -1090;
-  }
-}
-
-/*********************************************************************************
-**    NAV PAGE        ************************************************************
-*********************************************************************************/
-void display_nav_page() {
-  baro_updateFakeNumbers();
-  gps_updateFakeNumbers();
-
-  u8g2.firstPage();
-  do { 
-    uint8_t x = display_speed(0,12);
-    display_headingTurn(x+3, 10);
-    display_alt(17, 26, leaf_8x14, baro_getAlt());
-
-  } while ( u8g2.nextPage() ); 
-  
-}
-
-/*********************************************************************************
-**    THERMAL PAGE        ********************************************************
-*********************************************************************************/
-void display_thermal_page() {
-  //baro_updateFakeNumbers();
-  gps_updateFakeNumbers();
-  display_update_temp_vars();
-
-  u8g2.firstPage();
-  do { 
-    uint8_t x = display_speed(0,12);    // grab resulting x cursor value (if speed has 2 or 3 digits, things will shift over)
-    display_headingTurn(x+3, 10);
-    display_alt(17, 26, leaf_8x14, baro_getAlt());
-    display_altAboveLaunch(17, 50, baro_getAlt() - 120000);
-    display_varioBar(13, 111, 14, baro_getClimbRate());
-    display_climbRatePointerBox(14, 59, 50, 17, 6, baro_getClimbRate());     // x, y, w, h, triangle size
-    
-    display_battIcon(20, 90);
-
-    u8g2.drawBox(0,154,64,38);
-
-  } while ( u8g2.nextPage() ); 
-  
-}
 
 
 void display_test_real_3() {
@@ -1234,5 +1316,73 @@ void GLCD_init(void)
     GLCD_data(0b00000000);    //clear LCD
   }
 }
+
+
+void display_battery_icon(uint16_t x, uint16_t y, uint8_t pct, bool charging) {
+
+  uint8_t w =  7;
+  uint8_t h = 12;  
+
+  u8g2.setDrawColor(1);      
+  u8g2.drawFrame(x,y+1,w,h-1);               // main battery box
+  u8g2.drawLine(x+w/3, y, x+w-w/3-1, y);     // little +nib tip
+  uint16_t fill = (h-2)*pct/100;
+  u8g2.drawBox(x+1, y+h-fill-1, w-2, fill);  // fill up to capacity
+
+  if(charging) {                             // draw lightning bolt if charging
+    for (int i = 0; i<7; i++) {
+      if ( (y+3+i) >= (y+h-fill-1) ) u8g2.setDrawColor(0); //invert lightning bolt where battery level is filled
+      u8g2.drawPixel(x+w/2,y+3+i);
+      if (i==2) u8g2.drawPixel(x+w/2-1,y+3+i);
+      if (i==3) {u8g2.drawPixel(x+w/2-1,y+3+i); u8g2.drawPixel(x+w/2+1,y+3+i);}
+      if (i==4) u8g2.drawPixel(x+w/2+1,y+3+i);
+    }
+    u8g2.setDrawColor(1); //end invert    
+  }
+}
+
+void display_test_bat_icon(void) {
+  uint8_t x = 1;
+  uint8_t y = 1;
+  uint8_t pct = 0;
+  uint8_t w =  7;
+  uint8_t h = 12; 
+  bool charging = 1;
+
+
+  u8g2.firstPage();
+  do {
+    for (int i=0; i<51; i++) {
+      u8g2.setDrawColor(1);      
+      u8g2.drawFrame(x,y+1,w,h-1);           // main battery box
+      u8g2.drawLine(x+w/3, y, x+w-w/3-1, y); // little +nib tip
+      uint16_t fill = (h-2)*pct/100;
+      u8g2.drawBox(x+1, y+h-fill-1, w-2, fill);  // fill up to capacity
+
+      // draw lightning bolt if charging
+      if(charging) {
+        for (int i = 0; i<7; i++) {
+          if ( (y+3+i) >= (y+h-fill-1) ) u8g2.setDrawColor(0); //invert lightning bolt where battery level is filled
+          u8g2.drawPixel(x+w/2,y+3+i);
+          if (i==2) u8g2.drawPixel(x+w/2-1,y+3+i);
+          if (i==3) {u8g2.drawPixel(x+w/2-1,y+3+i); u8g2.drawPixel(x+w/2+1,y+3+i);}
+          if (i==4) u8g2.drawPixel(x+w/2+1,y+3+i);
+        }
+        u8g2.setDrawColor(1); //end invert
+        
+      }
+
+      x += 10;
+      pct += 2;
+      if (x >= 63-w) {
+        x = 1;
+        y += h+2;
+      }  
+    }
+  } while ( u8g2.nextPage() );
+  delay(100);
+}
+
+
 */
 

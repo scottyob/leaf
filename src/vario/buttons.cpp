@@ -29,7 +29,7 @@ uint16_t button_hold_action_time_elapsed = 0; // counting time between 'action s
 uint16_t button_hold_action_time_limit = 500; // time in ms required between "action steps" while holding the button
 uint16_t button_hold_counter = 0;
 
-void buttons_init(void) {
+uint8_t buttons_init(void) {
 
   //configure pins
   pinMode(BUTTON_PIN_UP, INPUT_PULLDOWN);
@@ -37,56 +37,102 @@ void buttons_init(void) {
   pinMode(BUTTON_PIN_LEFT, INPUT_PULLDOWN);
   pinMode(BUTTON_PIN_RIGHT, INPUT_PULLDOWN);
   pinMode(BUTTON_PIN_CENTER, INPUT_PULLDOWN);
+
+  uint8_t button = buttons_inspectPins();
+  return button;
 }
 
 void buttons_update(void) {
   // TODO: fill this in to handle button pushes with respect to display interface
   uint8_t which_button = buttons_check();
-  uint8_t button_state = buttons_get_state();
+//  uint8_t button_state = buttons_get_state();  //TODO: delete this line probably
 
-  switch (which_button) {
-    case CENTER:
-      switch (button_state) {
-        case HELD:
-          display_clear();
-          speaker_playSound(fx_exit);
-          delay(600);
-          power_turn_off();
-          while(1); // freeze here until user lets go of button
-          break;
-        case RELEASED:
-          display_page_turn(page_home);
-          break;
-      }      
-      break;
-    case RIGHT:
-      if (button_state == PRESSED) {
-        display_page_turn(page_next);
-        speaker_playSound(fx_increase);
-      }
-      break;
-    case LEFT:
-      if (button_state == PRESSED) {
-        display_page_turn(page_prev);
-        speaker_playSound(fx_decrease);
-      }
-      break;
-    case UP:
-      if (button_state == PRESSED) {
-        speaker_incVolume();
-        speaker_playSound(fx_increase);
-      }
-      break;
-    case DOWN:
-      if (button_state == PRESSED) {
-        speaker_decVolume();
-        speaker_playSound(fx_decrease);
-      }
-      break;
-  }
-
-  if (which_button == CENTER) {
-    
+  if (display_getPage() == page_charging) {
+    switch (which_button) {
+      case CENTER:
+        if (button_state == HELD && button_hold_counter == 1) {          
+          display_clear();          
+          display_setPage(page_thermal);
+          power_switchToOnState();
+        }
+        break;
+      case UP:
+        switch (button_state) {
+          case RELEASED:
+            break;
+          case HELD:
+            power_set_input_current(i500mA);
+            speaker_playSound(fx_enter);
+            break;
+        }
+        break;
+      case DOWN:
+        switch (button_state) {
+          case RELEASED:            
+            break;
+          case HELD:
+            power_set_input_current(i100mA);
+            speaker_playSound(fx_exit);
+            break;
+        }
+        break;
+    }
+  } else {
+    switch (which_button) {
+      case CENTER:
+        switch (button_state) {
+          case HELD:
+            if (button_hold_counter == 1) {
+              display_clear();
+              speaker_playSound(fx_exit);
+              delay(600);
+              power_shutdown();
+              display_setPage(page_charging);
+              //while(1); // freeze here until user lets go of button
+            }
+            break;
+          case RELEASED:
+            display_turnPage(page_home);
+            break;
+        }      
+        break;
+      case RIGHT:
+        if (button_state == PRESSED) {
+          display_turnPage(page_next);
+          speaker_playSound(fx_increase);
+        }
+        break;
+      case LEFT:
+        if (button_state == PRESSED) {
+          display_turnPage(page_prev);
+          speaker_playSound(fx_decrease);
+        }
+        break;
+      case UP:
+        switch (button_state) {
+          case RELEASED:
+            speaker_incVolume();
+            speaker_playSound(fx_increase);
+            break;
+          case HELD:
+            power_set_input_current(i500mA);
+            speaker_playSound(fx_enter);
+            break;
+        }
+        break;
+      case DOWN:
+        switch (button_state) {
+          case RELEASED:
+            speaker_decVolume();
+            speaker_playSound(fx_decrease);
+            break;
+          case HELD:
+            power_set_input_current(i100mA);
+            speaker_playSound(fx_exit);
+            break;
+        }
+        break;
+    }
   }
 }
 

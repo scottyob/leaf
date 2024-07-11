@@ -23,7 +23,7 @@
 enum buttons {NONE, UP, DOWN, LEFT, RIGHT, CENTER, BOUNCE};
 enum button_states {NO_STATE, PRESSED, RELEASED, HELD, HELD_LONG};
 
-void buttons_init(void);
+uint8_t buttons_init(void);
 
 uint8_t buttons_check(void);
 uint8_t buttons_inspectPins(void);

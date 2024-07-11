@@ -73,6 +73,13 @@
 
 
 void speaker_init(void);
+void speaker_sleep(void);
+void speaker_wake(void);
+
+void speaker_setDefaultVolume(void);
+void speaker_setVolume(unsigned char volume);
+void speaker_incVolume(void);
+void speaker_decVolume(void);
 
 void speaker_updateVarioNote(int16_t verticalRate); // the root one
 
@@ -85,9 +92,6 @@ void speaker_updateVarioNoteAdjustable(int16_t verticalRate);
 void speaker_enableTimer(void);
 void speaker_disableTimer(void);
 
-void speaker_setVolume(unsigned char volume);
-void speaker_incVolume(void);
-void speaker_decVolume(void);
 
 void speaker_updateClimbToneParameters(void);
 

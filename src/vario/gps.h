@@ -53,6 +53,9 @@ void gps_setBackupPower(bool backup_power_on);
 void gps_enterBackupMode(void);
 void gps_softReset(void);
 void gps_hardReset(void);
+void gps_shutdown(void);
+void gps_wake(void);
+void gps_sleep(void);
 
 void gps_updateFakeNumbers(void);
 

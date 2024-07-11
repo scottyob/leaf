@@ -70,8 +70,8 @@ void speaker_init(void)
   pinMode(SPEAKER_VOLA, OUTPUT);
   pinMode(SPEAKER_VOLB, OUTPUT);
 	//speaker_setVolume(VOLUME);      // use saved user prefs
-  speaker_setVolume(1);  
 
+  speaker_setDefaultVolume();
 
   if (FIXED_SAMPLE_APPROACH) {
   
@@ -93,6 +93,20 @@ void speaker_init(void)
   }
 
 	snd_index = fx_silence;  
+}
+
+void speaker_sleep() {
+  speaker_setVolume(0);
+  timerStop(speaker_timer);
+}
+
+void speaker_wake() {
+  speaker_setDefaultVolume();
+  timerStart(speaker_timer);
+}
+
+void speaker_setDefaultVolume() {
+  speaker_setVolume(1);  
 }
 
 void speaker_incVolume() {

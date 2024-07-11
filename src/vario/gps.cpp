@@ -66,9 +66,24 @@ void gps_enterBackupMode(void) {
   // cut main VCC power to further reduce power consumption to ~13uA (i.e., when whole system is shut down)
 }
 
+void gps_sleep() {
+  gpsPort.write("$PAIR650,0*25"); // shutdown command
+}
+
+void gps_wake() {
+  gps_setBackupPower(1);  // enable backup power if not already
+  gps_softReset();
+}
+
+void gps_shutdown() {
+  gps_sleep();
+  gps_setBackupPower(0);  // disable GPS backup supply, so when main system shuts down, gps is totally off
+}
+
 void gps_init(void) {
 
   // Set pins
+  Serial.print("GPS set pins... ");
   pinMode(GPS_BACKUP_EN, OUTPUT);
   gps_setBackupPower(true);       // by default, enable backup power
   pinMode(GPS_RESET, OUTPUT);
@@ -76,10 +91,12 @@ void gps_init(void) {
   delay(100);
   digitalWrite(GPS_RESET, HIGH);  // 
 
+  Serial.print("GPS being serial port... ");
   gpsPort.begin(GPSBaud); 
   //gpsPort.setRxBufferSize(GPSSerialBufferSize);
 
   // Initialize all the uninitialized TinyGPSCustom objects
+  Serial.print("GPS initialize sat messages... ");
   for (int i=0; i<4; ++i) {
     satNumber[i].begin(gps, "GPGSV", 4 + 4 * i); // offsets 4, 8, 12, 16
     elevation[i].begin(gps, "GPGSV", 5 + 4 * i); // offsets 5, 9, 13, 17
@@ -87,6 +104,7 @@ void gps_init(void) {
     snr[i].begin(      gps, "GPGSV", 7 + 4 * i); // offsets 7, 11, 15, 19
   }
 
+  Serial.print("GPS initialize done... ");
 
   //Serial.println("Setting GPS messages");	
 
