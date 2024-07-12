@@ -48,7 +48,7 @@
   char taskman_gps = 1;       // process any NMEA strings and update values
   char taskman_display = 1;   // update display
   char taskman_power = 1;     // check battery, check auto-turn-off, etc
-  char taskman_logging = 1;   // check auto-start, increment timers, update log file, etc
+  char taskman_log = 1;       // check auto-start, increment timers, update log file, etc
 
 // track current power on state to detect changes (if user turns device on or off while USB is plugged in, device can still run even when "off")
   uint8_t currentPowerOnState = POWER_OFF;
@@ -211,9 +211,9 @@ void setTasks(void) {
     case 9:
       
       // Tasks every second complete here in the 9th 10ms block.  Pick a unique 100ms block for each task to space things out
-      if (counter_100ms_block == 0) taskman_gps = 1;                              // every second: gps
-      if (counter_100ms_block == 1) taskman_power = 1;                            // every second: power checks      
-      if (counter_100ms_block == 2) taskman_logging = 1;                          // every second: logging
+      if (counter_100ms_block == 0) taskman_gps = 1;                          // every second: gps
+      if (counter_100ms_block == 1) taskman_power = 1;                        // every second: power checks      
+      if (counter_100ms_block == 2) taskman_log = 1;                          // every second: logging
 
       // Update LCD every half-second on the 3rd and 8th 100ms blocks
       if (counter_100ms_block == 3 || counter_100ms_block == 8) taskman_display = 1;  // every half-second: LCD update
@@ -230,7 +230,7 @@ void taskManager(void) {
   if (taskman_imu)     { imu_update();     taskman_imu = 0; }
   if (taskman_gps)     { gps_update();     taskman_gps = 0; }
   if (taskman_power)   { power_update();   taskman_power = 0; }
-//if (taskman_logging) { logging_update(); taskman_logging = 0; }
+  if (taskman_log)     { log_update();     taskman_log = 0; }
   if (taskman_display) { display_update(); taskman_display = 0; }  
 }
 

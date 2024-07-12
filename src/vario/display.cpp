@@ -14,6 +14,7 @@
 #include "gps.h"
 #include "baro.h"
 #include "power.h"
+#include "log.h"
 
 //#define GLCD_RS LCD_RS
 //#define GLCD_RESET LCD_RESET
@@ -151,6 +152,23 @@ void display_update_temp_vars() {
 /********************************************************************************************/
 // Display Components
 // Individual fields that can be called from many different pages, and/or placed in different positions
+
+    void display_flightTimer(uint8_t x, uint8_t y, bool shortstring) {
+      uint8_t h = 16;
+      uint8_t w = 44;
+      if (shortstring) w = 34;
+
+      u8g2.setDrawColor(1);
+      u8g2.drawRBox(x, y-h, w, h, 2);
+      u8g2.setDrawColor(0);
+      u8g2.setFont(leaf_6x12);
+      u8g2.setCursor(x+2, y-2);
+      u8g2.print(log_getFlightTimerString(shortstring));
+      u8g2.setDrawColor(1);
+    }
+
+
+
 
     uint8_t display_speed(uint8_t cursor_x, uint8_t cursor_y) {    
       uint16_t displaySpeed = gps_getSpeed_mph() + 0.5;   // add half so we effectively round when truncating from float to int.
@@ -549,7 +567,13 @@ void display_thermal_page() {
     u8g2.setCursor(40, 90);    
     u8g2.print(power_getInputCurrent());
 
-    u8g2.drawBox(0,154,64,38);
+    display_flightTimer(2, 156, 0);
+    display_flightTimer(2, 176, 1);
+
+    u8g2.setCursor(2, 192);
+    u8g2.print(log_getFlightTimerSec());
+
+    //u8g2.drawBox(0,154,64,38);
 
   } while ( u8g2.nextPage() ); 
   

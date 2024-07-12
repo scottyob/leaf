@@ -7,7 +7,9 @@
 
 
 uint32_t flightTimerSec = 0;
-bool flightTimerRunning = 0;
+bool flightTimerRunning = 1;
+char flightTimerString[] = "0:00:00";    // H:MM:SS -> 7 characters max for string.  If it hits 10 hours, will re-format to _HH:MM_
+char flightTimerStringShort[] = "00:00"; // MM:SS -> 5 characters max for string.  If it hits 1 hour, will change to HH:MM
 
 // values for logbook entries
   int32_t log_alt = 0;
@@ -27,13 +29,15 @@ bool flightTimerRunning = 0;
   int32_t log_temp_min = 0;
 
 
+void log_init() {
 
+}
 
 
 // update function to run every second
-void logging_udpate() {
+void log_update() {
   if (flightTimerRunning) {
-    flightTimerSec++;
+    flightTimerSec += 14;
   }
 
   //check altitude values for log
@@ -72,8 +76,7 @@ void flightTimer_start() {
 
   //starting values
   baro_resetLaunchAlt();
-  log_alt_start = baro_getAltAtLaunch();
-  
+  log_alt_start = baro_getAltAtLaunch();  
 }
 
 void flightTimer_stop() {
@@ -87,3 +90,105 @@ void flightTimer_reset() {
   flightTimer_stop();
   flightTimerSec = 0;
 }
+
+uint32_t log_getFlightTimerSec() {
+  return flightTimerSec;
+}
+
+char * log_getFlightTimerString(bool shortString) {
+  flightTimer_updateStrings();
+  if (shortString) return flightTimerStringShort;
+  else return flightTimerString;
+}
+
+void flightTimer_updateStrings() {
+  // char * flightTimerString = "0:00:00";    // H:MM:SS -> 7 characters max for string.  If it hits 10 hours, will re-format to _HH:MM_
+  // char * flightTimerStringShort = "00:00"; // MM:SS -> 5 characters max for string.  If it hits 1 hour, will change to HH:MM
+
+  uint8_t hours = flightTimerSec / 3600;
+  uint8_t mins  = (flightTimerSec / 60) % 60;
+  uint8_t secs  = flightTimerSec % 60;
+
+  uint8_t position = 0;
+
+  // update flightTimerString    
+  if (hours > 9) {
+    if (hours > 99) 
+    //      "000:00 "  HHH:MM_
+      flightTimerString[position] = '0' + hours/100;
+    else            
+    //      " 00:00 "  _HH:MM_
+      flightTimerString[position] = ' ';
+      flightTimerString[++position] = '0' + hours/10;
+      flightTimerString[++position] = '0' + hours % 10;
+      flightTimerString[++position] = ':';
+      flightTimerString[++position] = '0' + mins/10;
+      flightTimerString[++position] = '0' + mins % 10;
+      flightTimerString[++position] = ' ';
+  } else if (hours > 0) {
+    //      "0:00:00"  H:MM:SS
+      flightTimerString[position] = '0' + hours;
+      flightTimerString[++position] = ':';
+      flightTimerString[++position] = '0' + mins/10;
+      flightTimerString[++position] = '0' + mins % 10;
+      flightTimerString[++position] = ':';
+      flightTimerString[++position] = '0' + secs/10;
+      flightTimerString[++position] = '0' + secs % 10;
+  } else {
+      flightTimerString[position++] = ' ';
+    if (mins > 9)
+    //      " 00:00 "  _MM:SS_
+      flightTimerString[position] = '0' + mins/10;
+    else 
+    //      "  0:00 "  __M:SS_
+      flightTimerString[position] = ' ';
+      
+      flightTimerString[++position] = '0' + mins % 10;
+      flightTimerString[++position] = ':';
+      flightTimerString[++position] = '0' + secs/10;
+      flightTimerString[++position] = '0' + secs % 10;
+      flightTimerString[++position] = ' ';
+  }
+
+    position = 0;
+
+    // update flightTimerStringShort
+      // char * flightTimerStringShort = "00:00"; // MM:SS -> 5 characters max for string.  If it hits 1 hour, will change to HH:MM
+    if (hours > 0) {
+      if (hours > 9) flightTimerStringShort[position] = '0' + hours/10;
+      else flightTimerStringShort[position] = ' ';
+      flightTimerStringShort[++position] = '0' + hours % 10;
+      flightTimerStringShort[++position] = ':';
+      flightTimerStringShort[++position] = '0' + mins/10;
+      flightTimerStringShort[++position] = '0' + mins % 10;
+    } else {
+      if (mins > 9) flightTimerStringShort[position] = '0' + mins/10;
+      else flightTimerStringShort[position] = ' ';
+      flightTimerStringShort[++position] = '0' + mins % 10;
+      flightTimerStringShort[++position] = ':';
+      flightTimerStringShort[++position] = '0' + secs/10;
+      flightTimerStringShort[++position] = '0' + secs % 10;
+    }
+    
+       
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
