@@ -188,7 +188,7 @@ void display_update_temp_vars() {
     uint8_t display_speed(uint8_t x, uint8_t y, const uint8_t *font, bool units) {
       uint8_t cursor_x = display_speed(x, y, font);
       //kpm or mph
-      if (0) u8g2.print((char)135);  // unit character
+      if (1) u8g2.print((char)135);  // unit character
       else   u8g2.print((char)136);  // unit character   
       return (cursor_x += 7);
     }
@@ -571,21 +571,22 @@ void display_thermal_page() {
     //heading
     display_headingTurn(x+3, 10);
 
-
+    //alt
     display_alt(17, 26, leaf_8x14, baro_getAlt());
     display_altAboveLaunch(17, 50, baro_getAlt() - 120000);
     display_varioBar(13, 111, 14, baro_getClimbRate());
     display_climbRatePointerBox(14, 59, 50, 17, 6, baro_getClimbRate());     // x, y, w, h, triangle size
     
+    // batt stuff
     display_battIcon(20, 90);
 
     u8g2.setFont(leaf_6x12);
     u8g2.setCursor(40, 90);    
     u8g2.print(power_getInputCurrent());
 
+    //flight timer
     display_flightTimer(2, 156, 0);
     display_flightTimer(2, 176, 1);
-
     u8g2.setCursor(2, 192);
     u8g2.print(log_getFlightTimerSec());
 
@@ -606,7 +607,9 @@ void display_satellites(uint16_t x, uint16_t y, uint16_t size) {
 
     // temp display of speed and heading and all that.
       // speed
-        display_speed(0, 20, leaf_6x12, true);
+        u8g2.setCursor(0, 20);
+        u8g2.setFont(leaf_6x12);
+        u8g2.print(gps.speed.mph(), 1);        
         u8g2.setFont(leaf_5h);
         u8g2.drawStr(0, 7, "mph");
 
@@ -688,19 +691,14 @@ void display_satellites(uint16_t x, uint16_t y, uint16_t size) {
     
    
     //draw other GPS stuff just for testing purposes
-    u8g2.drawStr(0, size + y + 10, "Lat: ");
-    u8g2.setCursor(20, size + y + 10);
-    u8g2.print(gps.location.lat());
+    u8g2.drawStr(0, size + y + 10, "Lat:");
+    u8g2.setCursor(16, size + y + 10);
+    u8g2.print(gps.location.lat(), 10);
 
-    u8g2.drawStr(0, size + y + 20, "Lon: ");
-    u8g2.setCursor(20, size + y + 20);
+    u8g2.drawStr(0, size + y + 20, "Lon:");
+    u8g2.setCursor(16, size + y + 20);
     u8g2.print(gps.location.lng(), 10);
 
-    //u8g2.drawStr(0, size + y + 30, "Speed: ");
-    //u8g2.drawStr(50, size + y + 30, gps.speed());
-
-    u8g2.drawStr(0, size + y + 30, "Heading: ");
-    u8g2.drawStr(50, size + y + 30, gps.cardinal(gps.course.deg()));
   } while ( u8g2.nextPage() );
 }
 

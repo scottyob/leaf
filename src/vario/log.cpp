@@ -37,7 +37,7 @@ void log_init() {
 // update function to run every second
 void log_update() {
   if (flightTimerRunning) {
-    flightTimerSec += 14;
+    flightTimerSec += 1;
   }
 
   //check altitude values for log
