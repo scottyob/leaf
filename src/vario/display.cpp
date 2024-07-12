@@ -169,19 +169,28 @@ void display_update_temp_vars() {
 
 
 
-
+    // Display speed (overloaded function allows for with or without font setting and unit character)
     uint8_t display_speed(uint8_t cursor_x, uint8_t cursor_y) {    
-      uint16_t displaySpeed = gps_getSpeed_mph() + 0.5;   // add half so we effectively round when truncating from float to int.
+      uint16_t displaySpeed = gps.speed.mph() + 0.5;   // add half so we effectively round when truncating from float to int.
       if (displaySpeed >= 1000) displaySpeed = 999;       // cap display value at 3 digits
 
       if (displaySpeed < 10) cursor_x += 6; // leave a space if only 1 digit
-      u8g2.setCursor(cursor_x, cursor_y);
-
-      u8g2.setFont(leaf_6x12);
-      u8g2.print(displaySpeed);
+      u8g2.setCursor(cursor_x, cursor_y);    
+      u8g2.print(displaySpeed, 1);
       if (displaySpeed < 100) cursor_x = 13;
       else cursor_x = 19;
       return cursor_x;    // keep track of whether we printed a 3 digit or 2 digit speed value
+    }
+    uint8_t display_speed(uint8_t x, uint8_t y, const uint8_t *font) {     
+      u8g2.setFont(font);
+      return display_speed(x, y);
+    }    
+    uint8_t display_speed(uint8_t x, uint8_t y, const uint8_t *font, bool units) {
+      uint8_t cursor_x = display_speed(x, y, font);
+      //kpm or mph
+      if (0) u8g2.print((char)135);  // unit character
+      else   u8g2.print((char)136);  // unit character   
+      return (cursor_x += 7);
     }
 
     void display_headingTurn(uint8_t cursor_x, uint8_t cursor_y) {
@@ -193,7 +202,7 @@ void display_update_temp_vars() {
       if (displayTurn < '=') u8g2.print(displayTurn);  
 
       // Cardinal heading direction  
-      const char *displayHeadingCardinal = gps_getCourseCardinal();  
+      const char *displayHeadingCardinal = gps.cardinal(gps.course.deg());  //gps_getCourseCardinal();  
       if      (strlen(displayHeadingCardinal) == 1) u8g2.setCursor(cursor_x + 16, cursor_y);
       else if (strlen(displayHeadingCardinal) == 2) u8g2.setCursor(cursor_x + 12, cursor_y);
       else                                          u8g2.setCursor(cursor_x +  8, cursor_y);
@@ -499,7 +508,8 @@ void display_update_temp_vars() {
       u8g2.setCursor(x, y+=15);
       u8g2.print(battADC);
     }
-
+// END OF COMPONENT DISPLAY FUNCTIONS //
+/********************************************************************************************/
 
 
 
@@ -549,13 +559,19 @@ void display_nav_page() {
 *********************************************************************************/
 void display_thermal_page() {
   //baro_updateFakeNumbers();
-  gps_updateFakeNumbers();
-  display_update_temp_vars();
+  //gps_updateFakeNumbers();
+  //display_update_temp_vars();
 
   u8g2.firstPage();
   do { 
+    //speed
+    u8g2.setFont(leaf_6x12);
     uint8_t x = display_speed(0,12);    // grab resulting x cursor value (if speed has 2 or 3 digits, things will shift over)
+
+    //heading
     display_headingTurn(x+3, 10);
+
+
     display_alt(17, 26, leaf_8x14, baro_getAlt());
     display_altAboveLaunch(17, 50, baro_getAlt() - 120000);
     display_varioBar(13, 111, 14, baro_getClimbRate());
@@ -590,9 +606,7 @@ void display_satellites(uint16_t x, uint16_t y, uint16_t size) {
 
     // temp display of speed and heading and all that.
       // speed
-        u8g2.setFont(leaf_6x12);
-        u8g2.setCursor(0,20);
-        u8g2.print(gps.speed.mph(), 1);
+        display_speed(0, 20, leaf_6x12, true);
         u8g2.setFont(leaf_5h);
         u8g2.drawStr(0, 7, "mph");
 
