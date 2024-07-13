@@ -15,7 +15,7 @@
   #define ALTITUDE_FILTER_VALS_PREF 20                    // user setting for how many altitude samples to filter over, from 1 to 20
   #define CLIMB_FILTER_VALS_PREF    20                    // how many climb rate values to average over 
   int32_t altitudeFilterVals[FILTER_VALS_MAX+1]; // use [0] as the index / bookmark
-  int16_t climbFilterVals[FILTER_VALS_MAX+1];       // use [0] as the index / bookmark
+  int32_t climbFilterVals[FILTER_VALS_MAX+1];       // use [0] as the index / bookmark
   
   // LinearRegression to average out noisy sensor readings
   LinearRegression<ALTITUDE_FILTER_VALS_PREF> alt_lr;
@@ -24,15 +24,15 @@
     #define VARIO_SENSITIVITY 3 // not sure what this is yet :)
     #define CLIMB_AVERAGE 1
     #define PfilterSize		6			// pressure alt filter values (minimum 1, max 10)
-    int16_t varioVals[25];
-    int16_t climbVals[31];
-    int16_t climbSecVals[9];
+    int32_t varioVals[25];
+    int32_t climbVals[31];
+    int32_t climbSecVals[9];
 
 
 
 // Baro Values
-  int16_t CLIMB_RATE = 0;
-  int16_t CLIMB_RATEfiltered = 0;
+  int32_t CLIMB_RATE = 0;
+  int32_t CLIMB_RATEfiltered = 0;
   
   
   int32_t VARIO_RATEfiltered = 0;
@@ -83,8 +83,8 @@
 // fake stuff for testing
 
 int32_t fakeAlt = 0;
-int16_t fakeClimbRate = 0;
-int16_t fakeVarioRate = 0;
+int32_t fakeClimbRate = 0;
+int32_t fakeVarioRate = 0;
 int32_t change = 1;
 
 
@@ -97,13 +97,13 @@ int32_t baro_getAlt() {
 }
 
 // actual climb rate, for display on screen numerically, and saving in flight log
-int16_t baro_getClimbRate() {
+int32_t baro_getClimbRate() {
   //return fakeClimbRate;
   return CLIMB_RATEfiltered;
 }
 
 // climb rate for vario var visuals and perhaps sound.  This is separate in case we want to average/filter it differently
-int16_t baro_getVarioBar() {
+int32_t baro_getVarioBar() {
   return fakeVarioRate;
 }
 
@@ -521,7 +521,7 @@ void baro_debugPrint() {
 
 
 
-
+/*
 void baro_filterCLIMB(void)
 {
 	uint32_t sum = 0;
@@ -572,8 +572,9 @@ void baro_filterCLIMB(void)
 	// vario average setting is stored in 1/2 seconds, but vario samples come in every 1/8th second,
 	// so multiply [1/2 sec] setting by 4, to get number of [1/8th rate] samples.
 	VARIO_RATEfiltered = (VARIO_RATEfiltered * (4*VARIO_SENSITIVITY - 1) + CLIMB_RATE) / (4*VARIO_SENSITIVITY);  // filter by weighting old values higher
-*/
+
 }
+*/
 
 char process_step_test = 0;
 

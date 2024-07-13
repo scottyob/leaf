@@ -63,8 +63,8 @@ int32_t baro_getAltAtLaunch (void);
 int32_t baro_getAltAboveLaunch(void);
 void baro_resetLaunchAlt(void);
 
-int16_t baro_getClimbRate (void);
-int16_t baro_getVarioBar (void);
+int32_t baro_getClimbRate (void);
+int32_t baro_getVarioBar (void);
 
 
 

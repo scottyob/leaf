@@ -16,7 +16,7 @@ void GLCD_data(byte data);
 
 // keep track of pages
 enum display_page_actions {page_home, page_prev, page_next};
-enum display_pages {page_sats, page_thermal, page_nav, page_menu, page_charging, page_last};
+enum display_pages {page_sats, page_thermal, page_nav, page_menu, page_last, page_charging};
 void display_turnPage(uint8_t action);
 void display_setPage(uint8_t action);
 uint8_t display_getPage(void);

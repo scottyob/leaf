@@ -100,7 +100,7 @@ char speed[] = "132";
 char windSpeed[] = "28";
 char turn = 1;
 uint16_t windDir = 235;
-int16_t varioBar_climbRate = -100;     // cm/s  (i.e. m/s * 100)
+int32_t varioBar_climbRate = -100;     // cm/s  (i.e. m/s * 100)
 int8_t climbChange = 10;
 
 
@@ -261,7 +261,7 @@ void display_update_temp_vars() {
       }      
     }
 
-    void display_varioBar(uint8_t varioBarFrame_top, uint8_t varioBarFrame_length, uint8_t varioBarFrame_width, int16_t displayBarClimbRate) {
+    void display_varioBar(uint8_t varioBarFrame_top, uint8_t varioBarFrame_length, uint8_t varioBarFrame_width, int32_t displayBarClimbRate) {
       int16_t varioBar_climbRateMax = 500;   // this is the bar height, but because we can fill then empty the bar, we can show twice this climb value
       int16_t varioBar_climbRateMin = -500;  // again, bar height, so we can show twice this sink value
 
@@ -571,7 +571,7 @@ void display_thermal_page() {
     //heading
     display_headingTurn(x+3, 10);
 
-    //alt
+    //air data
     display_alt(17, 26, leaf_8x14, baro_getAlt());
     display_altAboveLaunch(17, 50, baro_getAlt() - 120000);
     display_varioBar(13, 111, 14, baro_getClimbRate());

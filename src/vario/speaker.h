@@ -81,13 +81,13 @@ void speaker_setVolume(unsigned char volume);
 void speaker_incVolume(void);
 void speaker_decVolume(void);
 
-void speaker_updateVarioNote(int16_t verticalRate); // the root one
+void speaker_updateVarioNote(int32_t verticalRate); // the root one
 
 void onSpeakerTimerSample(void);        // method 1 -- fixed sample length
-void speaker_updateVarioNoteSample(int16_t verticalRate);
+void speaker_updateVarioNoteSample(int32_t verticalRate);
 
 void onSpeakerTimerAdjustable(void);    // method 2 -- adjustable timer length
-void speaker_updateVarioNoteAdjustable(int16_t verticalRate);
+void speaker_updateVarioNoteAdjustable(int32_t verticalRate);
 
 void speaker_enableTimer(void);
 void speaker_disableTimer(void);

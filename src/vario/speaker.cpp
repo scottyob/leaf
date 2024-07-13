@@ -199,12 +199,12 @@ void speaker_updateClimbToneParameters(void)
 }
 
 //entry point to direct the approach
-void speaker_updateVarioNote(int16_t verticalRate) {
+void speaker_updateVarioNote(int32_t verticalRate) {
   if (FIXED_SAMPLE_APPROACH) speaker_updateVarioNoteSample(verticalRate);
   else speaker_updateVarioNoteAdjustable(verticalRate);
 }
 
-void speaker_updateVarioNoteSample(int16_t verticalRate) {
+void speaker_updateVarioNoteSample(int32_t verticalRate) {
   sound_varioNoteLastUpdate = sound_varioNote;
 
   uint16_t sound_varioNoteTEMP;
@@ -286,7 +286,7 @@ void speaker_debugPrint() {
 }
 
 
-void speaker_updateVarioNoteAdjustable(int16_t verticalRate)
+void speaker_updateVarioNoteAdjustable(int32_t verticalRate)
 {
   sound_varioNoteLastUpdate = sound_varioNote;
 
