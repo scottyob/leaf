@@ -9,6 +9,7 @@
   #include "baro.h"
   #include "IMU.h"
   #include "speaker.h"
+  #include "settings.h"
 
 uint8_t current_setting;          // keep track of which input current setting we're using
 uint8_t powerOnState = POWER_OFF; // keep track of which power state we're in (ON & Runnning; or (soft)OFF and charging via USB, or dead OFF)
@@ -36,6 +37,7 @@ void power_bootUp() {
   uint8_t button = buttons_init(); 
   if (button == CENTER) powerOnState = POWER_ON; 
   else powerOnState = POWER_OFF_USB;
+  settings_init();
   power_init_peripherals();
 }
 

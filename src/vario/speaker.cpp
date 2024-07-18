@@ -1,5 +1,6 @@
 #include "speaker.h"
 #include "Leaf_SPI.h"
+#include "settings.h"
 // use this to switch between method 1 (fixed sample length approach) and method 2 (adjustable timer length)
 #define FIXED_SAMPLE_APPROACH true
 
@@ -16,12 +17,12 @@ uint16_t fx_double[] = {NOTE_C4, NOTE_NONE, NOTE_C4, NOTE_END};  //110, 0, 110, 
 
 uint16_t fx_enter[] = {NOTE_A4, NOTE_C4, NOTE_E4, NOTE_END};     //150, 120, 90, END_OF_TONE};
 uint16_t fx_exit[] = {NOTE_C5, NOTE_A5, NOTE_F4, NOTE_C4, NOTE_END};       //65, 90, 120, 150, END_OF_TONE};
-uint16_t fx_confirm[] = {200, 200, 140, 140, 170, 170, 110, 110, NOTE_END};
-uint16_t fx_cancel[] = {150, 200, 250, NOTE_END};
+uint16_t fx_confirm[] = {NOTE_C3, NOTE_G3, NOTE_B3, NOTE_C4, NOTE_END};
+uint16_t fx_cancel[] = {NOTE_C4, NOTE_G4, NOTE_C3, NOTE_END};
 uint16_t fx_on[] = {250, 200, 150, 100, 50, NOTE_END};
 uint16_t fx_off[] = {50, 100, 150, 200, 250, NOTE_END};
 
-uint16_t fx_buttonpress[] = {180, 150, 120, NOTE_END};
+uint16_t fx_buttonpress[] = {NOTE_F3, NOTE_A3, NOTE_C4, NOTE_END};
 uint16_t fx_buttonhold[] = {150, 200, 250, NOTE_END};
 uint16_t fx_goingup[] = {55, 54, 53, 52, 51, 50, 49, 47, 44, 39, NOTE_END};
 uint16_t fx_goingdown[] = {31, 31, 32, 33, 34, 35, 36, 38, 41, 46, NOTE_END};
@@ -111,7 +112,7 @@ void speaker_setDefaultVolume() {
 
 void speaker_incVolume() {
   if (++speakerVolume > 3) speakerVolume = 3;
-  speaker_setVolume(speakerVolume);
+  speaker_setVolume(speakerVolume);  
 }
 
 void speaker_decVolume() {
@@ -140,20 +141,22 @@ void speaker_setVolume(unsigned char volume) {
       digitalWrite(SPEAKER_VOLB, 1);
 			break;
 	}
-  Serial.print("speaker_volume: ");
-  Serial.println(volume);
 }
 
 
 void speaker_playSound(uint16_t * sound)
 {	
-	snd_index = sound;
-  Serial.print("setting snd_index to: ");
-  Serial.print(*snd_index);
-  Serial.print(" @ ");
-  Serial.println(millis());
-  sound_fx = 1;
-  if (!FIXED_SAMPLE_APPROACH) onSpeakerTimerAdjustable();
+  if (VOLUME_SYSTEM != 0) { // only play sound if the volume is non-zero
+    speaker_setVolume(VOLUME_SYSTEM);   // set volume to system level for playing system sounds.  (ISR will set speaker volume back to VOLUME_VARIO when the sound finishes);
+
+    snd_index = sound;
+    Serial.print("setting snd_index to: ");
+    Serial.print(*snd_index);
+    Serial.print(" @ ");
+    Serial.println(millis());
+    sound_fx = 1;
+    if (!FIXED_SAMPLE_APPROACH) onSpeakerTimerAdjustable();
+  }
 }
 
 void speaker_playNote(uint16_t note) {
@@ -183,7 +186,7 @@ void speaker_updateClimbToneParameters(void)
 {
   /*
 	climbToneSpread = CLIMB_TONE_MIN - CLIMB_TONE_MAX;
-	climbRateSpread = CLIMB_MAX - CLIMB_AUDIO_THRESHOLD;
+	climbRateSpread = CLIMB_MAX - CLIMB_START;
 	climbPlaySpread = CLIMB_PLAY_MAX - CLIMB_PLAY_MIN;
 	climbSilenceSpread = CLIMB_SILENCE_MAX - CLIMB_SILENCE_MIN;
 
@@ -193,7 +196,7 @@ void speaker_updateClimbToneParameters(void)
 	sinkSilenceSpread = SINK_SILENCE_MAX - SINK_SILENCE_MIN;
 
 	liftyToneSpread = LIFTYAIR_TONE_MIN - LIFTYAIR_TONE_MAX;
-	liftyRateSpread = CLIMB_AUDIO_THRESHOLD + LIFTY_AIR;
+	liftyRateSpread = CLIMB_START + LIFTY_AIR;
 	liftySilenceSpread = LIFTYAIR_SILENCE_MAX - LIFTYAIR_SILENCE_MIN;
   */
 }
@@ -211,7 +214,7 @@ void speaker_updateVarioNoteSample(int32_t verticalRate) {
   uint16_t sound_vario_play_samplesTEMP;
   uint16_t sound_vario_rest_samplesTEMP;
 
-  if(verticalRate > CLIMB_AUDIO_THRESHOLD) {
+  if(verticalRate > CLIMB_START) {
     // first clamp to thresholds if climbRate is over the max
     if (verticalRate >= CLIMB_MAX) {
       sound_varioNoteTEMP = verticalRate * (CLIMB_NOTE_MAX - CLIMB_NOTE_MIN) / CLIMB_MAX + CLIMB_NOTE_MIN;
@@ -290,7 +293,7 @@ void speaker_updateVarioNoteAdjustable(int32_t verticalRate)
 {
   sound_varioNoteLastUpdate = sound_varioNote;
 
-  if(verticalRate > CLIMB_AUDIO_THRESHOLD) {
+  if(verticalRate > CLIMB_START) {
     // first clamp to thresholds if climbRate is over the max
     if (verticalRate >= CLIMB_MAX) {
       sound_varioNote = verticalRate * (CLIMB_NOTE_MAX - CLIMB_NOTE_MIN) / CLIMB_MAX + CLIMB_NOTE_MIN;
@@ -342,9 +345,9 @@ void speaker_updateVarioNoteAdjustable(int32_t verticalRate)
 
 	if (VOLUME != 0) {
 		// if climbing
-		if (VARIO_RATEfiltered >= CLIMB_AUDIO_THRESHOLD) {
+		if (VARIO_RATEfiltered >= CLIMB_START) {
 			// calculate % between CLIMB_THRESHOLD (min climb) and CLIMB_MAX
-			percentToMax = (VARIO_RATEfiltered - CLIMB_AUDIO_THRESHOLD)*100 / climbRateSpread;  //TODO: probably take out subtraction of the threshold, it's only 10cm
+			percentToMax = (VARIO_RATEfiltered - CLIMB_START)*100 / climbRateSpread;  //TODO: probably take out subtraction of the threshold, it's only 10cm
 			if (percentToMax > 100) percentToMax = 100;
 
 			// calculate sndCLIMB_tone, sndCLIMB_playCountMax, and sndCLIMB_silenceCountMax
@@ -365,7 +368,7 @@ void speaker_updateVarioNoteAdjustable(int32_t verticalRate)
 
 		// if LiftyAir is ON and we're in that sink/climb range
 		} else if (LIFTY_AIR != 0 && VARIO_RATEfiltered >= -LIFTY_AIR) {
-			percentToMax = (-VARIO_RATEfiltered + CLIMB_AUDIO_THRESHOLD)*100  / liftyRateSpread;
+			percentToMax = (-VARIO_RATEfiltered + CLIMB_START)*100  / liftyRateSpread;
 			if (percentToMax > 100) percentToMax = 100;
 
 			sndCLIMB_tone = LIFTYAIR_TONE_MAX + (percentToMax * liftyToneSpread / 100);
@@ -442,7 +445,8 @@ void IRAM_ATTR onSpeakerTimerSample() {
 		} else {									// Else, we're at END_OF_TONE
       ledcWriteTone(SPEAKER_PIN, 0);    			
 			sound_fx = 0;
-      sound_fxNoteLast = 0;      
+      sound_fxNoteLast = 0;
+      speaker_setVolume(VOLUME_VARIO);    // put volume back to volume_vario for playing vario notes (now that we're done with system sound effects)
 		} 
 
   } else if (sound_varioNote > 0) {

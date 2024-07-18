@@ -33,8 +33,7 @@
 // Baro Values
   int32_t CLIMB_RATE = 0;
   int32_t CLIMB_RATEfiltered = 0;
-  
-  
+    
   int32_t VARIO_RATEfiltered = 0;
 
   int32_t TEMP = 0;
@@ -47,8 +46,9 @@
   int32_t P_ALTfiltered = 0;
   int32_t P_ALTregression = 0;
   int32_t P_ALTinitial = 0;
+  int32_t P_ALTlaunch = 0;
   int32_t lastAlt = 0;
-  int32_t P_ALT_launch = 0; // value to store for beginning of flight.  At first, this is the altitude when the vario is turned on.  If the flight timer is started, then the altitude is reset to current when timer starts.
+  int32_t P_ALT_launch = 0; // value to store for beginning of flight.  At first, this will be set to the altitude when the vario is turned on.  If the flight timer is started, then the altitude is reset to current when timer starts.
 
 // Sensor Calibration Values (stored in chip PROM; must be read at startup before performing baro calculations)
   uint16_t C_SENS;
@@ -63,8 +63,7 @@
   uint32_t D1_Plast = 1000;     //  save previous value to use if we ever get a mis-read from the baro sensor (initialize with a non zero starter value)
   uint32_t D2_T;								//  digital temp value (D2 in datasheet) 
   uint32_t D2_Tlast = 1000;     //  save previous value to use if we ever get a mis-read from the baro sensor (initialize with a non zero starter value)
-  uint32_t D1_Pfiltered;
-  uint32_t D2_Tfiltered;
+
 
 // Temperature Calculations
   int32_t dT;
@@ -72,6 +71,7 @@
 // Compensation Values
   int64_t OFF1;        // Offset at actual temperature
   int64_t SENS1;       // Sensitivity at actual temperature
+
   // Extra compensation values for lower temperature ranges
   int32_t TEMP2;
   int64_t OFF2;
@@ -300,24 +300,34 @@ void baro_init(void)
 
 	// read calibration values
     C_SENS = spi_readBaroCalibration(1);
+    Serial.print("C_SENS:"); Serial.println(C_SENS);
     C_OFF = spi_readBaroCalibration(2);
+    Serial.print("C_OFF:"); Serial.println(C_OFF);
     C_TCS = spi_readBaroCalibration(3);
+    Serial.print("C_TCS:"); Serial.println(C_TCS);
     C_TCO = spi_readBaroCalibration(4);
+    Serial.print("C_TCO:"); Serial.println(C_TCO);
     C_TREF = spi_readBaroCalibration(5);
+    Serial.print("C_TREF:"); Serial.println(C_TREF);
     C_TEMPSENS = spi_readBaroCalibration(6);
+    Serial.print("C_TEMPSENS:"); Serial.println(C_TEMPSENS);
 
 	// after initialization, get first baro sensor reading to populate values
-    baro_update(1);  
+    baro_update(1, 7);  
     delay(10);					// wait for baro sensor to process
-    baro_update(2);  
+    baro_update(2, 7);  
     delay(10);					// wait for baro sensor to process
-    baro_update(3);  
-    Serial.println(P_ALT);
+    baro_update(3, 7);  
+    Serial.print("P_ALT:"); Serial.println(P_ALT);
+    Serial.print("TEMP:"); Serial.println(TEMP);
+
+    // initialize all the other reference variables with current altitude to start
     lastAlt = P_ALT;		          // assume we're stationary to start (previous Alt = Current ALt, so climb rate is zero)
     P_ALTfiltered = P_ALT;			  // filtered value should start with first reading
-    P_ALTinitial = P_ALT;	        // also save first value to use as starting point (launch)
-    P_ALTregression = P_ALT;
+    P_ALTinitial = P_ALT;	        // also save first value to use as starting point    
     P_ALT_launch = P_ALT;         // save the starting value 
+    P_ALTregression = P_ALT;
+    
 
   // load the filter with our current start-up altitude
     for (int i = 1; i <= FILTER_VALS_MAX; i++) {
@@ -332,8 +342,8 @@ void baro_init(void)
   //fakeAlt = altitude_values[altitude_values[0]];
   //lastAlt = fakeAlt;
 
-	baro_update(4);  
-  Serial.println(P_ALT);
+	baro_update(4, 7);  
+  
 
 
   //alt_lr.update((double)millis(), (double)P_ALTinitial);
@@ -346,7 +356,7 @@ void baro_reset(void) {
 }
 
 
-char baro_update(char process_step) {
+char baro_update(char process_step, uint8_t Counter) {
   // the baro senor requires ~9ms between the command to prep the ADC and actually reading the value.
   // Since this delay is required between both pressure and temp values, we break the sensor processing 
   // up into several steps, to allow other code to process while we're waiting for the ADC to become ready.
@@ -362,12 +372,14 @@ char baro_update(char process_step) {
       D1_P = spi_readBaroADC();                   // Read raw pressure value  
       if (D1_P == 0) D1_P = D1_Plast;             // use the last value if we get a misread
       else D1_Plast = D1_P;                       // otherwise save this value for next time if needed
-      spi_writeBaroCommand(CMD_CONVERT_TEMP);     // Prep baro sensor ADC to read raw temperature value (then come back for step 3 in ~10ms)
+      if (Counter == 7) spi_writeBaroCommand(CMD_CONVERT_TEMP);     // Prep baro sensor ADC to read raw temperature value (then come back for step 3 in ~10ms)
       break;
     case 3:
-      D2_T = spi_readBaroADC();						        // read digital temp data
-      if (D2_T == 0) D2_T = D2_Tlast;             // use the last value if we get a misread
-      else D2_Tlast = D2_T;                       // otherwise save this value for next time if needed
+      if (Counter == 7) {
+        D2_T = spi_readBaroADC();						        // read digital temp data
+        if (D2_T == 0) D2_T = D2_Tlast;             // use the last value if we get a misread
+        else D2_Tlast = D2_T;                       // otherwise save this value for next time if needed
+      }
       P_ALT = baro_calculateAlt();                // calculate Pressure Altitude in cm
       break;
     case 4:
@@ -385,7 +397,11 @@ int32_t baro_calculateAlt() {
 	// calculate temperature (in 100ths of degrees C, from -4000 to 8500)
 	  dT = D2_T - ((int32_t)C_TREF)*256;
 	  TEMP = 2000 + (((int64_t)dT)*((int64_t)C_TEMPSENS))  /  pow(2,23);
-
+		
+  // calculate sensor offsets to use in pressure & altitude calcs
+    OFF1  = (int64_t)C_OFF*pow(2,16) + (((int64_t)C_TCO) * dT)/pow(2,7);
+    SENS1 = (int64_t)C_SENS*pow(2,15) + ((int64_t)C_TCS * dT) /pow(2,8);
+  
   // low temperature compensation adjustments
     TEMP2 = 0;
     OFF2 = 0;
@@ -395,23 +411,19 @@ int32_t baro_calculateAlt() {
       OFF2  = 5*pow((TEMP - 2000),2) / 2;
       SENS2 = 5*pow((TEMP - 2000),2) / 4; 
     }
-
     // very low temperature compensation adjustments
     if (TEMP < -1500) {          
       OFF2  = OFF2 + 7 * pow((TEMP + 1500),2);
       SENS2 = SENS2 + 11 * pow((TEMP +1500),2) / 2; 
     }
-
     TEMP = TEMP - TEMP2;
     OFF1 = OFF1 - OFF2;
     SENS1 = SENS1 - SENS2;
 
-	//Filter Temp if necessary due to noise in values
-    TEMPfiltered = TEMP;    //TODO: actually filter if needed
-		
+  //Filter Temp if necessary due to noise in values
+    TEMPfiltered = TEMP;    //TODO: actually filter if needed	
+
   // calculate temperature compensated pressure (in 100ths of mbars)
-    OFF1  = (int64_t)C_OFF*pow(2,16) + (((int64_t)C_TCO) * dT)/pow(2,7);
-    SENS1 = (int64_t)C_SENS*pow(2,15) + ((int64_t)C_TCS * dT) /pow(2,8);
     PRESSURE = ((uint64_t)D1_P * SENS1 / (int64_t)pow(2,21) - OFF1)/pow(2,15);
 
 	// calculate pressure altitude in cm
@@ -580,7 +592,7 @@ char process_step_test = 0;
 
 void baro_test(void) {
   delay(10);  // delay for ADC processing bewteen update steps
-  process_step_test = baro_update(process_step_test);
+  process_step_test = baro_update(process_step_test, 7);
   if (process_step_test == 0) {
     process_step_test++;  
     Serial.print("PressureAltCm:");

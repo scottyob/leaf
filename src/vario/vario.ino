@@ -226,7 +226,7 @@ void setTasks(void) {
 // execute necessary tasks while we're awake and have things to do
 void taskManager(void) {    
   if (taskman_buttons) { buttons_update(); taskman_buttons = 0; }
-  if (taskman_baro)    { baro_update(taskman_baro); taskman_baro = 0; }    // update baro, using the appropriate step number
+  if (taskman_baro)    { baro_update(taskman_baro, counter_100ms_block); taskman_baro = 0; }    // update baro, using the appropriate step number
   if (taskman_imu)     { imu_update();     taskman_imu = 0; }
   if (taskman_gps)     { gps_update();     taskman_gps = 0; }
   if (taskman_power)   { power_update();   taskman_power = 0; }
@@ -312,7 +312,7 @@ void main_loop_test() {
 void full_system_test() {
   delay(500);
   // update baro sensor
-  taskman_baro = baro_update(taskman_baro);
+  taskman_baro = baro_update(taskman_baro, 7);
   if (taskman_baro == 0) taskman_baro = 1;
   
   //for (int i=0; i<300000; i++) {

@@ -30,7 +30,7 @@
 
 // FOR APPROACH #2 (time-adjusted speaker timer)
   // CLIMB TONE DEFINITIONS
-  #define CLIMB_AUDIO_THRESHOLD  10 	// don't play unless climb rate is over this value (cm/s)
+  //#define CLIMB_AUDIO_THRESHOLD  10 	// don't play unless climb rate is over this value (cm/s)
   #define CLIMB_MAX		          800		// above this cm/s climb rate, note doesn't get higher
   #define CLIMB_NOTE_MIN		    500		// min tone pitch in Hz for >0 climb
   #define CLIMB_NOTE_MAX 		   1600	  // max tone pitch in Hz for CLIMB_MAX (when vario peaks and starts holding a solid tone)
@@ -38,10 +38,10 @@
   #define CLIMB_PLAY_MAX		   60//1200 	// ms play per measure (at min climb)
   #define CLIMB_PLAY_MIN		    2//200   // ms play per measure (at max climb)
   #define CLIMB_REST_MAX       100//1000		// ms silence per measure (at min climb)
-  #define CLIMB_REST_MIN	      2//100		// ms silence per measure (at max climb)
+  #define CLIMB_REST_MIN	      2 //100		// ms silence per measure (at max climb)
 
   // SINK TONE DEFINITIONS
-  #define SINK_ALARM           -050   // cm/s sink rate that triggers sink alarm audio
+  //#define SINK_ALARM           -200   // cm/s sink rate that triggers sink alarm audio
   #define SINK_MAX		         -800		// at this sink rate, tone doesn't get lower
   #define SINK_NOTE_MIN		      300   // highest tone pitch for sink > SINK_ALARM
   #define SINK_NOTE_MAX		      110   // lowest tone pitch for sink @ SINK_MAX (when vario bottoms out and starts holding a solid tone)
@@ -97,8 +97,10 @@ void speaker_updateClimbToneParameters(void);
 
 void speaker_playSound(uint16_t * sound);
 
-void speaker_playsound_up(void);
-void speaker_playsound_down(void);
+
+// testing
+//void speaker_playsound_up(void);
+//void speaker_playsound_down(void);
 
 void speaker_TEST(void);
 void speaker_playPiano(void);

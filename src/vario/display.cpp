@@ -15,6 +15,7 @@
 #include "baro.h"
 #include "power.h"
 #include "log.h"
+#include "settings.h"
 
 //#define GLCD_RS LCD_RS
 //#define GLCD_RESET LCD_RESET
@@ -47,6 +48,7 @@ void display_init(void) {
   pinMode(LCD_BACKLIGHT, OUTPUT);
   Serial.println("u8g2 done. ");
 }
+
 
 void display_turnPage(uint8_t action) {
   if (action == page_home) display_page = page_thermal;
@@ -378,6 +380,17 @@ void display_update_temp_vars() {
       display_alt(x, y, leaf_6x12, aboveLaunchAlt);
     }
 
+    void display_temp(uint8_t x, uint8_t y, uint16_t temperature) {
+      u8g2.setCursor(x, y);
+      u8g2.setDrawColor(1);
+      u8g2.setFont(leaf_6x12);
+      u8g2.print(temperature/100);
+      u8g2.print((char)133);
+      u8g2.setCursor(x, y+14);
+      u8g2.print(temperature * 9 / 500 + 32);
+      u8g2.print((char)134);
+    }
+
 
     void display_battIcon(uint8_t x, uint8_t y) {
       /*  
@@ -573,10 +586,12 @@ void display_thermal_page() {
 
     //air data
     display_alt(17, 26, leaf_8x14, baro_getAlt());
-    display_altAboveLaunch(17, 50, baro_getAlt() - 120000);
+    display_altAboveLaunch(17, 50, baro_getAltAboveLaunch());
     display_varioBar(13, 111, 14, baro_getClimbRate());
     display_climbRatePointerBox(14, 59, 50, 17, 6, baro_getClimbRate());     // x, y, w, h, triangle size
     
+    display_temp(40, 174, baro_getTemp());
+
     // batt stuff
     display_battIcon(20, 90);
 
