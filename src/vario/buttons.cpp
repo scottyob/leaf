@@ -11,6 +11,8 @@
 #include "power.h"
 #include "display.h"
 #include "speaker.h"
+#include "settings.h"
+#include "page_menu_units.h"
 
 //button debouncing 
 uint8_t button_debounce_last = NONE;
@@ -46,8 +48,9 @@ void buttons_update(void) {
   // TODO: fill this in to handle button pushes with respect to display interface
   uint8_t which_button = buttons_check();
 //  uint8_t button_state = buttons_get_state();  //TODO: delete this line probably
-
-  if (display_getPage() == page_charging) {
+  if (display_getPage() == page_menu_units) {
+    page_menu_units_doButton(which_button, buttons_get_state(), buttons_get_hold_count());
+  } else if (display_getPage() == page_charging) {
     switch (which_button) {
       case CENTER:
         if (button_state == HELD && button_hold_counter == 1) {          
@@ -78,7 +81,7 @@ void buttons_update(void) {
         }
         break;
     }
-  } else {
+  } else { // NOT CHARGING PAGE
     switch (which_button) {
       case CENTER:
         switch (button_state) {
@@ -112,8 +115,7 @@ void buttons_update(void) {
       case UP:
         switch (button_state) {
           case RELEASED:
-            speaker_incVolume();
-            speaker_playSound(fx_increase);
+            settings_adjustVolumeVario(1);            
             break;
           case HELD:
             power_set_input_current(i500mA);
@@ -124,8 +126,7 @@ void buttons_update(void) {
       case DOWN:
         switch (button_state) {
           case RELEASED:
-            speaker_decVolume();
-            speaker_playSound(fx_decrease);
+            settings_adjustVolumeVario(-1);            
             break;
           case HELD:
             power_set_input_current(i100mA);
@@ -141,7 +142,7 @@ uint8_t buttons_get_state(void) {
   return button_state;
 }
 
-uint8_t buttons_get_hold_count(void) {
+uint16_t buttons_get_hold_count(void) {
   return button_hold_counter;
 }
 

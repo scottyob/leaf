@@ -6,19 +6,67 @@
 #ifndef display_h
 #define display_h
 
+#include <U8g2lib.h>
+
 #define LCD_BACKLIGHT    21  // can be used for backlight if desired (also broken out to header)
 #define LCD_RS           16
 #define LCD_RESET        17
+
+extern U8G2_ST7539_192X64_F_4W_HW_SPI u8g2;
 
 void GLCD_inst(byte data);
 void GLCD_data(byte data);
 //void GLCD_init(void);
 
 // keep track of pages
-enum display_page_actions {page_home, page_prev, page_next};
-enum display_pages {page_sats, page_thermal, page_nav, page_menu, page_last, page_charging};
+enum display_page_actions {
+  page_home,    // go to home screen (probably thermal page)
+  page_prev,    // go to page -1
+  page_next,    // go to page +1
+  page_back     // go to previous page (i.e. step back in a menu tree, or cancel a dialog page back to previous page)
+  };
+
+enum display_pages {
+  page_sats,
+  page_thermal,
+  page_nav,
+  page_menu_units,
+  page_menu, 
+  page_menu_system,
+  page_menu_vario,
+  page_menu_display,
+  page_menu_gps,
+  page_menu_log,
+  page_menu_resetConfirm,
+  page_last,
+  page_charging
+  };
+// cursor positions
+enum cursor_main_menu {
+  cursor_menu_vario,
+  cursor_menu_display,
+  cursor_menu_units,
+  cursor_menu_gps,
+  cursor_menu_log,
+  cursor_menu_system,
+  cursor_menu_back
+};
+
+enum cursor_vario_menu {
+  cursor_vario_volume,
+  cursor_vario_sensitivity,
+  cursor_vario_toneStyle,
+  cursor_vario_liftyAir,
+  cursor_vario_climbAvg,
+  cursor_vario_sinkAlarm,
+  cursor_vario_altAdj,
+  cursor_vario_back
+};
+
+
 void display_turnPage(uint8_t action);
-void display_setPage(uint8_t action);
+void display_setPage(uint8_t targetPage);
+void display_pageBack();
 uint8_t display_getPage(void);
 
 void display_init(void);
@@ -39,9 +87,10 @@ void display_test_real_3(void);
 void display_test_big(uint8_t page);
 
 
-void display_nav_page(void);
-void display_thermal_page(void);
-void display_charging_page(void);
+void display_page_nav(void);
+void display_page_thermal(void);
+void display_page_charging(void);
+void display_page_menu(void);
 
 
 

@@ -335,7 +335,7 @@ void settings_adjustVolumeVario(int8_t dir) {
   } else {
     sound = fx_decrease;
     VOLUME_VARIO--;
-    if (VOLUME_VARIO < 0) {
+    if (VOLUME_VARIO <= 0) {
       VOLUME_VARIO = 0;
       sound = fx_cancel;  // even if vario volume is set to 0, the system volume may still be turned on, so we have a sound for turning vario off
     }
@@ -358,7 +358,7 @@ void settings_adjustVolumeSystem(int8_t dir) {
   } else {
     sound = fx_decrease;
     VOLUME_SYSTEM--;
-    if (VOLUME_SYSTEM < 0) {
+    if (VOLUME_SYSTEM <= 0) {
       VOLUME_SYSTEM = 0;
       sound = fx_cancel;  // we have this line of code for completeness, but the speaker will be turned off for system sounds so you won't hear it
     }

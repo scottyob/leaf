@@ -32,7 +32,7 @@
     #define DEF_VARIO_AVERAGE 		    2	    // in half-seconds.  1s seems to be good, so use value of 2 for default
     #define DEF_CLIMB_AVERAGE			    1	    // in units of 5-seconds.  (def = 1 = 5sec)
     #define DEF_CLIMB_START   		    5			// cm/s when climb note begins 
-    #define DEF_VOLUME_VARIO		      2	    // 0=off, 1=low, 2=med, 3=high
+    #define DEF_VOLUME_VARIO		      1	    // 0=off, 1=low, 2=med, 3=high
     #define DEF_LIFTY_AIR				    -40	    // In units of cm/s (a sink rate of 30cm/s means the air itself is going up).  '0' is off.  (lift air will apply from the lifty_air setting up to the climb_start value)
     #define DEF_ALT_OFFSET				    0	    // cm altitude offset from pressure altitude
   // Default GPS & Track Log Settings
@@ -42,7 +42,7 @@
     #define DEF_AUTO_START		        1	    // 1 = ENABLE, 0 = DISABLE
   // Default System Settings
     #define DEF_TIME_ZONE     				0     // HHh  (-070 for PDT, +115 for india (11 hours, 30 minutes))
-    #define DEF_VOLUME_SYSTEM		      3	    // 0=off, 1=low, 2=med, 3=high
+    #define DEF_VOLUME_SYSTEM		      1	    // 0=off, 1=low, 2=med, 3=high
     #define DEF_CONTRAST			        10
     #define DEF_ENTER_BOOTLOAD		    0	    // by default, don't enter bootloader on reset		      
     #define DEF_AUTO_OFF				      1	    // 1 = ENABLE, 0 = DISABLE
@@ -105,6 +105,8 @@ void settings_adjustClimbStart(int8_t dir);
 void settings_adjustLiftyAir(int8_t dir);
 void settings_adjustVolumeVario(int8_t dir);
 void settings_adjustVolumeSystem(int8_t dir);
+
+void settings_toggleUnits(bool * unitSetting);
 
 /*
 // Timer/Stopwatch Variable

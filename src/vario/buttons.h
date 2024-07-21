@@ -29,6 +29,7 @@ uint8_t buttons_check(void);
 uint8_t buttons_inspectPins(void);
 uint8_t buttons_debounce(uint8_t button);
 uint8_t buttons_get_state(void);
+uint16_t buttons_get_hold_count(void);
 
 void buttons_update(void); // the main task of checking and handling button pushes
 

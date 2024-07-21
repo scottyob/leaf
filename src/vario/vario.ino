@@ -321,7 +321,7 @@ void full_system_test() {
   speaker_debugPrint();
 
   // update display
-  display_thermal_page();
+  display_page_thermal();
 
   // allow setting volume by sending a 0, 1, 2, 3 character over Serial  
   if (Serial.available() > 0) {

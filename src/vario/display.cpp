@@ -9,6 +9,7 @@
 #include "display.h"
 #include "display_tests.h"
 #include "fonts.h"
+#include "page_menu_units.h"
 
 #include "Leaf_SPI.h"
 #include "gps.h"
@@ -16,6 +17,7 @@
 #include "power.h"
 #include "log.h"
 #include "settings.h"
+#include "speaker.h"
 
 //#define GLCD_RS LCD_RS
 //#define GLCD_RESET LCD_RESET
@@ -34,6 +36,7 @@ char string_gpsLng[] = "0000000000";
 U8G2_ST7539_192X64_F_4W_HW_SPI u8g2(U8G2_R3, SPI_SS_LCD, LCD_RS, LCD_RESET);
 
 uint8_t display_page = page_thermal;
+uint8_t display_page_prior = page_thermal; // track the page we used to be on, so we can "go back" if needed (like cancelling out of a menu heirarchy)
 
 void display_init(void) {
   pinMode(SPI_SS_LCD, OUTPUT);
@@ -51,16 +54,30 @@ void display_init(void) {
 
 
 void display_turnPage(uint8_t action) {
+  uint8_t tempPage = display_page;
+  
   if (action == page_home) display_page = page_thermal;
   else if (action == page_next) display_page++;
   else if (action == page_prev) display_page--;
 
   if (display_page == page_last) display_page = 0;
   else if (display_page > page_last) display_page = page_last - 1;
+
+  if (display_page != tempPage) display_page_prior = tempPage;
 }
 
-void display_setPage(uint8_t action) {
-  display_page = action;
+void display_setPage(uint8_t targetPage) {
+  uint8_t tempPage = display_page;  
+  display_page = targetPage;
+  
+  if (display_page != tempPage) display_page_prior = tempPage;
+}
+
+void display_pageBack() {
+  speaker_playSound(fx_cancel);
+  uint8_t tempPage = display_page;
+  display_page = display_page_prior;
+  display_page_prior = tempPage;
 }
 
 uint8_t display_getPage() {
@@ -70,13 +87,22 @@ uint8_t display_getPage() {
 void display_update() {
   switch (display_page) {
     case page_thermal:
-      display_thermal_page();
+      display_page_thermal();
       break;
     case page_sats:
       gps_test_sats();
       break;
+    case page_nav:
+      display_page_nav();
+      break;
+    case page_menu:
+      display_page_menu();
+      break;
     case page_charging:
-      display_charging_page();
+      display_page_charging();
+      break;
+    case page_menu_units:
+      display_page_menu_units();
       break;
   }  
 }
@@ -529,7 +555,7 @@ void display_update_temp_vars() {
 /*********************************************************************************
 **   CHARGING PAGE    ************************************************************
 *********************************************************************************/
-void display_charging_page() {
+void display_page_charging() {
   
   u8g2.firstPage();
   do { 
@@ -553,7 +579,7 @@ void display_charging_page() {
 /*********************************************************************************
 **    NAV PAGE        ************************************************************
 *********************************************************************************/
-void display_nav_page() {
+void display_page_nav() {
   baro_updateFakeNumbers();
   gps_updateFakeNumbers();
 
@@ -570,7 +596,7 @@ void display_nav_page() {
 /*********************************************************************************
 **    THERMAL PAGE        ********************************************************
 *********************************************************************************/
-void display_thermal_page() {
+void display_page_thermal() {
   //baro_updateFakeNumbers();
   //gps_updateFakeNumbers();
   //display_update_temp_vars();
@@ -611,8 +637,78 @@ void display_thermal_page() {
   
 }
 
+
 /*********************************************************************************
-**    SATELLITES          ********************************************************
+**    MAIN MENU PAGE      ********************************************************
+*********************************************************************************/
+void display_page_menu() {
+
+  u8g2.firstPage();
+  do { 
+    // Title(s) 
+    u8g2.setFont(leaf_6x12);
+    u8g2.setCursor(2, 14);
+    u8g2.setDrawColor(1);
+    u8g2.print("Main Menu");
+    u8g2.drawHLine(0, 16, 64);
+
+    u8g2.setCursor(0, 30);
+    u8g2.print("Volume:");
+    u8g2.setCursor(0, 75);
+    u8g2.print("Units:");
+
+
+  // Menu Items
+    uint8_t start_y = 30;
+    uint8_t y_spacing = 16;
+    uint8_t setting_name_x = 3;
+    uint8_t setting_choice_x = 44;
+    uint8_t i = 0;
+    uint8_t menu_items_y[] = {45, 60, 90, 105, 120, 135};
+     
+     
+    u8g2.setCursor(setting_name_x, menu_items_y[i]);
+    u8g2.print("Vario");
+    u8g2.setCursor(setting_choice_x+11, menu_items_y[i]);    
+    u8g2.print(VOLUME_VARIO);
+
+    i++;
+    u8g2.setCursor(setting_name_x, menu_items_y[i]);
+    u8g2.print("System");
+    u8g2.setCursor(setting_choice_x+11, menu_items_y[i]);    
+    u8g2.print(VOLUME_SYSTEM);
+    
+    i++;
+    u8g2.setCursor(setting_name_x, menu_items_y[i]);
+    u8g2.print("Alt");
+    u8g2.setCursor(setting_choice_x, menu_items_y[i]); 
+    if (UNITS_alt) u8g2.print("ft");
+    else u8g2.print(" m");
+
+    i++;
+    u8g2.setCursor(setting_name_x, menu_items_y[i]);
+    u8g2.print("Speed");
+    u8g2.setCursor(setting_choice_x, menu_items_y[i]); 
+    if (UNITS_speed) u8g2.print("mph");
+    else u8g2.print("kph");
+
+    i++;
+    u8g2.setCursor(setting_name_x, menu_items_y[i]);
+    u8g2.print("Climb");
+    u8g2.setCursor(setting_choice_x, menu_items_y[i]); 
+    if (UNITS_speed) u8g2.print("fpm");
+    else u8g2.print("m/s");
+
+
+
+  } while ( u8g2.nextPage() ); 
+
+
+}
+
+
+/*********************************************************************************
+**    SATELLITES PAGE     ********************************************************
 *********************************************************************************/
 
 // draw satellite constellation starting in upper left x, y and box size (width = height)
