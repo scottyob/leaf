@@ -101,13 +101,13 @@ void buttons_update(void) {
         }      
         break;
       case RIGHT:
-        if (button_state == PRESSED) {
+        if (button_state == RELEASED) {
           display_turnPage(page_next);
           speaker_playSound(fx_increase);
         }
         break;
       case LEFT:
-        if (button_state == PRESSED) {
+        if (button_state == RELEASED) {
           display_turnPage(page_prev);
           speaker_playSound(fx_decrease);
         }

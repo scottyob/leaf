@@ -66,7 +66,6 @@ enum cursor_vario_menu {
 
 void display_turnPage(uint8_t action);
 void display_setPage(uint8_t targetPage);
-void display_pageBack();
 uint8_t display_getPage(void);
 
 void display_init(void);
