@@ -5,8 +5,7 @@
 * SparkFun 9DoF IMU Breakout - ICM 20948 - Arduino Library: 1.2.12
 
 ## ESP32 configuration
- ESP Board Manager Package 2.0.14
-
+ ESP Board Manager Package 3.0.2
 * USB CDC On Boot -> "Enabled"
 * Flash Size -> 8MB
 * Partition Scheme -> 8M with spiffs (3MB APP/1.5MB SPIFFS)

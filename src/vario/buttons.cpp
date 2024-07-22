@@ -13,7 +13,7 @@
 #include "pages.h"
 #include "speaker.h"
 #include "settings.h"
-#include "page_menu_units.h"
+#include "pages.h"
 
 //button debouncing 
 uint8_t button_debounce_last = NONE;
@@ -49,9 +49,12 @@ void buttons_update(void) {
   // TODO: fill this in to handle button pushes with respect to display interface
   uint8_t which_button = buttons_check();
 //  uint8_t button_state = buttons_get_state();  //TODO: delete this line probably
-  if (display_getPage() == page_menu_units) {
-    bool draw_now = units_page.button_event(which_button, buttons_get_state(), buttons_get_hold_count());
+
+  if (display_getPage() == page_menu) {
+    bool draw_now = mainMenuPage.button_event(which_button, buttons_get_state(), buttons_get_hold_count());
     if (draw_now) display_update();
+
+
   } else if (display_getPage() == page_charging) {
     switch (which_button) {
       case CENTER:

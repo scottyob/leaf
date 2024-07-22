@@ -24,45 +24,16 @@ enum display_page_actions {
   page_prev,    // go to page -1
   page_next,    // go to page +1
   page_back     // go to previous page (i.e. step back in a menu tree, or cancel a dialog page back to previous page)
-  };
+};
 
-enum display_pages {
+enum display_main_pages {  
   page_sats,
   page_thermal,
   page_nav,
-  page_menu_units,
-  page_menu, 
-  page_menu_system,
-  page_menu_vario,
-  page_menu_display,
-  page_menu_gps,
-  page_menu_log,
-  page_menu_resetConfirm,
+  page_menu,   
   page_last,
-  page_charging
-  };
-// cursor positions
-enum cursor_main_menu {
-  cursor_menu_vario,
-  cursor_menu_display,
-  cursor_menu_units,
-  cursor_menu_gps,
-  cursor_menu_log,
-  cursor_menu_system,
-  cursor_menu_back
+  page_charging  
 };
-
-enum cursor_vario_menu {
-  cursor_vario_volume,
-  cursor_vario_sensitivity,
-  cursor_vario_toneStyle,
-  cursor_vario_liftyAir,
-  cursor_vario_climbAvg,
-  cursor_vario_sinkAlarm,
-  cursor_vario_altAdj,
-  cursor_vario_back
-};
-
 
 void display_turnPage(uint8_t action);
 void display_setPage(uint8_t targetPage);

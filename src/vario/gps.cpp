@@ -4,8 +4,11 @@
  *
  */
 #include <Arduino.h>
+#include <TinyGPSPlus.h>
 
 #include "gps.h"
+#include "display.h"
+
 
 
 // Setup GPS

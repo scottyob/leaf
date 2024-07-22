@@ -17,11 +17,7 @@
 #ifndef gps_h
 #define gps_h
 
-
 #include <TinyGPSPlus.h>
-#include "display.h"
-
-
 
 //Pinout for Leaf V3.2.0
 #define GPS_BACKUP_EN     42  // Enable GPS backup power.  Generally always-on, except able to be turned off for a full GPS reset if needed

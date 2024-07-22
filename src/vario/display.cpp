@@ -105,13 +105,10 @@ void display_update() {
       display_page_nav();
       break;
     case page_menu:
-      display_page_menu();
+      mainMenuPage.draw();
       break;
     case page_charging:
       display_page_charging();
-      break;
-    case page_menu_units:
-      units_page.draw();
       break;
   }  
 }
@@ -646,74 +643,6 @@ void display_page_thermal() {
   
 }
 
-
-/*********************************************************************************
-**    MAIN MENU PAGE      ********************************************************
-*********************************************************************************/
-void display_page_menu() {
-
-  u8g2.firstPage();
-  do { 
-    // Title(s) 
-    u8g2.setFont(leaf_6x12);
-    u8g2.setCursor(2, 14);
-    u8g2.setDrawColor(1);
-    u8g2.print("Main Menu");
-    u8g2.drawHLine(0, 16, 64);
-
-    u8g2.setCursor(0, 30);
-    u8g2.print("Volume:");
-    u8g2.setCursor(0, 75);
-    u8g2.print("Units:");
-
-
-  // Menu Items
-    uint8_t start_y = 30;
-    uint8_t y_spacing = 16;
-    uint8_t setting_name_x = 3;
-    uint8_t setting_choice_x = 44;
-    uint8_t i = 0;
-    uint8_t menu_items_y[] = {45, 60, 90, 105, 120, 135};
-     
-     
-    u8g2.setCursor(setting_name_x, menu_items_y[i]);
-    u8g2.print("Vario");
-    u8g2.setCursor(setting_choice_x+11, menu_items_y[i]);    
-    u8g2.print(VOLUME_VARIO);
-
-    i++;
-    u8g2.setCursor(setting_name_x, menu_items_y[i]);
-    u8g2.print("System");
-    u8g2.setCursor(setting_choice_x+11, menu_items_y[i]);    
-    u8g2.print(VOLUME_SYSTEM);
-    
-    i++;
-    u8g2.setCursor(setting_name_x, menu_items_y[i]);
-    u8g2.print("Alt");
-    u8g2.setCursor(setting_choice_x, menu_items_y[i]); 
-    if (UNITS_alt) u8g2.print("ft");
-    else u8g2.print(" m");
-
-    i++;
-    u8g2.setCursor(setting_name_x, menu_items_y[i]);
-    u8g2.print("Speed");
-    u8g2.setCursor(setting_choice_x, menu_items_y[i]); 
-    if (UNITS_speed) u8g2.print("mph");
-    else u8g2.print("kph");
-
-    i++;
-    u8g2.setCursor(setting_name_x, menu_items_y[i]);
-    u8g2.print("Climb");
-    u8g2.setCursor(setting_choice_x, menu_items_y[i]); 
-    if (UNITS_speed) u8g2.print("fpm");
-    else u8g2.print("m/s");
-
-
-
-  } while ( u8g2.nextPage() ); 
-
-
-}
 
 
 /*********************************************************************************
