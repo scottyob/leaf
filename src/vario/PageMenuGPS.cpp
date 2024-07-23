@@ -5,16 +5,6 @@
 #include "fonts.h"
 #include "settings.h"
 
-char * gps_menu_labels[] = {
-  "Back",
-  "Alt:",
-  "Climb:",
-  "Speed:",
-  "Dist:",
-  "Head:",
-  "Temp:",
-  "Time:"
-};
 
 enum gps_menu_items { 
   cursor_units_back,
@@ -27,9 +17,6 @@ enum gps_menu_items {
   cursor_units_hours
 
 };
-
-int8_t gps_menu_cursor_position = 0;   // 0 means nothing selected
-uint8_t gps_menu_cursor_max = 7;       // the number of items (0-based) in the enum list above
 
 
 void GPSMenuPage::draw() {
@@ -50,14 +37,14 @@ void GPSMenuPage::draw() {
     uint8_t menu_items_y[] = {190, 45, 60, 75, 90, 105, 120, 135};
 
     //first draw cursor selection box
-    u8g2.drawRBox(setting_choice_x-2, menu_items_y[gps_menu_cursor_position]-14, 22, 16, 2);
+    u8g2.drawRBox(setting_choice_x-2, menu_items_y[cursor_position]-14, 22, 16, 2);
     
     // then draw all the menu items
-    for (int i = 0; i <= gps_menu_cursor_max; i++) {      
+    for (int i = 0; i <= cursor_max; i++) {      
       u8g2.setCursor(setting_name_x, menu_items_y[i]);
-      u8g2.print(gps_menu_labels[i]);
+      u8g2.print(labels[i]);
       u8g2.setCursor(setting_choice_x, menu_items_y[i]);
-      if (i == gps_menu_cursor_position) u8g2.setDrawColor(0);
+      if (i == cursor_position) u8g2.setDrawColor(0);
       else u8g2.setDrawColor(1);
       switch (i) {
         case cursor_units_alt:
@@ -98,18 +85,8 @@ void GPSMenuPage::draw() {
 }
 
 
-void cursor_prev() {
-  gps_menu_cursor_position--;
-  if (gps_menu_cursor_position < 0) gps_menu_cursor_position = gps_menu_cursor_max;
-}
-
-void cursor_next() {
-gps_menu_cursor_position++;
-  if (gps_menu_cursor_position > gps_menu_cursor_max) gps_menu_cursor_position = 0;
-}
-
-void setting_change(int8_t dir) {
-  switch (gps_menu_cursor_position) {
+void GPSMenuPage::setting_change(int8_t dir) {
+  switch (cursor_position) {
     case cursor_units_alt:
       settings_toggleUnits(&UNITS_alt);
       break;

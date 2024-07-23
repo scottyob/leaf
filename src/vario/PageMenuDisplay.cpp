@@ -6,16 +6,6 @@
 #include "fonts.h"
 #include "settings.h"
 
-char * display_menu_labels[] = {
-  "Back",
-  "Alt:",
-  "Climb:",
-  "Speed:",
-  "Dist:",
-  "Head:",
-  "Temp:",
-  "Time:"
-};
 
 enum display_menu_items { 
   cursor_units_back,
@@ -28,9 +18,6 @@ enum display_menu_items {
   cursor_units_hours
 
 };
-
-int8_t display_menu_cursor_position = 0;   // 0 means nothing selected
-uint8_t display_menu_cursor_max = 7;       // the number of items (0-based) in the enum list above
 
 
 void DisplayMenuPage::draw() {
@@ -51,14 +38,14 @@ void DisplayMenuPage::draw() {
     uint8_t menu_items_y[] = {190, 45, 60, 75, 90, 105, 120, 135};
 
     //first draw cursor selection box
-    u8g2.drawRBox(setting_choice_x-2, menu_items_y[display_menu_cursor_position]-14, 22, 16, 2);
+    u8g2.drawRBox(setting_choice_x-2, menu_items_y[cursor_position]-14, 22, 16, 2);
     
     // then draw all the menu items
-    for (int i = 0; i <= display_menu_cursor_max; i++) {      
+    for (int i = 0; i <= cursor_max; i++) {      
       u8g2.setCursor(setting_name_x, menu_items_y[i]);
-      u8g2.print(display_menu_labels[i]);
+      u8g2.print(labels[i]);
       u8g2.setCursor(setting_choice_x, menu_items_y[i]);
-      if (i == display_menu_cursor_position) u8g2.setDrawColor(0);
+      if (i == cursor_position) u8g2.setDrawColor(0);
       else u8g2.setDrawColor(1);
       switch (i) {
         case cursor_units_alt:
@@ -98,19 +85,8 @@ void DisplayMenuPage::draw() {
   } while ( u8g2.nextPage() ); 
 }
 
-
-void cursor_prev() {
-  display_menu_cursor_position--;
-  if (display_menu_cursor_position < 0) display_menu_cursor_position = display_menu_cursor_max;
-}
-
-void cursor_next() {
-display_menu_cursor_position++;
-  if (display_menu_cursor_position > display_menu_cursor_max) display_menu_cursor_position = 0;
-}
-
-void setting_change(int8_t dir) {
-  switch (display_menu_cursor_position) {
+void DisplayMenuPage::setting_change(int8_t dir) {
+  switch (cursor_position) {
     case cursor_units_alt:
       settings_toggleUnits(&UNITS_alt);
       break;

@@ -8,16 +8,6 @@
 #include "settings.h"
 
 
-char * labels[] = {
-  "Back",
-  "Vario",
-  "Display",
-  "Units",
-  "GPS",
-  "Log",
-  "System"  
-};
-
 // cursor positions on the main menu
 enum cursor_main_menu {
   cursor_back,
@@ -41,10 +31,6 @@ enum display_menu_pages {
   page_menu_resetConfirm,
 };
 
-// cursor tracking for the main menu page
-  int8_t cursor_position = 0;   // 0 means nothing selected
-  uint8_t cursor_max = 6;       // the number of items (0-based) in the enum list above
-
 // tracking which meny page we're on (we might move from the main meny page into a sub-meny)
   uint8_t menu_page = page_menu_main;
 
@@ -60,7 +46,7 @@ void MainMenuPage::draw() {
 }
 
 
-void draw_main_menu() {
+void MainMenuPage::draw_main_menu() {
   u8g2.firstPage();
   do { 
     // Title(s) 
@@ -96,18 +82,7 @@ void draw_main_menu() {
 }
 
 
-void cursor_prev() {
-  cursor_position--;
-  if (cursor_position < 0) cursor_position = cursor_max;
-}
-
-void cursor_next() {
-cursor_position++;
-  if (cursor_position > cursor_max) cursor_position = 0;
-}
-
-
-void menu_item_action(int8_t dir) {
+void MainMenuPage::menu_item_action(int8_t dir) {
   switch (cursor_position) {    
     case cursor_back:
       
@@ -133,7 +108,7 @@ void menu_item_action(int8_t dir) {
   }
 }
 
-bool mainMenuButtonEvent(uint8_t button, uint8_t state, uint8_t count) {
+bool MainMenuPage::mainMenuButtonEvent(uint8_t button, uint8_t state, uint8_t count) {
   bool redraw = false; // only redraw screen if a UI input changes something
   switch (button) {
     case UP:

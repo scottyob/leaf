@@ -5,16 +5,6 @@
 #include "fonts.h"
 #include "settings.h"
 
-char * log_menu_labels[] = {
-  "Back",
-  "Alt:",
-  "Climb:",
-  "Speed:",
-  "Dist:",
-  "Head:",
-  "Temp:",
-  "Time:"
-};
 
 enum log_menu_items { 
   cursor_units_back,
@@ -27,9 +17,6 @@ enum log_menu_items {
   cursor_units_hours
 
 };
-
-int8_t log_menu_cursor_position = 0;   // 0 means nothing selected
-uint8_t log_menu_cursor_max = 7;       // the number of items (0-based) in the enum list above
 
 
 void LogMenuPage::draw() {
@@ -50,14 +37,14 @@ void LogMenuPage::draw() {
     uint8_t menu_items_y[] = {190, 45, 60, 75, 90, 105, 120, 135};
 
     //first draw cursor selection box
-    u8g2.drawRBox(setting_choice_x-2, menu_items_y[log_menu_cursor_position]-14, 22, 16, 2);
+    u8g2.drawRBox(setting_choice_x-2, menu_items_y[cursor_position]-14, 22, 16, 2);
     
     // then draw all the menu items
-    for (int i = 0; i <= log_menu_cursor_max; i++) {      
+    for (int i = 0; i <= cursor_max; i++) {      
       u8g2.setCursor(setting_name_x, menu_items_y[i]);
-      u8g2.print(log_menu_labels[i]);
+      u8g2.print(labels[i]);
       u8g2.setCursor(setting_choice_x, menu_items_y[i]);
-      if (i == log_menu_cursor_position) u8g2.setDrawColor(0);
+      if (i == cursor_position) u8g2.setDrawColor(0);
       else u8g2.setDrawColor(1);
       switch (i) {
         case cursor_units_alt:
@@ -98,18 +85,8 @@ void LogMenuPage::draw() {
 }
 
 
-void cursor_prev() {
-  log_menu_cursor_position--;
-  if (log_menu_cursor_position < 0) log_menu_cursor_position = log_menu_cursor_max;
-}
-
-void cursor_next() {
-log_menu_cursor_position++;
-  if (log_menu_cursor_position > log_menu_cursor_max) log_menu_cursor_position = 0;
-}
-
-void setting_change(int8_t dir) {
-  switch (log_menu_cursor_position) {
+void LogMenuPage::setting_change(int8_t dir) {
+  switch (cursor_position) {
     case cursor_units_alt:
       settings_toggleUnits(&UNITS_alt);
       break;

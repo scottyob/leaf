@@ -1,6 +1,8 @@
 #ifndef MENU_PAGE_H
 #define MENU_PAGE_H
 
+#include <Arduino.h>
+
 class MenuPage {
   public:
     // Called whenever a button event occurs
@@ -12,6 +14,13 @@ class MenuPage {
     // Called to draw the menu page.
     // Assumes(?) the screen is already clear.
     virtual void draw() = 0;
+
+  protected:
+    void cursor_prev();
+    void cursor_next();
+
+    int8_t cursor_position;   // 0 means nothing selected
+    int8_t cursor_max;
 };
 
 #endif

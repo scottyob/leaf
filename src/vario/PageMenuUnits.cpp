@@ -5,16 +5,6 @@
 #include "fonts.h"
 #include "settings.h"
 
-char * labels[] = {
-  "Back",
-  "Alt:",
-  "Climb:",
-  "Speed:",
-  "Dist:",
-  "Head:",
-  "Temp:",
-  "Time:"
-};
 
 enum units_menu_items { 
   cursor_units_back,
@@ -27,9 +17,6 @@ enum units_menu_items {
   cursor_units_hours
 
 };
-
-int8_t cursor_position = 0;   // 0 means nothing selected
-uint8_t cursor_max = 7;       // the number of items (0-based) in the enum list above
 
 
 void UnitsMenuPage::draw() {
@@ -98,17 +85,7 @@ void UnitsMenuPage::draw() {
 }
 
 
-void cursor_prev() {
-  cursor_position--;
-  if (cursor_position < 0) cursor_position = cursor_max;
-}
-
-void cursor_next() {
-cursor_position++;
-  if (cursor_position > cursor_max) cursor_position = 0;
-}
-
-void setting_change(int8_t dir) {
+void UnitsMenuPage::setting_change(int8_t dir) {
   switch (cursor_position) {
     case cursor_units_alt:
       settings_toggleUnits(&UNITS_alt);
