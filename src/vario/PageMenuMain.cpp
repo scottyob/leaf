@@ -31,16 +31,38 @@ enum display_menu_pages {
   page_menu_resetConfirm,
 };
 
-// tracking which meny page we're on (we might move from the main meny page into a sub-meny)
+// tracking which menu page we're on (we might move from the main menu page into a sub-meny)
   uint8_t menu_page = page_menu_main;
+
+
+void MainMenuPage::backToMainMenu() {
+  cursor_position = cursor_back;
+  menu_page = page_menu_main;
+}
+
 
 void MainMenuPage::draw() {
   switch (menu_page) {
     case page_menu_main:
       draw_main_menu();
       break;
+    case page_menu_vario:
+      varioMenuPage.draw();
+      break;
+    case page_menu_display:
+      displayMenuPage.draw();
+      break;
     case page_menu_units:
       unitsMenuPage.draw();
+      break;
+    case page_menu_gps:
+      gpsMenuPage.draw();
+      break;
+    case page_menu_log:
+      logMenuPage.draw();
+      break;
+    case page_menu_system:
+      systemMenuPage.draw();
       break;
   }
 }
@@ -72,7 +94,7 @@ void MainMenuPage::draw_main_menu() {
         u8g2.setCursor(setting_choice_x, menu_items_y[i]);
         if (i == cursor_position) u8g2.setDrawColor(0);
         else u8g2.setDrawColor(1);
-        if (cursor_position == cursor_back)
+        if (i == cursor_back)
           u8g2.print((char)124);
         else
           u8g2.print((char)126);
@@ -82,28 +104,40 @@ void MainMenuPage::draw_main_menu() {
 }
 
 
-void MainMenuPage::menu_item_action(int8_t dir) {
+void MainMenuPage::menu_item_action(int8_t button) {
   switch (cursor_position) {    
     case cursor_back:
-      
+      if (button == LEFT || button == CENTER) {
+        display_turnPage(page_back);
+      } else if (button == RIGHT) {
+        display_turnPage(page_next);
+      }
       break;
     case cursor_vario:
-      
+      if (button == RIGHT || button == CENTER) {
+        menu_page = page_menu_vario;
+      }      
       break;
     case cursor_display:
-      
+      if (button == RIGHT || button == CENTER)
+      // go to display page      
       break;
     case cursor_units:
-      
+      if (button == RIGHT || button == CENTER) {        
+        menu_page = page_menu_units;
+      }
       break;
     case cursor_gps:
-      
+      if (button == RIGHT || button == CENTER) {}
+      // go to gps page
       break;
     case cursor_log:
-      
+      if (button == RIGHT || button == CENTER) {}
+      // go to log page
       break;
     case cursor_system:      
-      
+      if (button == RIGHT || button == CENTER) {}
+      // go to system page
       break;
   }
 }
@@ -124,23 +158,13 @@ bool MainMenuPage::mainMenuButtonEvent(uint8_t button, uint8_t state, uint8_t co
       }
       break;
     case LEFT:
-      if (state == RELEASED && cursor_position == cursor_back) {
+    case RIGHT:
+    case CENTER:
+      if (state == RELEASED) {
         menu_item_action(button);
         redraw = true;
       }
       break;
-    case RIGHT:
-      if (state == RELEASED) {
-        //go to that page
-        redraw = true;
-      }
-      break;
-    case CENTER:
-      if (state == RELEASED) {
-        // go to that page
-        redraw = true;
-      }
-      break;    
   }    
   return redraw;   //update display after button push so that the UI reflects any changes immediately
 }

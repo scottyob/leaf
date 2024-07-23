@@ -8,7 +8,7 @@ class VarioMenuPage : public SettingsMenuPage {
   public:
     VarioMenuPage() {
       cursor_position = 0;
-      cursor_max = 7;
+      cursor_max = 8;
     }
     void draw();
 
@@ -16,15 +16,16 @@ class VarioMenuPage : public SettingsMenuPage {
     void setting_change(int8_t dir);
 
   private:
-    static constexpr char * labels[8] = {
+    static constexpr char * labels[9] = {
       "Back",
-      "Alt:",
-      "Climb:",
-      "Speed:",
-      "Dist:",
-      "Head:",
-      "Temp:",
-      "Time:"
+      "Volume",
+      "Sensitive",
+      "Tones",
+      "LiftyAir",
+      "ClimbAvg",
+      "ClimbStart",
+      "SinkAlarm",
+      "AltAdj"      
     };
 };
 

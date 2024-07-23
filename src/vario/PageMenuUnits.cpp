@@ -1,5 +1,7 @@
 #include <Arduino.h>
 #include "PageMenuUnits.h"
+#include "pages.h"
+
 #include "buttons.h"
 #include "display.h"
 #include "fonts.h"
@@ -76,7 +78,7 @@ void UnitsMenuPage::draw() {
           else u8g2.print("24h");
           break;
         case cursor_units_back:
-          u8g2.print("<-");
+          u8g2.print((char)124);
           break;        
       }
     u8g2.setDrawColor(1);
@@ -110,7 +112,8 @@ void UnitsMenuPage::setting_change(int8_t dir) {
       break;
     case cursor_units_back:
       //if (dir == 0) 
-      display_turnPage(page_back);
+      mainMenuPage.backToMainMenu();
+      //display_turnPage(page_back);
       break;
   }
 }

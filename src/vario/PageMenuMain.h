@@ -13,6 +13,8 @@ class MainMenuPage : public MenuPage {
     }
     bool button_event(uint8_t button, uint8_t state, uint8_t count);
     void draw();
+    void backToMainMenu();
+
   private:
     void draw_main_menu();
     bool mainMenuButtonEvent(uint8_t button, uint8_t state, uint8_t count);

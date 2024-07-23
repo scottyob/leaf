@@ -6,7 +6,7 @@
 #include "settings.h"
 
 
-enum units_menu_items { 
+enum system_menu_items { 
   cursor_units_back,
   cursor_units_alt,
   cursor_units_climb,
