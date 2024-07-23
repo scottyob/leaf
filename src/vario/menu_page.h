@@ -23,4 +23,13 @@ class MenuPage {
     int8_t cursor_max;
 };
 
+
+class SettingsMenuPage : public MenuPage {
+  public:
+    bool button_event(uint8_t button, uint8_t state, uint8_t cound);
+
+  protected:
+    virtual void setting_change(int8_t dir) = 0;
+};
+
 #endif

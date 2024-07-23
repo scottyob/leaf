@@ -4,16 +4,18 @@
 #include <Arduino.h>
 #include "menu_page.h"
 
-class SystemMenuPage : public MenuPage {
+class SystemMenuPage : public SettingsMenuPage {
   public:
     SystemMenuPage() {
       cursor_position = 0;
       cursor_max = 7;
     }
-    bool button_event(uint8_t button, uint8_t state, uint8_t count);
     void draw();
-  private:
+
+  protected:
     void setting_change(int8_t dir);
+
+  private:
     static constexpr char * labels[8] = {
       "Back",
       "Alt:",

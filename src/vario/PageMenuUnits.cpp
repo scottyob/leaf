@@ -115,34 +115,6 @@ void UnitsMenuPage::setting_change(int8_t dir) {
   }
 }
 
-bool UnitsMenuPage::button_event(uint8_t button, uint8_t state, uint8_t count) {    
-  bool redraw = false;  // only redraw screen if something visible changes due to button push
-  switch (button) {
-    case UP:
-      if (state == RELEASED) cursor_prev();
-      redraw = true;
-      break;
-    case DOWN:
-      if (state == RELEASED) cursor_next();
-      redraw = true;
-      break;
-    case LEFT:
-      if (state == RELEASED) setting_change(-1);
-      redraw = true;
-      break;
-    case RIGHT:
-      if (state == RELEASED) setting_change(1);
-      redraw = true;
-      break;
-    case CENTER:
-      if (state == RELEASED) setting_change(0);
-      redraw = true;
-      break;    
-  }    
-  return redraw;   //update display after button push so that the UI reflects any changes immediately
-}
-
-
 
 // helpful switch constructors to copy-paste as needed:
 /*
