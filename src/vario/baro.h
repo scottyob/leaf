@@ -59,6 +59,7 @@ void baro_test(void);
 int32_t baro_getTemp(void);
 
 int32_t baro_getAlt (void);
+int32_t baro_getOffsetAlt(void);
 int32_t baro_getAltAtLaunch (void);
 int32_t baro_getAltAboveLaunch(void);
 void baro_resetLaunchAlt(void);

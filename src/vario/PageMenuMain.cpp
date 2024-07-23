@@ -6,6 +6,7 @@
 #include "display.h"
 #include "fonts.h"
 #include "settings.h"
+#include "speaker.h"
 
 
 // cursor positions on the main menu
@@ -119,8 +120,9 @@ void MainMenuPage::menu_item_action(int8_t button) {
       }      
       break;
     case cursor_display:
-      if (button == RIGHT || button == CENTER)
-      // go to display page      
+      if (button == RIGHT || button == CENTER) {
+        menu_page = page_menu_display;
+      }
       break;
     case cursor_units:
       if (button == RIGHT || button == CENTER) {        
@@ -128,16 +130,19 @@ void MainMenuPage::menu_item_action(int8_t button) {
       }
       break;
     case cursor_gps:
-      if (button == RIGHT || button == CENTER) {}
-      // go to gps page
+      if (button == RIGHT || button == CENTER) {
+        menu_page = page_menu_gps;
+      }      
       break;
     case cursor_log:
-      if (button == RIGHT || button == CENTER) {}
-      // go to log page
+      if (button == RIGHT || button == CENTER) {
+        menu_page = page_menu_log;
+      }      
       break;
     case cursor_system:      
-      if (button == RIGHT || button == CENTER) {}
-      // go to system page
+      if (button == RIGHT || button == CENTER) {
+        menu_page = page_menu_system;
+      }      
       break;
   }
 }

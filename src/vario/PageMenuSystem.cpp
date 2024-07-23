@@ -1,39 +1,45 @@
 #include <Arduino.h>
 #include "PageMenuSystem.h"
+#include "pages.h"
+
 #include "buttons.h"
 #include "display.h"
 #include "fonts.h"
 #include "settings.h"
+#include "power.h"
+#include "speaker.h"
 
 
 enum system_menu_items { 
-  cursor_units_back,
-  cursor_units_alt,
-  cursor_units_climb,
-  cursor_units_speed,
-  cursor_units_distance,
-  cursor_units_heading,
-  cursor_units_temp,
-  cursor_units_hours
-
+  cursor_system_back,
+  cursor_system_timezone,
+  cursor_system_volume,
+  cursor_system_poweroff,
+  cursor_system_charge,
+  cursor_system_wifi,
+  cursor_system_bluetooth,
+  cursor_system_reset
 };
 
 
 void SystemMenuPage::draw() {
+
+  int16_t displayTimeZone = TIME_ZONE;
+
   u8g2.firstPage();
   do { 
     // Title(s) 
     u8g2.setFont(leaf_6x12);
     u8g2.setCursor(2, 12);
     u8g2.setDrawColor(1);
-    u8g2.print("UNITS");
+    u8g2.print("SYSTEM");
     u8g2.drawHLine(0, 15, 64);
 
   // Menu Items
     uint8_t start_y = 29;
     uint8_t y_spacing = 16;
     uint8_t setting_name_x = 3;
-    uint8_t setting_choice_x = 44;    
+    uint8_t setting_choice_x = 38;    
     uint8_t menu_items_y[] = {190, 45, 60, 75, 90, 105, 120, 135};
 
     //first draw cursor selection box
@@ -47,36 +53,46 @@ void SystemMenuPage::draw() {
       if (i == cursor_position) u8g2.setDrawColor(0);
       else u8g2.setDrawColor(1);
       switch (i) {
-        case cursor_units_alt:
-          if (UNITS_alt) u8g2.print("ft");
-          else u8g2.print(" m");
+        case cursor_system_timezone:      
+          // sign
+          if (displayTimeZone < 0) {
+            u8g2.print('-');
+            displayTimeZone *= -1;
+          } else {
+            u8g2.print('+');
+          }
+          //hours, :, minute
+          u8g2.print(displayTimeZone/60);
+          u8g2.print(':');
+          if (displayTimeZone % 60 == 0) u8g2.print("00");
+          else u8g2.print(displayTimeZone % 60);
           break;
-        case cursor_units_climb:
-          if (UNITS_climb) u8g2.print("fpm");
-          else u8g2.print("m/s");    
+        case cursor_system_volume:
+          u8g2.print(VOLUME_SYSTEM); 
           break;
-        case cursor_units_speed:
-          if (UNITS_speed) u8g2.print("mph");
-          else u8g2.print("kph");
+        case cursor_system_poweroff:
+          if (AUTO_OFF) u8g2.print("ON");
+          else u8g2.print("OFF");
           break;
-        case cursor_units_distance:
-          if (UNITS_distance) u8g2.print("mi");
-          else u8g2.print("km");
+        case cursor_system_charge:
+          if (power_getInputCurrent()) u8g2.print("LOW");
+          else if (power_getInputCurrent()) u8g2.print("MED");
+          else if (power_getInputCurrent()) u8g2.print("HI");
+          else if (power_getInputCurrent()) u8g2.print("OFF");
           break;
-        case cursor_units_heading:
-          if (UNITS_heading) u8g2.print("NNW");
-          else u8g2.print("deg");
+        case cursor_system_wifi:
+          if (WIFI_ON) u8g2.print("ON");
+          else u8g2.print("OFF");
           break;
-        case cursor_units_temp:
-          if (UNITS_temp) u8g2.print("F");
-          else u8g2.print("C");
+        case cursor_system_bluetooth:
+          if (BLUETOOTH_ON) u8g2.print("ON");
+          else u8g2.print("OFF");
           break;
-        case cursor_units_hours:
-          if (UNITS_hours) u8g2.print("12h");
-          else u8g2.print("24h");
+        case cursor_system_reset:
+          u8g2.print((char)126);
           break;
-        case cursor_units_back:
-          u8g2.print("<-");
+        case cursor_system_back:
+          u8g2.print((char)124);
           break;        
       }
     u8g2.setDrawColor(1);
@@ -85,32 +101,32 @@ void SystemMenuPage::draw() {
 }
 
 
-void SystemMenuPage::setting_change(int8_t dir) {
+void SystemMenuPage::setting_change(int8_t dir, uint8_t state, uint8_t count) {
   switch (cursor_position) {
-    case cursor_units_alt:
-      settings_toggleUnits(&UNITS_alt);
+    case cursor_system_timezone:
+      if (state == RELEASED && dir != 0) settings_adjustTimeZone(dir);
+      if (state == HELD && dir == 0) settings_adjustTimeZone(dir);
       break;
-    case cursor_units_climb:
-      settings_toggleUnits(&UNITS_climb);
+    case cursor_system_volume:
+      if (state == RELEASED && dir != 0) settings_adjustVolumeSystem(dir);
       break;
-    case cursor_units_speed:
-      settings_toggleUnits(&UNITS_speed);
+    case cursor_system_poweroff:
+      if (state == RELEASED) settings_toggleBoolOnOff(&AUTO_OFF);
       break;
-    case cursor_units_distance:
-      settings_toggleUnits(&UNITS_distance);
+    case cursor_system_charge:
+      if (state == RELEASED) 
       break;
-    case cursor_units_heading:
-      settings_toggleUnits(&UNITS_heading);
+    case cursor_system_wifi:
+      if (state == RELEASED) 
       break;
-    case cursor_units_temp:
-      settings_toggleUnits(&UNITS_temp);
+    case cursor_system_bluetooth:
+      if (state == RELEASED) 
       break;
-    case cursor_units_hours:
-      settings_toggleUnits(&UNITS_hours);
+    case cursor_system_reset:
+      if (state == RELEASED) 
       break;
-    case cursor_units_back:
-      //if (dir == 0) 
-      display_turnPage(page_back);
+    case cursor_system_back:      
+      if (state == RELEASED) mainMenuPage.backToMainMenu();
       break;
   }
 }

@@ -5,6 +5,7 @@
 #include "baro.h"
 #include "speaker.h"
 #include "LinearRegression.h"
+#include "settings.h"
 
 
 
@@ -95,6 +96,11 @@ int32_t baro_getTemp() {
 int32_t baro_getAlt() {  
   return P_ALTfiltered;  
 }
+
+int32_t baro_getOffsetAlt() {  
+  return P_ALTfiltered + ALT_OFFSET;  
+}
+
 
 // actual climb rate, for display on screen numerically, and saving in flight log
 int32_t baro_getClimbRate() {

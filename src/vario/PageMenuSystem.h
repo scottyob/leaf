@@ -13,18 +13,18 @@ class SystemMenuPage : public SettingsMenuPage {
     void draw();
 
   protected:
-    void setting_change(int8_t dir);
+    void setting_change(int8_t dir, uint8_t state, uint8_t count);
 
   private:
     static constexpr char * labels[8] = {
       "Back",
-      "Alt:",
-      "Climb:",
-      "Speed:",
-      "Dist:",
-      "Head:",
-      "Temp:",
-      "Time:"
+      "TimeZn",
+      "Vol",
+      "AutoOff",
+      "Charge",
+      "Wifi",
+      "BT",
+      "Reset"      
     };
 };
 

@@ -1,9 +1,12 @@
 #include <Arduino.h>
 #include "PageMenuLog.h"
+#include "pages.h"
+
 #include "buttons.h"
 #include "display.h"
 #include "fonts.h"
 #include "settings.h"
+#include "speaker.h"
 
 
 enum log_menu_items { 
@@ -26,7 +29,7 @@ void LogMenuPage::draw() {
     u8g2.setFont(leaf_6x12);
     u8g2.setCursor(2, 12);
     u8g2.setDrawColor(1);
-    u8g2.print("UNITS");
+    u8g2.print("LOG");
     u8g2.drawHLine(0, 15, 64);
 
   // Menu Items
@@ -85,32 +88,32 @@ void LogMenuPage::draw() {
 }
 
 
-void LogMenuPage::setting_change(int8_t dir) {
+void LogMenuPage::setting_change(int8_t dir, uint8_t state, uint8_t count) {
   switch (cursor_position) {
     case cursor_units_alt:
-      settings_toggleUnits(&UNITS_alt);
+
       break;
     case cursor_units_climb:
-      settings_toggleUnits(&UNITS_climb);
+
       break;
     case cursor_units_speed:
-      settings_toggleUnits(&UNITS_speed);
+
       break;
     case cursor_units_distance:
-      settings_toggleUnits(&UNITS_distance);
+
       break;
     case cursor_units_heading:
-      settings_toggleUnits(&UNITS_heading);
+
       break;
     case cursor_units_temp:
-      settings_toggleUnits(&UNITS_temp);
+
       break;
     case cursor_units_hours:
-      settings_toggleUnits(&UNITS_hours);
+
       break;
     case cursor_units_back:
       //if (dir == 0) 
-      display_turnPage(page_back);
+      if (state == RELEASED) mainMenuPage.backToMainMenu();
       break;
   }
 }

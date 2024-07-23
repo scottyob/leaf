@@ -5,6 +5,8 @@
 
 #include "settings.h"
 #include "speaker.h"
+#include "gps.h"
+#include "baro.h"
 
 #define RW_MODE false
 #define RO_MODE true
@@ -12,13 +14,14 @@
 
 // Global Variables for Current Settings
   // Vario Settings    
-    int8_t SINK_ALARM;
+    int8_t VOLUME_VARIO;
+    bool VARIO_TONES;
     int8_t VARIO_AVERAGE;
     int8_t CLIMB_AVERAGE;
     int8_t CLIMB_START;
-    int8_t VOLUME_VARIO;
-    int8_t LIFTY_AIR;
-    int32_t ALT_OFFSET;
+    int8_t LIFTY_AIR;    
+    int8_t SINK_ALARM;
+    int32_t ALT_OFFSET;    
   // GPS & Track Log Settings
     bool DISTANCE_FLOWN;
     int8_t GPS_SETTING;
@@ -30,6 +33,8 @@
     int16_t CONTRAST;
     bool ENTER_BOOTLOAD;
     bool AUTO_OFF;
+    bool WIFI_ON;
+    bool BLUETOOTH_ON;
   // Unit Values
     bool UNITS_climb;
     bool UNITS_alt;
@@ -73,6 +78,7 @@ void settings_loadDefaults() {
     CLIMB_AVERAGE = DEF_CLIMB_AVERAGE;
     CLIMB_START = DEF_CLIMB_START;
     VOLUME_VARIO = DEF_VOLUME_VARIO;
+    VARIO_TONES = DEF_VARIO_TONES;
     LIFTY_AIR = DEF_LIFTY_AIR;
     ALT_OFFSET = DEF_ALT_OFFSET;
   // GPS & Track Log Settings
@@ -86,6 +92,8 @@ void settings_loadDefaults() {
     CONTRAST = DEF_CONTRAST;
     ENTER_BOOTLOAD = DEF_ENTER_BOOTLOAD;
     AUTO_OFF = DEF_AUTO_OFF;
+    WIFI_ON = DEF_WIFI_ON;
+    BLUETOOTH_ON = DEF_BLUETOOTH_ON;
   // Unit Values
     UNITS_climb = DEF_UNITS_climb;
     UNITS_alt = DEF_UNITS_alt;
@@ -105,6 +113,7 @@ void settings_retrieve() {
     CLIMB_AVERAGE =   leafPrefs.getChar("CLIMB_AVERAGE");
     CLIMB_START =     leafPrefs.getChar("CLIMB_START");
     VOLUME_VARIO =    leafPrefs.getChar("VOLUME_VARIO");
+    VARIO_TONES =     leafPrefs.getChar("VARIO_TONES");
     LIFTY_AIR =       leafPrefs.getChar ("LIFTY_AIR");
     ALT_OFFSET =      leafPrefs.getLong ("ALT_OFFSET");
   // GPS & Track Log Settings
@@ -118,6 +127,9 @@ void settings_retrieve() {
     CONTRAST =        leafPrefs.getShort("CONTRAST");
     ENTER_BOOTLOAD =  leafPrefs.getBool("ENTER_BOOTLOAD");
     AUTO_OFF =        leafPrefs.getBool("AUTO_OFF");
+    WIFI_ON =         leafPrefs.getBool("WIFI_ON");
+    BLUETOOTH_ON =    leafPrefs.getBool("BLUETOOTH_ON");
+
   // Unit Values
     UNITS_climb =     leafPrefs.getBool("UNITS_climb");
     UNITS_alt =       leafPrefs.getBool("UNITS_alt");
@@ -139,16 +151,17 @@ void settings_save() {
     leafPrefs.putBool("nvsInitVario", true);
 
   // Vario Settings    
-    leafPrefs.putChar ("SINK_ALARM", SINK_ALARM);
+    leafPrefs.putChar("SINK_ALARM", SINK_ALARM);
     leafPrefs.putChar("VARIO_AVERAGE", VARIO_AVERAGE);
     leafPrefs.putChar("CLIMB_AVERAGE", CLIMB_AVERAGE);
     leafPrefs.putChar("CLIMB_START", CLIMB_START);
     leafPrefs.putChar("VOLUME_VARIO", VOLUME_VARIO);
-    leafPrefs.putChar ("LIFTY_AIR", LIFTY_AIR);
-    leafPrefs.putLong ("ALT_OFFSET", ALT_OFFSET);
+    leafPrefs.putBool("VARIO_TONES", VARIO_TONES);
+    leafPrefs.putChar("LIFTY_AIR", LIFTY_AIR);
+    leafPrefs.putLong("ALT_OFFSET", ALT_OFFSET);
   // GPS & Track Log Settings
-    leafPrefs.putUChar("DISTANCE_FLOWN", DISTANCE_FLOWN);
-    leafPrefs.putUChar("GPS_SETTING", GPS_SETTING);
+    leafPrefs.putBool("DISTANCE_FLOWN", DISTANCE_FLOWN);
+    leafPrefs.putChar("GPS_SETTING", GPS_SETTING);
     leafPrefs.putBool("TRACK_SAVE", TRACK_SAVE);
     leafPrefs.putBool("AUTO_START", AUTO_START);
   // System Settings
@@ -157,6 +170,8 @@ void settings_save() {
     leafPrefs.putShort("CONTRAST", CONTRAST);
     leafPrefs.putBool("ENTER_BOOTLOAD", ENTER_BOOTLOAD);
     leafPrefs.putBool("AUTO_OFF", AUTO_OFF);
+    leafPrefs.putBool("WIFI_ON", WIFI_ON);
+    leafPrefs.putBool("BLUETOOTH_ON", BLUETOOTH_ON);    
   // Unit Values
     leafPrefs.putBool("UNITS_climb", UNITS_climb);
     leafPrefs.putBool("UNITS_alt", UNITS_alt);
@@ -187,6 +202,7 @@ void settings_totallyEraseNVS() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Adjust individual settings
 
+// Contrast
 void settings_adjustContrast(uint16_t val) {
   if (val == -1) {
     // TODO: set contrast lower
@@ -199,20 +215,29 @@ void settings_adjustContrast(uint16_t val) {
   }
 }
 
- 
+// Alt Offsets
+  bool settings_matchGPSAlt() {
+    bool success = false;
+    if (gps.altitude.isValid()) {    
+      ALT_OFFSET = gps.altitude.meters()*100 - baro_getAlt(); // alt is in cm, convert gps m->cm
+      success = true;
+    }
+    return success;
+  }
 
+  void settings_setAltOffset(int32_t value) {
+    ALT_OFFSET = value;
+  }
 
-void settings_setAltOffset(int32_t value) {
-  ALT_OFFSET = value;
-}
+  void settings_adjustAltOffset(int8_t dir, uint8_t count) {
+    int increase = 100;                 // 1m increments (100cm)
+    if (UNITS_alt == 1) increase = 30;  // 1 ft increments (30cm)
+    if (count >= 4) increase *= 5;
+    if (dir >= 1) ALT_OFFSET += increase;
+    else if (dir <= -1) ALT_OFFSET -= increase;	
+  }
+//
 
-void settings_adjustAltOffset(int8_t dir, uint8_t count) {
-	int increase = 100;                 // 1m increments (100cm)
-	if (UNITS_alt == 1) increase = 30;  // 1 ft increments (30cm)
-	if (count >= 40) increase *= 5;
-	if (dir >= 1) ALT_OFFSET += increase;
-	else if (dir <= -1) ALT_OFFSET -= increase;	
-}
 
 void settings_adjustSinkAlarm(int8_t dir) {
 	uint16_t * sound = fx_neutral;
@@ -345,9 +370,7 @@ void settings_adjustVolumeVario(int8_t dir) {
   
 
 void settings_adjustVolumeSystem(int8_t dir) {
-
-  uint16_t * sound = fx_neutral;
-  
+  uint16_t * sound = fx_neutral;  
   if (dir > 0) {
     sound = fx_increase;
     VOLUME_SYSTEM++;
@@ -366,16 +389,47 @@ void settings_adjustVolumeSystem(int8_t dir) {
   speaker_playSound(sound); 
 }
 
+uint8_t timeZoneIncrement = 60;   // in tenths of an hour.  This allows us to change and adjust by 05, or half an hour, for some countries that have half-hour time zones.
+void settings_adjustTimeZone(int8_t dir) {
+
+  if (dir == 0) { // switch from half-hour to full-hour increments
+    if (timeZoneIncrement == 60) {
+      timeZoneIncrement = 15;
+      speaker_playSound(fx_increase);
+    } else if (timeZoneIncrement == 15) {
+      timeZoneIncrement = 60;
+      speaker_playSound(fx_decrease);
+    }
+  }
+  if (dir == 1)
+    if (TIME_ZONE >= TIME_ZONE_MAX) {
+      speaker_playSound(fx_double);
+      TIME_ZONE = TIME_ZONE_MAX;
+    } else {
+      TIME_ZONE += timeZoneIncrement;
+      speaker_playSound(fx_neutral);
+    }    
+  else if (dir == -1) {
+    if (TIME_ZONE <= TIME_ZONE_MIN) {
+      speaker_playSound(fx_double);
+      TIME_ZONE = TIME_ZONE_MIN;
+    } else {
+      TIME_ZONE -= timeZoneIncrement;
+      speaker_playSound(fx_neutral);
+    }
+  }
+}
+
 // swap unit settings and play a neutral sound
-void settings_toggleUnits(bool * unitSetting) {
+void settings_toggleBoolNeutral(bool * unitSetting) {
   *unitSetting = !*unitSetting;
   speaker_playSound(fx_neutral);
 }
 
 // flip on/off certain settings and play on/off sounds
-void settings_toggleSwitch(bool * switchSetting) {
+void settings_toggleBoolOnOff(bool * switchSetting) {
   *switchSetting = !*switchSetting;
-  if (*switchSetting) speaker_playSound(fx_neutral);  // if we turned it on
+  if (*switchSetting) speaker_playSound(fx_enter);  // if we turned it on
   else speaker_playSound(fx_cancel);                  // if we turned it off
 }
 

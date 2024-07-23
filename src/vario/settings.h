@@ -23,8 +23,8 @@
     // Volume (max for both vario and system volume settings)
       #define VOLUME_MAX			 	      3
     // Time Zone Offsets from UTC
-      #define TIME_OFFSET_MIN			    -120
-      #define TIME_OFFSET_MAX		 	    140
+      #define TIME_ZONE_MIN			   -720     // max minutes -UTC time zone
+      #define TIME_ZONE_MAX         840     // max minutes +UTC time zone
 
 // Default Settings
   // Default Vario Settings  
@@ -33,6 +33,7 @@
     #define DEF_CLIMB_AVERAGE			    1	    // in units of 5-seconds.  (def = 1 = 5sec)
     #define DEF_CLIMB_START   		    5			// cm/s when climb note begins 
     #define DEF_VOLUME_VARIO		      1	    // 0=off, 1=low, 2=med, 3=high
+    #define DEF_VARIO_TONES           0     // 0 == linear pitch interpolation; 1 == major C-scale for climb, minor scale for descent
     #define DEF_LIFTY_AIR				    -40	    // In units of cm/s (a sink rate of 30cm/s means the air itself is going up).  '0' is off.  (lift air will apply from the lifty_air setting up to the climb_start value)
     #define DEF_ALT_OFFSET				    0	    // cm altitude offset from pressure altitude
   // Default GPS & Track Log Settings
@@ -41,11 +42,13 @@
     #define DEF_TRACK_SAVE				    1	    // save track log?
     #define DEF_AUTO_START		        1	    // 1 = ENABLE, 0 = DISABLE
   // Default System Settings
-    #define DEF_TIME_ZONE     				0     // HHh  (-070 for PDT, +115 for india (11 hours, 30 minutes))
+    #define DEF_TIME_ZONE     				0     // mm (in minutes) UTC -8 (PDT) would therefor be -8*60, or 480.  This allows us to cover all time zones, including the :30 minute and :15 minute ones
     #define DEF_VOLUME_SYSTEM		      1	    // 0=off, 1=low, 2=med, 3=high
     #define DEF_CONTRAST			        10
     #define DEF_ENTER_BOOTLOAD		    0	    // by default, don't enter bootloader on reset		      
     #define DEF_AUTO_OFF				      1	    // 1 = ENABLE, 0 = DISABLE
+    #define DEF_WIFI_ON               0     // default wifi off
+    #define DEF_BLUETOOTH_ON          0     // default bluetooth off
   // Default Unit Values
     #define DEF_UNITS_climb				    0	    // 0 (m per second), 	1 (feet per minute)
     #define DEF_UNITS_alt				      0	    // 0 (meters), 				1 (feet)
@@ -63,6 +66,7 @@
     extern int8_t CLIMB_AVERAGE;
     extern int8_t CLIMB_START;
     extern int8_t VOLUME_VARIO;
+    extern bool   VARIO_TONES;
     extern int8_t LIFTY_AIR;
     extern int32_t ALT_OFFSET;
   // GPS & Track Log Settings
@@ -76,6 +80,8 @@
     extern int16_t CONTRAST;
     extern bool ENTER_BOOTLOAD;
     extern bool AUTO_OFF;
+    extern bool WIFI_ON;
+    extern bool BLUETOOTH_ON;
   // Unit Values
     extern bool UNITS_climb;
     extern bool UNITS_alt;
@@ -96,8 +102,11 @@ void factoryResetVario(void);
 
 // adjust-settings functions
 void settings_adjustContrast(uint16_t val);
+
 void settings_setAltOffset(int32_t value);
 void settings_adjustAltOffset(int8_t dir, uint8_t count);
+bool settings_matchGPSAlt(void);
+
 void settings_adjustSinkAlarm(int8_t dir);
 void settings_adjustVarioAverage(int8_t dir);
 void settings_adjustClimbAverage(int8_t dir);
@@ -106,7 +115,11 @@ void settings_adjustLiftyAir(int8_t dir);
 void settings_adjustVolumeVario(int8_t dir);
 void settings_adjustVolumeSystem(int8_t dir);
 
-void settings_toggleUnits(bool * unitSetting);
+
+void settings_adjustTimeZone(int8_t dir);
+
+void settings_toggleBoolNeutral(bool * boolSetting);
+void settings_toggleBoolOnOff(bool * switchSetting);
 
 /*
 // Timer/Stopwatch Variable

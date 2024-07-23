@@ -6,6 +6,7 @@
 #include "display.h"
 #include "fonts.h"
 #include "settings.h"
+#include "speaker.h"
 
 
 enum units_menu_items { 
@@ -87,32 +88,32 @@ void UnitsMenuPage::draw() {
 }
 
 
-void UnitsMenuPage::setting_change(int8_t dir) {
+void UnitsMenuPage::setting_change(int8_t dir, uint8_t state, uint8_t count) {
   switch (cursor_position) {
     case cursor_units_alt:
-      settings_toggleUnits(&UNITS_alt);
+      if (state == RELEASED) settings_toggleBoolNeutral(&UNITS_alt);
       break;
     case cursor_units_climb:
-      settings_toggleUnits(&UNITS_climb);
+      if (state == RELEASED) settings_toggleBoolNeutral(&UNITS_climb);
       break;
     case cursor_units_speed:
-      settings_toggleUnits(&UNITS_speed);
+      if (state == RELEASED) settings_toggleBoolNeutral(&UNITS_speed);
       break;
     case cursor_units_distance:
-      settings_toggleUnits(&UNITS_distance);
+      if (state == RELEASED) settings_toggleBoolNeutral(&UNITS_distance);
       break;
     case cursor_units_heading:
-      settings_toggleUnits(&UNITS_heading);
+      if (state == RELEASED) settings_toggleBoolNeutral(&UNITS_heading);
       break;
     case cursor_units_temp:
-      settings_toggleUnits(&UNITS_temp);
+      if (state == RELEASED) settings_toggleBoolNeutral(&UNITS_temp);
       break;
     case cursor_units_hours:
-      settings_toggleUnits(&UNITS_hours);
+      if (state == RELEASED) settings_toggleBoolNeutral(&UNITS_hours);
       break;
     case cursor_units_back:
       //if (dir == 0) 
-      mainMenuPage.backToMainMenu();
+      if (state == RELEASED) mainMenuPage.backToMainMenu();
       //display_turnPage(page_back);
       break;
   }

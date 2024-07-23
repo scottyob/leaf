@@ -7,6 +7,8 @@
 #include "fonts.h"
 #include "settings.h"
 #include "baro.h"
+#include "gps.h"
+#include "speaker.h"
 
 
 enum vario_menu_items { 
@@ -30,7 +32,7 @@ void VarioMenuPage::draw() {
     u8g2.setFont(leaf_6x12);
     u8g2.setCursor(2, 12);
     u8g2.setDrawColor(1);
-    u8g2.print("UNITS");
+    u8g2.print("VARIO");
     u8g2.drawHLine(0, 15, 64);
 
   // Menu Items
@@ -42,10 +44,7 @@ void VarioMenuPage::draw() {
 
     //first draw cursor selection box
     u8g2.drawRBox(setting_choice_x-2, menu_items_y[cursor_position]-14, 22, 16, 2);
-    
-      
 
-    int32_t ALT_OFFSET;
 
     // then draw all the menu items
     for (int i = 0; i <= cursor_max; i++) {      
@@ -77,46 +76,60 @@ void VarioMenuPage::draw() {
           u8g2.print(SINK_ALARM);
           break;
         case cursor_vario_altadj:
-          u8g2.print(baro_getAlt()+ALT_OFFSET, 0);
+          u8g2.print("-/+");
           break;
         case cursor_vario_back:
           u8g2.print((char)124);
           break;        
       }
-    u8g2.setDrawColor(1);
+    u8g2.setDrawColor(1);    
     }
+    // show altitude so proper offset can be set, if desired
+    display_alt(5, menu_items_y[cursor_max]+15, leaf_6x12, baro_getOffsetAlt());
   } while ( u8g2.nextPage() ); 
 }
 
 
-void VarioMenuPage::setting_change(int8_t dir) {
+void VarioMenuPage::setting_change(int8_t dir, uint8_t state, uint8_t count) {  
   switch (cursor_position) {
     case cursor_vario_volume:
-      settings_toggleUnits(&UNITS_alt);
+      if (state == RELEASED) settings_adjustVolumeVario(dir);
       break;
     case cursor_vario_sensitive:
-      settings_toggleUnits(&UNITS_climb);
+      if (state == RELEASED) settings_adjustVarioAverage(dir);
       break;
     case cursor_vario_tones:
-      settings_toggleUnits(&UNITS_speed);
+      if (state == RELEASED) settings_toggleBoolNeutral(&VARIO_TONES);
       break;
     case cursor_vario_liftyair:
-      settings_toggleUnits(&UNITS_distance);
+      if (state == RELEASED) settings_adjustLiftyAir(dir);
       break;
     case cursor_vario_climbavg:
-      settings_toggleUnits(&UNITS_heading);
+      if (state == RELEASED) settings_adjustClimbAverage(dir);
       break;
     case cursor_vario_climbstart:
-      settings_toggleUnits(&UNITS_temp);
+      if (state == RELEASED) settings_adjustClimbStart(dir);
       break;
     case cursor_vario_sinkalarm:
-      settings_toggleUnits(&UNITS_hours);
+      if (state == RELEASED) settings_adjustSinkAlarm(dir);
       break;
     case cursor_vario_altadj:
+      if (dir == 0 && count == 1 && state == HELD) {  // if center button held for 1 'action time'
+        if (settings_matchGPSAlt()) { // successful reset of AltOffset to match GPS altitude
+          speaker_playSound(fx_enter);  
+        } else {                      // unsuccessful 
+          speaker_playSound(fx_cancel);
+        }
+      } else if (dir != 0) {
+        if (state == PRESSED || state == HELD || state == HELD_LONG) {
+          settings_adjustAltOffset(dir, count);
+          speaker_playSound(fx_neutral);
+        }
+      }
       break;
     case cursor_vario_back:
       //if (dir == 0) 
-      display_turnPage(page_back);
+      if (state == RELEASED) mainMenuPage.backToMainMenu();
       break;
   }
 }

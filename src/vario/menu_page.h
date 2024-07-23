@@ -29,7 +29,7 @@ class SettingsMenuPage : public MenuPage {
     bool button_event(uint8_t button, uint8_t state, uint8_t cound);
 
   protected:
-    virtual void setting_change(int8_t dir) = 0;
+    virtual void setting_change(int8_t dir, uint8_t state, uint8_t count) = 0;
 };
 
 #endif

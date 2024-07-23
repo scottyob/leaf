@@ -21,10 +21,12 @@
 #define BATT_SHUTDOWN_MV 3200  // mV at which to shutdown the system to prevent battery over-discharge 
 //Note: the battery also has over discharge protection, but we don't fully trust it, plus we want to shutdown while we have power to save logs etc
 
-enum power_on_states {  POWER_OFF,       // power off we'll never use, because chip is unpowered and not running
-                        POWER_ON,        // system is ON by user input (pushbutton) and should function normally.  Dislpay battery icon and charging state depending on what charger is doing (we can't tell if USB is plugged in or not, only if battery is charging or not)
-                        POWER_OFF_USB    // system is OFF, but has USB power.  Keep power usage to a minimum, and just power on display to show battery charge state (when charging) or turn display off and have processor sleep (when not charging)
-                        };               //   ... note: we enter POWER_OFF_USB state either from POWER_OFF and then plugging in to USB power (no power button detected during boot) or from POWER_ON with USB plugged in, and user turning off power via pushbutton.
+enum power_on_states {  
+  POWER_OFF,       // power off we'll never use, because chip is unpowered and not running
+  POWER_ON,        // system is ON by user input (pushbutton) and should function normally.  Dislpay battery icon and charging state depending on what charger is doing (we can't tell if USB is plugged in or not, only if battery is charging or not)
+  POWER_OFF_USB    // system is OFF, but has USB power.  Keep power usage to a minimum, and just power on display to show battery charge state (when charging) or turn display off and have processor sleep (when not charging)
+};                 //   ... note: we enter POWER_OFF_USB state either from POWER_OFF and then plugging in to USB power (no power button detected during boot) or from POWER_ON with USB plugged in, and user turning off power via pushbutton.
+
 enum power_input_levels {i100mA, i500mA, iMax, iStandby}; 
 
 // iMax set by ILIM pin resistor on battery charger chip. Results in 1.348Amps max input (for battery charging AND system load)

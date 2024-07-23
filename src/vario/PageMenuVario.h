@@ -13,18 +13,18 @@ class VarioMenuPage : public SettingsMenuPage {
     void draw();
 
   protected:
-    void setting_change(int8_t dir);
+    void setting_change(int8_t dir, uint8_t state, uint8_t count);
 
   private:
     static constexpr char * labels[9] = {
       "Back",
-      "Volume",
-      "Sensitive",
+      "BeepVol",
+      "Sens",
       "Tones",
-      "LiftyAir",
-      "ClimbAvg",
-      "ClimbStart",
-      "SinkAlarm",
+      "Lifty",
+      "CliAv",
+      "CliSt",
+      "SnkAlr",
       "AltAdj"      
     };
 };

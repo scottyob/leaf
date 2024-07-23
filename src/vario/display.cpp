@@ -250,7 +250,7 @@ void display_update_temp_vars() {
 
 
     void display_alt(uint8_t cursor_x, uint8_t cursor_y, const uint8_t *font, int32_t displayAlt) {      
-      if (/*ft unit preference*/ false) displayAlt = displayAlt *100 / 3048; // convert cm to ft
+      if (UNITS_alt) displayAlt = displayAlt *100 / 3048; // convert cm to ft
       else displayAlt /= 100;    //convert from cm to m
 
       u8g2.setCursor(cursor_x, cursor_y);  

@@ -47,6 +47,8 @@ void display_clear(void);
 void display_satellites(uint16_t x, uint16_t y, uint16_t size);
 void display_battery_icon(uint16_t x, uint16_t y, uint8_t battery_pct);
 
+void display_alt(uint8_t cursor_x, uint8_t cursor_y, const uint8_t *font, int32_t displayAlt);
+
 void display_drawTrianglePointer(uint16_t x, uint16_t y, float angle, uint16_t radius);
 
 void display_test_bat_icon(void);
