@@ -127,9 +127,16 @@ void VarioMenuPage::setting_change(int8_t dir, uint8_t state, uint8_t count) {
         }
       }
       break;
-    case cursor_vario_back:
-      //if (dir == 0) 
-      if (state == RELEASED) mainMenuPage.backToMainMenu();
+    case cursor_vario_back:     
+      if (state == RELEASED) {
+        speaker_playSound(fx_cancel);
+        settings_save(); 
+        mainMenuPage.backToMainMenu();
+      } else if (state == HELD) {
+        speaker_playSound(fx_exit);
+        settings_save(); 
+        mainMenuPage.quitMenu();        
+      }      
       break;
   }
 }

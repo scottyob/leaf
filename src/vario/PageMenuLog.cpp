@@ -7,6 +7,7 @@
 #include "fonts.h"
 #include "settings.h"
 #include "speaker.h"
+#include "log.h"
 
 
 enum log_menu_items { 
@@ -75,15 +76,16 @@ void LogMenuPage::draw() {
           else u8g2.print("C");
           break;
         case cursor_units_hours:
-          if (UNITS_hours) u8g2.print("12h");
-          else u8g2.print("24h");
+          if (flightTimer_isRunning()) u8g2.print("STOP");
+          else u8g2.print("START");
           break;
         case cursor_units_back:
-          u8g2.print("<-");
+          u8g2.print((char)124);
           break;        
       }
     u8g2.setDrawColor(1);
     }
+    display_flightTimer(4, 170, false);
   } while ( u8g2.nextPage() ); 
 }
 
@@ -109,12 +111,21 @@ void LogMenuPage::setting_change(int8_t dir, uint8_t state, uint8_t count) {
 
       break;
     case cursor_units_hours:
-
+      if (dir == 0) {
+        if (state == RELEASED) flightTimer_toggle();
+        else if (state == HELD) flightTimer_reset();
+      }
       break;
     case cursor_units_back:
-      //if (dir == 0) 
-      if (state == RELEASED) mainMenuPage.backToMainMenu();
-      break;
+      if (state == RELEASED) {
+        speaker_playSound(fx_cancel);
+        settings_save(); 
+        mainMenuPage.backToMainMenu();
+      } else if (state == HELD) {
+        speaker_playSound(fx_exit);
+        settings_save(); 
+        mainMenuPage.quitMenu();        
+      }      
   }
 }
 

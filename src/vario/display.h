@@ -23,7 +23,7 @@ enum display_page_actions {
   page_home,    // go to home screen (probably thermal page)
   page_prev,    // go to page -1
   page_next,    // go to page +1
-  page_back     // go to previous page (i.e. step back in a menu tree, or cancel a dialog page back to previous page)
+  page_back     // go to page we were just on before (i.e. step back in a menu tree, or cancel a dialog page back to previous page)
 };
 
 enum display_main_pages {  
@@ -47,7 +47,10 @@ void display_clear(void);
 void display_satellites(uint16_t x, uint16_t y, uint16_t size);
 void display_battery_icon(uint16_t x, uint16_t y, uint8_t battery_pct);
 
-void display_alt(uint8_t cursor_x, uint8_t cursor_y, const uint8_t *font, int32_t displayAlt);
+// make these accessible so we can show these fields in other pages
+  void display_alt(uint8_t cursor_x, uint8_t cursor_y, const uint8_t *font, int32_t displayAlt);
+  void display_flightTimer(uint8_t x, uint8_t y, bool shortstring);
+//
 
 void display_drawTrianglePointer(uint16_t x, uint16_t y, float angle, uint16_t radius);
 

@@ -174,6 +174,7 @@ float fakeSpeedIncrement = 3;
 float fakeCourse = 0;
 
 void gps_update() {
+  /*
   //TODO: fill this in
   Serial.print("Valid: ");
   Serial.print(gps.course.isValid());
@@ -185,6 +186,7 @@ void gps_update() {
   Serial.print(gps.altitude.isValid());
   Serial.print(", GPS_alt: ");
   Serial.println(gps.altitude.meters()); 
+  */
 }
 
 

@@ -18,13 +18,13 @@ class DisplayMenuPage : public SettingsMenuPage {
   private:
     static constexpr char * labels[8] = {
       "Back",
-      "Alt:",
-      "Climb:",
-      "Speed:",
-      "Dist:",
-      "Head:",
-      "Temp:",
-      "Time:"
+      "Contrast",
+      "AA",
+      "BB",
+      "CC",
+      "DD",
+      "EE",
+      "FF"
     };
 };
 

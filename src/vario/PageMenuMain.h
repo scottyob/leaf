@@ -14,6 +14,7 @@ class MainMenuPage : public MenuPage {
     bool button_event(uint8_t button, uint8_t state, uint8_t count);
     void draw();
     void backToMainMenu();
+    void quitMenu();
 
   private:
     void draw_main_menu();

@@ -4,10 +4,12 @@
 #include "baro.h"
 #include "gps.h"
 #include "IMU.h"
+#include "speaker.h"
 
 
 uint32_t flightTimerSec = 0;
 bool flightTimerRunning = 1;
+bool flightTimerResetting = 0;
 char flightTimerString[] = "0:00:00";    // H:MM:SS -> 7 characters max for string.  If it hits 10 hours, will re-format to _HH:MM_
 char flightTimerStringShort[] = "00:00"; // MM:SS -> 5 characters max for string.  If it hits 1 hour, will change to HH:MM
 
@@ -70,8 +72,12 @@ void log_update() {
   // TODO
 }
 
+bool flightTimer_isRunning() {
+  return flightTimerRunning;
+}
 
 void flightTimer_start() {
+  speaker_playSound(fx_enter);
   flightTimerRunning = 1;
 
   //starting values
@@ -84,18 +90,27 @@ void flightTimer_stop() {
 
   //ending values
   log_alt_end = baro_getAlt();
+  if (!flightTimerResetting) speaker_playSound(fx_cancel);    // only play sound if not in the process of resetting (the resetting sound will play from the reset function)
+}
+
+void flightTimer_toggle() {  
+  if (flightTimerRunning) flightTimer_stop();
+  else flightTimer_start();
 }
 
 void flightTimer_reset() {
-  flightTimer_stop();
-  flightTimerSec = 0;
+  flightTimerResetting = true;
+  if (flightTimerRunning) flightTimer_stop();
+  speaker_playSound(fx_exit);
+  flightTimerSec = 0;  
+  flightTimerResetting = false;
 }
 
-uint32_t log_getFlightTimerSec() {
+uint32_t flightTimer_getTime() {
   return flightTimerSec;
 }
 
-char * log_getFlightTimerString(bool shortString) {
+char * flightTimer_getString(bool shortString) {
   flightTimer_updateStrings();
   if (shortString) return flightTimerStringShort;
   else return flightTimerString;

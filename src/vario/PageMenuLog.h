@@ -18,13 +18,13 @@ class LogMenuPage : public SettingsMenuPage {
   private:
     static constexpr char * labels[8] = {
       "Back",
-      "Alt:",
-      "Climb:",
-      "Speed:",
-      "Dist:",
-      "Head:",
-      "Temp:",
-      "Time:"
+      "Format",
+      "SaveLog",
+      "AutoStart",
+      "AA",
+      "BB",
+      "CC",
+      "Timer"
     };
 };
 

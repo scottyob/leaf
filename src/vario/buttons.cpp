@@ -24,6 +24,7 @@ uint32_t button_time_elapsed = 0;
 //button actions
 uint8_t button_last = NONE;
 uint8_t button_state = NO_STATE;
+bool button_everHeld = false;   // in a single button-push event, track if it was ever held long enough to reach the "HELD" or "HELD_LONG" states (no we know not to also take action when it is released)
 uint16_t button_min_hold_time = 800;  // time in ms to count a button as "held down"
 uint16_t button_max_hold_time = 3500; // time in ms to start further actions on long-holds
 
@@ -156,15 +157,11 @@ uint16_t buttons_get_hold_count(void) {
 
 // the recurring call to see if user is pressing buttons.  Handles debounce and button state changes
 uint8_t buttons_check(void) {
-
+  button_state = NO_STATE;            // assume no_state on this pass, we'll update if necessary as we go
   uint8_t button = buttons_debounce(buttons_inspectPins());  // check if we have a button press in a stable state
-  
-  //Serial.print("debounced: ");
-  //Serial.println(button);
 
   // reset and exit if bouncing
   if (button == BOUNCE) {
-    button_state = NO_STATE;
     button_hold_counter = 0;
     return NONE;
   }
@@ -172,13 +169,16 @@ uint8_t buttons_check(void) {
   // if we have a state change (low to high or high to low)
   if (button != button_last) { 
 
-    button_hold_counter = 0;
+    button_hold_counter = 0;  // reset hold counter because button changed -- which means it's not being held
 
-    if (button != NONE) {
+    if (button != NONE) {     // if not-none, we have a pressed button!
       button_state = PRESSED;       
-    } else {      
-      button_state = RELEASED;
-      button = button_last;       // we are presently seeing "NONE", which is the release of the previously pressed/held button, so grab that previous button            
+    } else {                  // if it IS none, we have a just-released button
+      if (!button_everHeld)  { // we only want to report a released button if it wasn't already held before.  This prevents accidental immediate 'release' button actions when you let go of a held button
+        button_state = RELEASED;    // just-released
+        button = button_last;       // we are presently seeing "NONE", which is the release of the previously pressed/held button, so grab that previous button to associate with the released state        
+      }
+      button_everHeld = false;    // we can reset this now
     }
   // otherwise we have a non-state change (button is held)
   } else if (button != NONE) {
@@ -186,14 +186,11 @@ uint8_t buttons_check(void) {
       button_state = HELD_LONG;
     } else if (button_time_elapsed >= button_min_hold_time) {
       button_state = HELD;
-    } else {
-      button_state = NO_STATE;
+      button_everHeld = true; // track that we reached the "HELD" state, so we know not to take action also when it's released
     }   
-  } else {
-    button_state = NO_STATE;
-  }
+  } 
 
-  // only "act" on a held button every ~500ms (button_hold_action_time_limit)
+  // only "act" on a held button every ~500ms (button_hold_action_time_limit).  So we'll report NO_STATE in between 'actions' on a held button.  
   if (button_state == HELD || button_state == HELD_LONG) {
     button_hold_action_time_elapsed = millis() - button_hold_action_time_initial;
     if (button_hold_action_time_elapsed < button_hold_action_time_limit) {

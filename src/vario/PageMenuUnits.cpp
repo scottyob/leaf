@@ -111,10 +111,16 @@ void UnitsMenuPage::setting_change(int8_t dir, uint8_t state, uint8_t count) {
     case cursor_units_hours:
       if (state == RELEASED) settings_toggleBoolNeutral(&UNITS_hours);
       break;
-    case cursor_units_back:
-      //if (dir == 0) 
-      if (state == RELEASED) mainMenuPage.backToMainMenu();
-      //display_turnPage(page_back);
+    case cursor_units_back:      
+      if (state == RELEASED) {
+        speaker_playSound(fx_cancel);
+        settings_save(); 
+        mainMenuPage.backToMainMenu();
+      } else if (state == HELD) {
+        speaker_playSound(fx_exit);
+        settings_save(); 
+        mainMenuPage.quitMenu();        
+      }      
       break;
   }
 }

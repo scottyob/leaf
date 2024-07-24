@@ -125,8 +125,16 @@ void SystemMenuPage::setting_change(int8_t dir, uint8_t state, uint8_t count) {
     case cursor_system_reset:
       if (state == RELEASED) 
       break;
-    case cursor_system_back:      
-      if (state == RELEASED) mainMenuPage.backToMainMenu();
+    case cursor_system_back:        
+      if (state == RELEASED) {
+        speaker_playSound(fx_cancel);
+        settings_save(); 
+        mainMenuPage.backToMainMenu();
+      } else if (state == HELD) {
+        speaker_playSound(fx_exit);
+        settings_save(); 
+        mainMenuPage.quitMenu();        
+      }      
       break;
   }
 }

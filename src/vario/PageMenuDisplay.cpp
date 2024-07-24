@@ -78,7 +78,7 @@ void DisplayMenuPage::draw() {
           else u8g2.print("24h");
           break;
         case cursor_units_back:
-          u8g2.print("<-");
+          u8g2.print((char)124);
           break;        
       }
     u8g2.setDrawColor(1);
@@ -110,9 +110,15 @@ void DisplayMenuPage::setting_change(int8_t dir, uint8_t state, uint8_t count) {
 
       break;
     case cursor_units_back:
-      //if (dir == 0) 
-      if (state == RELEASED) mainMenuPage.backToMainMenu();
-      break;
+      if (state == RELEASED) {
+        speaker_playSound(fx_cancel);
+        settings_save(); 
+        mainMenuPage.backToMainMenu();
+      } else if (state == HELD) {
+        speaker_playSound(fx_exit);
+        settings_save(); 
+        mainMenuPage.quitMenu();        
+      }      
   }
 }
 

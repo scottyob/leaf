@@ -71,8 +71,7 @@ void display_turnPage(uint8_t action) {
       if (display_page < 0) display_page = page_last - 1;
       break;
 
-    case page_back:
-      speaker_playSound(fx_cancel);      
+    case page_back:          
       display_page = display_page_prior;      
   }
   
@@ -197,7 +196,7 @@ void display_update_temp_vars() {
       u8g2.setDrawColor(0);
       u8g2.setFont(leaf_6x12);
       u8g2.setCursor(x+2, y-2);
-      u8g2.print(log_getFlightTimerString(shortstring));
+      u8g2.print(flightTimer_getString(shortstring));
       u8g2.setDrawColor(1);
     }
 
@@ -635,7 +634,7 @@ void display_page_thermal() {
     display_flightTimer(2, 156, 0);
     display_flightTimer(2, 176, 1);
     u8g2.setCursor(2, 192);
-    u8g2.print(log_getFlightTimerSec());
+    u8g2.print(flightTimer_getTime());
 
     //u8g2.drawBox(0,154,64,38);
 
