@@ -3,9 +3,9 @@
 
 #include <Arduino.h>
 
+  void log_init(void);
 
 // Update function to run every second
-  void log_init(void);
   void log_update(void);
 
 // Flight Timer functions
@@ -18,12 +18,10 @@
   void flightTimer_updateStrings(void);
   char * flightTimer_getString(bool shortString);
   uint32_t flightTimer_getTime(void);
+//
 
-
-
-
-
-
+// Log Files
+String log_createFileName(void);
 
 
 

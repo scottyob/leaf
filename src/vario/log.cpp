@@ -1,10 +1,12 @@
 
+#include <String>
 
 #include "log.h"
 #include "baro.h"
 #include "gps.h"
 #include "IMU.h"
 #include "speaker.h"
+#include "settings.h"
 
 
 uint32_t flightTimerSec = 0;
@@ -189,7 +191,26 @@ void flightTimer_updateStrings() {
 }
 
 
+String log_createFileName() {
+  
+  String fileTitle = "FlightTrack";
+  String fileDate = String(gps_getDate());
+  int32_t timeInMinutes = (gps.time.hour()*60 + gps.time.minute() + 24*60 + TIME_ZONE) % (24*60);
+  uint8_t timeHours = timeInMinutes/60;
+  uint8_t timeMinutes = timeInMinutes % 60;
+  String fileTime = String(timeHours/10) + String(timeHours % 10) + String(timeMinutes / 10) + String(timeMinutes % 10);
+  
+  Serial.println(timeInMinutes);
+  Serial.println(timeHours);
+  Serial.println(timeMinutes);
+  Serial.println(timeMinutes/10);
+  Serial.println(timeMinutes%10);
 
+  String fileName = fileTitle + "_" + fileDate + "_" + fileTime + ".kml";
+  Serial.println(fileName);
+
+  return fileName;
+}
 
 
 

@@ -27,5 +27,6 @@ void deleteFile(fs::FS &fs, const char * path);
 void testFileIO(fs::FS &fs, const char * path);
 void SDcard_init(void);
 void SDcard_test(void);
+void SDcard_testStuff(void);
 
 #endif

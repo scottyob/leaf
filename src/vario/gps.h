@@ -25,7 +25,6 @@
 #define GPS_RESET         45
 #define GPS_1PPS          46  // INPUT
 
-
 //gps object for fix data 
 extern TinyGPSPlus gps;    
 
@@ -34,13 +33,14 @@ extern TinyGPSPlus gps;
 struct gps_sat_info{bool active; int elevation; int azimuth; int snr;};
 extern struct gps_sat_info sats[MAX_SATELLITES];
 
-
+//enum time_formats {hhmmss, }
 
 void gps_init(void);
 char gps_read_buffer(void);
 bool gps_read_buffer_once(void);
 void gps_update(void);
 
+uint32_t gps_getDate(void);
 
 void gps_test(void);
 void gps_test_sats(void);

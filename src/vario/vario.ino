@@ -86,6 +86,9 @@ void setup() {
 
   // All done!
     Serial.println("Finished Setup");
+
+    Serial.println("Testing SD Card");
+    SDcard_test();
 }
 
 

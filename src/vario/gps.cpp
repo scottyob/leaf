@@ -5,11 +5,11 @@
  */
 #include <Arduino.h>
 #include <TinyGPSPlus.h>
+#include <String.h>
 
 #include "gps.h"
 #include "display.h"
-
-
+#include "settings.h"
 
 // Setup GPS
 #define gpsPort Serial0         // This is the hardware communication port (UART0) for GPS Rx and Tx lines.  We use the default ESP32S3 pins so no need to set them specifically
@@ -82,6 +82,8 @@ void gps_shutdown() {
   gps_sleep();
   gps_setBackupPower(0);  // disable GPS backup supply, so when main system shuts down, gps is totally off
 }
+
+
 
 void gps_init(void) {
 
@@ -294,6 +296,8 @@ void gps_test_sats() {
       int currentMessage = atoi(messageNumber.value());
       if (totalMessages == currentMessage) {
 
+
+        /*
         // Print Sat Info
         Serial.print(F("Sats=")); Serial.print(gps.satellites.value());
         Serial.print(F(" Nums="));
@@ -327,8 +331,27 @@ void gps_test_sats() {
           }
         Serial.println();
 
+        */
+
         //display_satellites(0,3,63);
         display_satellites(0,100,63);
+/*
+          Serial.print("|TIME| isValid: "); Serial.print(gps.time.isValid());
+          Serial.print(", isUpdated:"); Serial.print(gps.time.isUpdated());
+          Serial.print(", hour: "); Serial.print(gps.time.hour());
+          Serial.print(", minute: "); Serial.print(gps.time.minute());
+          Serial.print(", second: "); Serial.print(gps.time.second());
+          Serial.print(", age: "); Serial.print(gps.time.age());
+          Serial.print(", value: "); Serial.print(gps.time.value());
+
+          Serial.print("  |DATE| isValid: "); Serial.print(gps.date.isValid());
+          Serial.print(" isUpdated: "); Serial.print(gps.date.isUpdated());
+          Serial.print(" year: "); Serial.print(gps.date.year());
+          Serial.print(" month: "); Serial.print(gps.date.month());
+          Serial.print(" day: "); Serial.print(gps.date.day());
+          Serial.print(" age: "); Serial.print(gps.date.age());
+          Serial.print(" value: "); Serial.println(gps.date.value());
+*/
 
         // Reset Active
         for (int i=0; i<MAX_SATELLITES; ++i)
@@ -336,6 +359,69 @@ void gps_test_sats() {
       }      
     }
   //}
+}
+
+
+//int32_t dateYYYYMMDD = 20240724;
+
+uint32_t gps_getDate() {
+  uint32_t returnDate = 0;    // return 0 if failure
+  int16_t timeInMinutes = 0;  // used to check if time zone will change the date
+  int8_t timeZoneDay = 0;     // adjust a day if needed
+  uint8_t adjustedDay = 0;
+  uint8_t adjustedMonth = 0;
+  uint8_t adjustedYear = 0;
+
+  if (gps.date.isValid() && gps.time.isValid()) {    
+
+    uint8_t adjustedDay = gps.date.day();
+    uint8_t adjustedMonth = gps.date.month();
+    uint16_t adjustedYear = gps.date.year();
+
+    // check if time zone changes the date
+    timeInMinutes = gps.time.hour() * 60 + gps.time.minute() + TIME_ZONE;   // correct for local time zone
+    if (timeInMinutes < 0)
+      timeZoneDay = -1; 
+    else if (timeInMinutes >= 24*60)           
+      timeZoneDay = 1;
+    adjustedDay = gps.date.day() + timeZoneDay;
+
+    // handle rolling back a day
+    if (adjustedDay == 0) {
+      adjustedMonth -= 1;
+      if (adjustedMonth == 0) {
+        adjustedMonth = 12;
+        adjustedYear -= 1;
+      }
+      if (adjustedMonth == 4 || adjustedMonth == 6 || adjustedMonth == 9 || adjustedMonth == 11)
+        adjustedDay = 30;
+      else if (adjustedMonth == 2) {
+        if (adjustedYear % 4 == 0)
+          adjustedDay = 29;
+        else
+          adjustedDay = 28;
+      } else {
+        adjustedDay = 31;
+      }        
+      //handle rolling forward a day
+    } else if (adjustedDay == 31 && (adjustedMonth == 4 || adjustedMonth == 6 || adjustedMonth == 9 || adjustedMonth == 11)) {
+      adjustedDay = 1;
+      adjustedMonth++;
+    } else if ((adjustedDay == 29 && adjustedMonth == 2 && (adjustedYear % 4) != 0) || (adjustedDay == 30 && adjustedMonth == 2 && (adjustedYear % 4) == 0)) {
+      adjustedDay = 1;
+      adjustedMonth++;
+    } else if (adjustedDay == 32) {
+      adjustedDay = 1;
+      adjustedMonth++;
+      if (adjustedMonth == 13) {
+        adjustedMonth = 1;
+        adjustedYear++;
+      }
+    }
+
+    returnDate = adjustedYear * 10000 + adjustedMonth * 100 + adjustedDay;
+  }
+  return returnDate;
 }
 
 

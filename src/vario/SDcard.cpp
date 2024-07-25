@@ -1,6 +1,10 @@
-
+#include <SD_MMC.h>
+#include <FS.h>
 
 #include "SDcard.h"
+#include "gps.h"
+#include "log.h"
+
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels) {
     Serial.printf("Listing directory: %s\n", dirname);
@@ -170,6 +174,9 @@ void SDcard_init(void) {
 }
 
 void SDcard_test(void) {  
+  Serial.println("SD test stuff");
+  SDcard_testStuff();
+
     uint8_t cardType = SD_MMC.cardType();
 
     if(cardType == CARD_NONE){
@@ -191,18 +198,56 @@ void SDcard_test(void) {
     uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
     Serial.printf("SD_MMC Card Size: %lluMB\n", cardSize);
 
-    listDir(SD_MMC, "/", 0);
+    //listDir(SD_MMC, "/", 2);
     createDir(SD_MMC, "/mydir");
-    listDir(SD_MMC, "/", 0);
-    removeDir(SD_MMC, "/mydir");
     listDir(SD_MMC, "/", 2);
-    writeFile(SD_MMC, "/hello.txt", "Hello ");
-    appendFile(SD_MMC, "/hello.txt", "World!\n");
-    readFile(SD_MMC, "/hello.txt");
-    deleteFile(SD_MMC, "/foo.txt");
-    renameFile(SD_MMC, "/hello.txt", "/foo.txt");
-    readFile(SD_MMC, "/foo.txt");
+    //removeDir(SD_MMC, "/mydir");
+    listDir(SD_MMC, "/", 2);
+    writeFile(SD_MMC, "/mydir/hello.txt", "Hello ");
+    listDir(SD_MMC, "/", 2);
+    createDir(SD_MMC, "/mydir");
+    listDir(SD_MMC, "/", 2);
+
+    //appendFile(SD_MMC, "/hello.txt", "World!\n");
+    //readFile(SD_MMC, "/hello.txt");
+    //deleteFile(SD_MMC, "/foo.txt");
+    //renameFile(SD_MMC, "/hello.txt", "/foo.txt");
+    //readFile(SD_MMC, "/foo.txt");
     testFileIO(SD_MMC, "/test.txt");
     Serial.printf("Total space: %lluMB\n", SD_MMC.totalBytes() / (1024 * 1024));
     Serial.printf("Used space: %lluMB\n", SD_MMC.usedBytes() / (1024 * 1024));
 }
+
+void SD_card_createLogFile() {
+  String saveDir = "/SavedTracks";
+  createDir(SD_MMC, saveDir.c_str());
+  String path = saveDir + log_createFileName();
+  writeFile(SD_MMC, path.c_str(), "The Start Of A New Track File!\n");
+}
+
+void SDcard_writeLogHeader() {
+  appendFile(SD_MMC, "/hello.txt", "World!\n");
+}
+
+void SDcard_writeLogData() {
+
+}
+
+void SDcard_writeLogFooter() {
+
+}
+
+
+void SDcard_testStuff() {
+  Serial.print("isValid: "); Serial.print(gps.time.isValid());
+  Serial.print(", isUpdated:"); Serial.print(gps.time.isUpdated());
+  Serial.print(", hour: "); Serial.print(gps.time.hour());
+  Serial.print(", minute: "); Serial.print(gps.time.minute());
+  Serial.print(", second: "); Serial.print(gps.time.second());
+  Serial.print(", age: "); Serial.print(gps.time.age());
+  Serial.print(", value: "); Serial.println(gps.time.value());
+  
+}
+
+
+
