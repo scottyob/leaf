@@ -30,9 +30,6 @@ char minutes = 0;
 char hours = 0;
 uint16_t heading = 0;
 char string_heading[] = " WNW ";
-char string_satNum[] = "00";
-char string_gpsLat[] = "0000000000";
-char string_gpsLng[] = "0000000000";
 
 U8G2_ST7539_192X64_F_4W_HW_SPI u8g2(U8G2_R3, SPI_SS_LCD, LCD_RS, LCD_RESET);
 
@@ -99,7 +96,7 @@ void display_update() {
       display_page_thermal();
       break;
     case page_sats:
-      gps_test_sats();
+      display_page_satellites();
       break;
     case page_nav:
       display_page_nav();
@@ -650,7 +647,7 @@ void display_page_thermal() {
 *********************************************************************************/
 
 // draw satellite constellation starting in upper left x, y and box size (width = height)
-void display_satellites(uint16_t x, uint16_t y, uint16_t size) {
+void display_page_satellites() {
   u8g2.firstPage();
   do {
 
@@ -678,75 +675,8 @@ void display_satellites(uint16_t x, uint16_t y, uint16_t size) {
         u8g2.setFont(leaf_5h);
         u8g2.drawStr(0, 47, "alt");
 
-
-    // Draw the satellite background
-    u8g2.setDrawColor(0);
-    u8g2.drawBox(x, y, size, size);   // clear the box drawing area
-    u8g2.setDrawColor(1);
-    u8g2.drawCircle(x+size/2, y+size/2, size/2);   // the horizon circle
-    u8g2.drawCircle(x+size/2, y+size/2, size/4);   // the 45deg elevation circle
-
-    // Draw the satellites
-    for (int i = MAX_SATELLITES -1; i>=0; i--) { 
-      if (sats[i].active) {
-        /*
-        Serial.print("act: ");
-        Serial.print(sats[i].active);
-        Serial.print(" el: ");
-        Serial.print(sats[i].elevation);
-        Serial.print(" az: ");
-        Serial.print(sats[i].azimuth);
-        Serial.print(" snr: ");
-        Serial.println(sats[i].snr);
-        */
-
-        // Sat location (on circle display)
-        uint16_t radius = (90 - sats[i].elevation) * size/2 / 90;
-        int16_t sat_x = sin(sats[i].azimuth*PI/180)*radius;
-        int16_t sat_y = - cos(sats[i].azimuth*PI/180)*radius;
-
-        // Draw disc
-        /*
-        u8g2.drawDisc(size/2+sat_x, size/2+sat_y, size/16);
-        u8g2.setDrawColor(0);
-        u8g2.drawCircle(size/2+sat_x, size/2+sat_y, size/16+1);
-        u8g2.setDrawColor(1);
-        */
-
-        // Draw box with numbers
-        uint16_t x_pos = x + size/2 + sat_x;
-        uint16_t y_pos = y + size/2 + sat_y;
-
-        u8g2.setFont(u8g2_font_micro_tr);          // Font for satellite numbers
-        if (sats[i].snr < 20) {                    
-          u8g2.drawFrame(x_pos-5, y_pos-4, 11, 9); // white box with black border if SNR is low
-          u8g2.setDrawColor(0);
-          u8g2.drawBox(x_pos-4, y_pos-3, 9, 7); // erase the gap between frame and text
-          u8g2.setDrawColor(1);
-        } else {
-          u8g2.drawBox(x_pos-4, y_pos-3, 9, 7);    // black box if SNR is high
-          u8g2.setDrawColor(0);                    // .. with white font inside box
-        }
-
-        if (i<9) {
-          u8g2.drawStr(x_pos-3, y_pos+3, "0");
-          x_pos += 4;
-        }
-        u8g2.drawStr(x_pos-3, y_pos+3, itoa(i+1,string_satNum, 10));
-        u8g2.setDrawColor(1);                
-      }
-     
-    }
+    gpsMenuPage.drawConstellation(0,100,63);
     
-   
-    //draw other GPS stuff just for testing purposes
-    u8g2.drawStr(0, size + y + 10, "Lat:");
-    u8g2.setCursor(16, size + y + 10);
-    u8g2.print(gps.location.lat(), 10);
-
-    u8g2.drawStr(0, size + y + 20, "Lon:");
-    u8g2.setCursor(16, size + y + 20);
-    u8g2.print(gps.location.lng(), 10);
 
   } while ( u8g2.nextPage() );
 }

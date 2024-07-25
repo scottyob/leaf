@@ -27,7 +27,8 @@ const char disableVTG [] PROGMEM = "$PAIR062,5,0";  // disable message
 
 
 // Satellite tracking
-struct gps_sat_info sats[MAX_SATELLITES];          // GLOBAL GPS satellite info
+struct gps_sat_info sats[MAX_SATELLITES];          // GLOBAL GPS satellite info for storing values straight from the GPS
+struct gps_sat_info satsDisplay[MAX_SATELLITES];   // Cached version of the sat info for showing on display (this will be re-written each time a total set of new sat info is available)
 TinyGPSCustom totalGPGSVMessages(gps, "GPGSV", 1); // $GPGSV sentence, the first element is how many GSV messages (N) total will be sent
 TinyGPSCustom messageNumber(gps, "GPGSV", 2);      // $GPGSV sentence, second element is the message number (x of N)
 TinyGPSCustom satsInView(gps, "GPGSV", 3);         // $GPGSV sentence, third element is how many satellites in view
@@ -176,6 +177,10 @@ float fakeSpeedIncrement = 3;
 float fakeCourse = 0;
 
 void gps_update() {
+
+  // update sats if we're tracking sat NMEA sentences
+  gps_updateSatList();
+
   /*
   //TODO: fill this in
   Serial.print("Valid: ");
@@ -272,93 +277,111 @@ char gps_read_buffer() {
   return 0;
 }
 
-void gps_test_sats() {
-  // Timing test to see if serial buffer size increase works
-  delay(0);
-
-
-  // Dispatch incoming characters
-//  while (gpsPort.available() > 0) {
-//    gps.encode(gpsPort.read());
-    if (totalGPGSVMessages.isUpdated()) {
-      for (int i=0; i<4; ++i) {
-        int no = atoi(satNumber[i].value());
-        // Serial.print(F("SatNumber is ")); Serial.println(no);
-        if (no >= 1 && no <= MAX_SATELLITES) {
-          sats[no-1].elevation = atoi(elevation[i].value());
-          sats[no-1].azimuth = atoi(azimuth[i].value());
-          sats[no-1].snr = atoi(snr[i].value());
-          sats[no-1].active = true;
-        }
+// copy data from each satellite message into the sats[] array.  Then, if we reach the complete set of sentences, copy the fresh sat data into the satDisplay[] array for showing on LCD screen when needed.
+void gps_updateSatList() {
+  // copy data if we have a complete single sentence
+  if (totalGPGSVMessages.isUpdated()) {
+    for (int i=0; i<4; ++i) {
+      int no = atoi(satNumber[i].value());
+      // Serial.print(F("SatNumber is ")); Serial.println(no);
+      if (no >= 1 && no <= MAX_SATELLITES) {
+        sats[no-1].elevation = atoi(elevation[i].value());
+        sats[no-1].azimuth = atoi(azimuth[i].value());
+        sats[no-1].snr = atoi(snr[i].value());
+        sats[no-1].active = true;
       }
-      
-      int totalMessages = atoi(totalGPGSVMessages.value());
-      int currentMessage = atoi(messageNumber.value());
-      if (totalMessages == currentMessage) {
-
-
-        /*
-        // Print Sat Info
-        Serial.print(F("Sats=")); Serial.print(gps.satellites.value());
-        Serial.print(F(" Nums="));
-        for (int i=0; i<MAX_SATELLITES; ++i)
-          if (sats[i].active)
-          {
-            Serial.print(i+1);
-            Serial.print(F(" "));
-          }
-        Serial.print(F(" Elevation="));
-        for (int i=0; i<MAX_SATELLITES; ++i)
-          if (sats[i].active)
-          {
-            Serial.print(sats[i].elevation);
-            Serial.print(F(" "));
-          }
-        Serial.print(F(" Azimuth="));
-        for (int i=0; i<MAX_SATELLITES; ++i)
-          if (sats[i].active)
-          {
-            Serial.print(sats[i].azimuth);
-            Serial.print(F(" "));
-          }
-        
-        Serial.print(F(" SNR="));
-        for (int i=0; i<MAX_SATELLITES; ++i)
-          if (sats[i].active)
-          {
-            Serial.print(sats[i].snr);
-            Serial.print(F(" "));
-          }
-        Serial.println();
-
-        */
-
-        //display_satellites(0,3,63);
-        display_satellites(0,100,63);
-/*
-          Serial.print("|TIME| isValid: "); Serial.print(gps.time.isValid());
-          Serial.print(", isUpdated:"); Serial.print(gps.time.isUpdated());
-          Serial.print(", hour: "); Serial.print(gps.time.hour());
-          Serial.print(", minute: "); Serial.print(gps.time.minute());
-          Serial.print(", second: "); Serial.print(gps.time.second());
-          Serial.print(", age: "); Serial.print(gps.time.age());
-          Serial.print(", value: "); Serial.print(gps.time.value());
-
-          Serial.print("  |DATE| isValid: "); Serial.print(gps.date.isValid());
-          Serial.print(" isUpdated: "); Serial.print(gps.date.isUpdated());
-          Serial.print(" year: "); Serial.print(gps.date.year());
-          Serial.print(" month: "); Serial.print(gps.date.month());
-          Serial.print(" day: "); Serial.print(gps.date.day());
-          Serial.print(" age: "); Serial.print(gps.date.age());
-          Serial.print(" value: "); Serial.println(gps.date.value());
-*/
-
-        // Reset Active
-        for (int i=0; i<MAX_SATELLITES; ++i)
-          sats[i].active = false;
-      }      
     }
-  //}
+    
+    // If we're on the final sentence, then copy data into the display array
+    int totalMessages = atoi(totalGPGSVMessages.value());
+    int currentMessage = atoi(messageNumber.value());
+    if (totalMessages == currentMessage) {
+      
+      for (int i=0; i<MAX_SATELLITES; ++i){
+        //copy data
+        satsDisplay[i].elevation = sats[i].elevation;
+        satsDisplay[i].azimuth = sats[i].azimuth;
+        satsDisplay[i].snr = sats[i].snr;
+        satsDisplay[i].active = sats[i].active;
+
+        //then negate the source, so it will only be used if it's truly updated again (i.e., received again in an NMEA sat message)
+        sats[i].active = false;
+      }        
+    }      
+  }
+}
+
+void gps_test_sats() {
+  if (totalGPGSVMessages.isUpdated()) {
+    for (int i=0; i<4; ++i) {
+      int no = atoi(satNumber[i].value());
+      // Serial.print(F("SatNumber is ")); Serial.println(no);
+      if (no >= 1 && no <= MAX_SATELLITES) {
+        sats[no-1].elevation = atoi(elevation[i].value());
+        sats[no-1].azimuth = atoi(azimuth[i].value());
+        sats[no-1].snr = atoi(snr[i].value());
+        sats[no-1].active = true;
+      }
+    }
+      
+    int totalMessages = atoi(totalGPGSVMessages.value());
+    int currentMessage = atoi(messageNumber.value());
+    if (totalMessages == currentMessage) {
+      /*
+      // Print Sat Info
+      Serial.print(F("Sats=")); Serial.print(gps.satellites.value());
+      Serial.print(F(" Nums="));
+      for (int i=0; i<MAX_SATELLITES; ++i)
+        if (sats[i].active)
+        {
+          Serial.print(i+1);
+          Serial.print(F(" "));
+        }
+      Serial.print(F(" Elevation="));
+      for (int i=0; i<MAX_SATELLITES; ++i)
+        if (sats[i].active)
+        {
+          Serial.print(sats[i].elevation);
+          Serial.print(F(" "));
+        }
+      Serial.print(F(" Azimuth="));
+      for (int i=0; i<MAX_SATELLITES; ++i)
+        if (sats[i].active)
+        {
+          Serial.print(sats[i].azimuth);
+          Serial.print(F(" "));
+        }
+      
+      Serial.print(F(" SNR="));
+      for (int i=0; i<MAX_SATELLITES; ++i)
+        if (sats[i].active)
+        {
+          Serial.print(sats[i].snr);
+          Serial.print(F(" "));
+        }
+      Serial.println();
+
+      Serial.print("|TIME| isValid: "); Serial.print(gps.time.isValid());
+      Serial.print(", isUpdated:"); Serial.print(gps.time.isUpdated());
+      Serial.print(", hour: "); Serial.print(gps.time.hour());
+      Serial.print(", minute: "); Serial.print(gps.time.minute());
+      Serial.print(", second: "); Serial.print(gps.time.second());
+      Serial.print(", age: "); Serial.print(gps.time.age());
+      Serial.print(", value: "); Serial.print(gps.time.value());
+
+      Serial.print("  |DATE| isValid: "); Serial.print(gps.date.isValid());
+      Serial.print(" isUpdated: "); Serial.print(gps.date.isUpdated());
+      Serial.print(" year: "); Serial.print(gps.date.year());
+      Serial.print(" month: "); Serial.print(gps.date.month());
+      Serial.print(" day: "); Serial.print(gps.date.day());
+      Serial.print(" age: "); Serial.print(gps.date.age());
+      Serial.print(" value: "); Serial.println(gps.date.value());
+      */    
+
+      // Reset Active
+      for (int i=0; i<MAX_SATELLITES; ++i) { sats[i].active = false; }
+    }      
+  }
 }
 
 

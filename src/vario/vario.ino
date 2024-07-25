@@ -214,7 +214,9 @@ void setTasks(void) {
     case 9:
       
       // Tasks every second complete here in the 9th 10ms block.  Pick a unique 100ms block for each task to space things out
-      if (counter_100ms_block == 0) taskman_gps = 1;                          // every second: gps
+
+      // gps update every half second (this avoid any aliasing issues if we keep trying to update GPS in the middle of )
+      if (counter_100ms_block == 0 || counter_100ms_block == 5) taskman_gps = 1;         
       if (counter_100ms_block == 1) taskman_power = 1;                        // every second: power checks      
       if (counter_100ms_block == 2) taskman_log = 1;                          // every second: logging
 

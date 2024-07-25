@@ -43,8 +43,6 @@ void display_init(void);
 void display_update(void);
 void display_clear(void);
 
-
-void display_satellites(uint16_t x, uint16_t y, uint16_t size);
 void display_battery_icon(uint16_t x, uint16_t y, uint8_t battery_pct);
 
 // make these accessible so we can show these fields in other pages
@@ -62,6 +60,7 @@ void display_test_real_3(void);
 void display_test_big(uint8_t page);
 
 
+void display_page_satellites(void);
 void display_page_nav(void);
 void display_page_thermal(void);
 void display_page_charging(void);
