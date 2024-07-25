@@ -27,7 +27,7 @@ enum power_on_states {
   POWER_OFF_USB    // system is OFF, but has USB power.  Keep power usage to a minimum, and just power on display to show battery charge state (when charging) or turn display off and have processor sleep (when not charging)
 };                 //   ... note: we enter POWER_OFF_USB state either from POWER_OFF and then plugging in to USB power (no power button detected during boot) or from POWER_ON with USB plugged in, and user turning off power via pushbutton.
 
-enum power_input_levels {i100mA, i500mA, iMax, iStandby}; 
+enum power_input_levels {iStandby, i100mA, i500mA, iMax}; 
 
 // iMax set by ILIM pin resistor on battery charger chip. Results in 1.348Amps max input (for battery charging AND system load)
 // Note: with this higher input limit, the battery charging will then be limited by the ISET pin resistor value, to approximately 810mA charging current)
@@ -47,6 +47,7 @@ void power_switchToOnState(void);
 
 void power_update(void);
 
+void power_adjustInputCurrent(int8_t dir);
 void power_set_input_current(uint8_t current);
 uint16_t power_getBattLevel(uint8_t value);
 bool power_getBattCharging(void);

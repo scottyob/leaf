@@ -71,7 +71,8 @@ void buttons_update(void) {
           case RELEASED:
             break;
           case HELD:
-            power_set_input_current(i500mA);
+            power_adjustInputCurrent(1);
+
             speaker_playSound(fx_enter);
             break;
         }
@@ -81,7 +82,7 @@ void buttons_update(void) {
           case RELEASED:            
             break;
           case HELD:
-            power_set_input_current(i100mA);
+            power_adjustInputCurrent(-1);
             speaker_playSound(fx_exit);
             break;
         }
@@ -124,7 +125,7 @@ void buttons_update(void) {
             settings_adjustVolumeVario(1);            
             break;
           case HELD:
-            power_set_input_current(i500mA);
+            power_adjustInputCurrent(1);
             speaker_playSound(fx_enter);
             break;
         }
@@ -135,7 +136,7 @@ void buttons_update(void) {
             settings_adjustVolumeVario(-1);            
             break;
           case HELD:
-            power_set_input_current(i100mA);
+            power_adjustInputCurrent(-1);
             speaker_playSound(fx_exit);
             break;
         }

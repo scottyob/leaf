@@ -151,12 +151,21 @@ bool power_getBattCharging() {
   return (!digitalRead(POWER_CHARGE_GOOD)); // logic low is charging, logic high is not
 }
 
+
+void power_adjustInputCurrent(int8_t dir) {
+  int8_t newVal = power_getInputCurrent() + dir;
+  if (newVal > iMax) newVal = iMax;
+  else if (newVal < iStandby) newVal = iStandby;
+  power_set_input_current(newVal);
+}
+
+
+
 uint8_t power_getInputCurrent() {
   return current_setting;
 }
 
 // Note: the Battery Charger Chip has controllable input current (which is then used for both batt charging AND system load).  The battery will be charged with whatever current is remaining after system load.
-
 void power_set_input_current(uint8_t current) {
   current_setting = current;
   switch (current) {
@@ -169,12 +178,12 @@ void power_set_input_current(uint8_t current) {
       digitalWrite(POWER_CHARGE_I1, HIGH);
       digitalWrite(POWER_CHARGE_I2, LOW);
       break;
-    case iMax:      // Approx 1.348A max inpuyt current (set by ILIM pin resistor value).
+    case iMax:      // Approx 1.348A max input current (set by ILIM pin resistor value).
                     // In this case, battery charging will then be limited by the max fast-charge limit set by the ISET pin resistor value (approximately 810mA to the battery).
       digitalWrite(POWER_CHARGE_I1, LOW);
       digitalWrite(POWER_CHARGE_I2, HIGH);
       break;
-    case iStandby:  // USB Suspend mode - turns off charger (and system power?) (TODO: check what this actually does)
+    case iStandby:  // USB Suspend mode - turns off USB input power (no charging or supplemental power, but battery can still power the system)
       digitalWrite(POWER_CHARGE_I1, HIGH);
       digitalWrite(POWER_CHARGE_I2, HIGH);
       break;

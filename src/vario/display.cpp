@@ -18,6 +18,7 @@
 #include "log.h"
 #include "settings.h"
 #include "speaker.h"
+#include "power.h"
 
 //#define GLCD_RS LCD_RS
 //#define GLCD_RESET LCD_RESET
@@ -569,11 +570,11 @@ void display_page_charging() {
 
 
     u8g2.setFont(leaf_6x12);
-    u8g2.setCursor(18, 14);  
-    if      (power_getInputCurrent() == 0)  u8g2.print("100mA");
-    else if (power_getInputCurrent() == 1)  u8g2.print("500mA");
-    else if (power_getInputCurrent() == 2)  u8g2.print("8100mA");
-    else if (power_getInputCurrent() == 3)  u8g2.print("OFF");
+    u8g2.setCursor(18, 14);
+    if      (power_getInputCurrent() == i100mA)  u8g2.print("100mA");
+    else if (power_getInputCurrent() == i500mA)  u8g2.print("500mA");
+    else if (power_getInputCurrent() == iMax)  u8g2.print("810mA");
+    else if (power_getInputCurrent() == iStandby)  u8g2.print(" OFF");
     
     
 

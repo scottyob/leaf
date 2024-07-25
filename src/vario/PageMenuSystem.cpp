@@ -75,10 +75,10 @@ void SystemMenuPage::draw() {
           else u8g2.print("OFF");
           break;
         case cursor_system_charge:
-          if (power_getInputCurrent()) u8g2.print("LOW");
-          else if (power_getInputCurrent()) u8g2.print("MED");
-          else if (power_getInputCurrent()) u8g2.print("HI");
-          else if (power_getInputCurrent()) u8g2.print("OFF");
+          if (power_getInputCurrent() == i100mA) u8g2.print("100");
+          else if (power_getInputCurrent() == i500mA) u8g2.print("500");
+          else if (power_getInputCurrent() == iMax) u8g2.print("MAX");
+          else if (power_getInputCurrent() == iStandby) u8g2.print("OFF");
           break;
         case cursor_system_wifi:
           if (WIFI_ON) u8g2.print("ON");
