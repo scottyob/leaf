@@ -16,6 +16,7 @@ enum system_menu_items {
   cursor_system_volume,
   cursor_system_poweroff,
   cursor_system_charge,
+  cursor_system_ecomode,
   cursor_system_wifi,
   cursor_system_bluetooth,
   cursor_system_reset
@@ -39,7 +40,7 @@ void SystemMenuPage::draw() {
     uint8_t y_spacing = 16;
     uint8_t setting_name_x = 3;
     uint8_t setting_choice_x = 38;    
-    uint8_t menu_items_y[] = {190, 45, 60, 75, 90, 105, 120, 135};
+    uint8_t menu_items_y[] = {190, 45, 60, 75, 90, 105, 120, 135, 150};
     char twoZeros[] = "00";
 
     //first draw cursor selection box
@@ -80,6 +81,10 @@ void SystemMenuPage::draw() {
           else if (power_getInputCurrent() == iMax) u8g2.print("MAX");
           else if (power_getInputCurrent() == iStandby) u8g2.print("OFF");
           break;
+        case cursor_system_ecomode:
+          if (ECO_MODE) u8g2.print("ON");
+          else u8g2.print("OFF");
+          break;
         case cursor_system_wifi:
           if (WIFI_ON) u8g2.print("ON");
           else u8g2.print("OFF");
@@ -116,6 +121,9 @@ void SystemMenuPage::setting_change(int8_t dir, uint8_t state, uint8_t count) {
       break;
     case cursor_system_charge:
       if (state == RELEASED) 
+      break;
+    case cursor_system_ecomode:
+      if (state == RELEASED) settings_toggleBoolOnOff(&ECO_MODE);
       break;
     case cursor_system_wifi:
       if (state == RELEASED) 

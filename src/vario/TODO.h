@@ -29,5 +29,10 @@ Baro sensor
   
 
 
+Bugs and obvservations
+* GPS time shows valid and 4:59pm on boot up, and even keeps time (incrementing minutes), but is incorrect until later (better signal?)
+* Can't always reprogram even though ECO_MODE is turned off (no sleep)
+
+
 
 */

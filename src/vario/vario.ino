@@ -12,6 +12,7 @@
   #include "IMU.h"
   #include "speaker.h"
   #include "log.h"
+  #include "settings.h"
 
 
 // Pinout for ESP32 Leaf V2
@@ -135,7 +136,7 @@ void loop() {
   else Serial.print("FAILED MAIN LOOP HANDLER");
 }
 
-bool sleeping = false;
+bool goToSleep = false;
 uint64_t taskTimeLast = 0;
 uint64_t taskTimeNow = 0;
 uint32_t taskDuration = 0;
@@ -150,20 +151,34 @@ void main_CHARGE_loop() {
 
     display_setPage(page_charging);
     display_update();       // update display based on battery charge state etc
-    buttons_update();       // check buttons for any presses (user can turn ON from charging state)
+    uint8_t buttonPushed = buttons_update();       // check buttons for any presses (user can turn ON from charging state)
     chargeman_doTasks = 0;  // done with tasks this timer cycle
-    sleeping = true;
+    if (buttonPushed == NONE) goToSleep = true; // get ready to sleep if no button is being pushed
   } else {    
-    if (sleeping) {
+    if (goToSleep && ECO_MODE) {  // don't allow sleep if ECO_MODE is off
+      // we don't want to sleep again as soon as we wake up; we want to wait until we've done 'doTasks' before sleeping again
+      goToSleep = false;
+
+      // Wake up if button pushes
+      esp_sleep_enable_ext0_wakeup((gpio_num_t)BUTTON_PIN_CENTER, HIGH);
+      esp_sleep_enable_ext0_wakeup((gpio_num_t)BUTTON_PIN_LEFT, HIGH);    // TODO: we probably only need to wake up with center button
+      esp_sleep_enable_ext0_wakeup((gpio_num_t)BUTTON_PIN_RIGHT, HIGH);
+      esp_sleep_enable_ext0_wakeup((gpio_num_t)BUTTON_PIN_UP, HIGH);
+      esp_sleep_enable_ext0_wakeup((gpio_num_t)BUTTON_PIN_DOWN, HIGH);
+
+      // or wake up with timer
       uint64_t microsNow = micros();
-      uint64_t sleepMicros = sleepTimeStamp + (1000 * (CHARGE_TIMER_LENGTH - 2)) - microsNow;  // sleep until the expected next cycle of CHARGE_TIMER... minus 2 milliseconds to give some buffer);
-      Serial.print("microsNow:    "); Serial.println(microsNow);
-      Serial.print("sleepMicros:  "); Serial.println(sleepMicros);
-      Serial.print("wakeMicros:   "); Serial.println(microsNow + sleepMicros);
-      esp_sleep_enable_timer_wakeup(sleepMicros); //light sleep for 2 seconds
-      //delayMicroseconds(sleepMicros);
-      sleeping = false;
-      //esp_light_sleep_start();        
+      uint64_t sleepMicros = sleepTimeStamp + (1000 * (CHARGE_TIMER_LENGTH - 1)) - microsNow;  // sleep until just 1ms before the expected next cycle of CHARGE_TIMER
+      //Serial.print("microsNow:    "); Serial.println(microsNow);
+      //Serial.print("sleepMicros:  "); Serial.println(sleepMicros);
+      //Serial.print("wakeMicros:   "); Serial.println(microsNow + sleepMicros);
+      
+      if(sleepMicros > 496*1000) sleepMicros = 496*1000;  // ensure we don't go to sleep for too long if there's some math issue (or micros rollover, etc).            
+      esp_sleep_enable_timer_wakeup(sleepMicros);         // set timer to wake up
+      //delayMicroseconds(sleepMicros);                   // use delay instead of actual sleep to test sleep logic (allows us to serial print during 'fake sleep' and also re-program over USB mid-'fake sleep')
+      esp_light_sleep_start();        
+    } else {
+      if (buttons_update() != NONE) Serial.println("we see a button!");
     }
   }
 }

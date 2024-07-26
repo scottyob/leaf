@@ -8,7 +8,7 @@ class SystemMenuPage : public SettingsMenuPage {
   public:
     SystemMenuPage() {
       cursor_position = 0;
-      cursor_max = 7;
+      cursor_max = 8;
     }
     void draw();
 
@@ -16,12 +16,13 @@ class SystemMenuPage : public SettingsMenuPage {
     void setting_change(int8_t dir, uint8_t state, uint8_t count);
 
   private:
-    static constexpr char * labels[8] = {
+    static constexpr char * labels[9] = {
       "Back",
       "TimeZn",
       "Vol",
       "AutoOff",
       "Charge",
+      "EcoMode",
       "Wifi",
       "BT",
       "Reset"      

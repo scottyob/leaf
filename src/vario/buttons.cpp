@@ -46,7 +46,7 @@ uint8_t buttons_init(void) {
   return button;
 }
 
-void buttons_update(void) {
+uint8_t buttons_update(void) {
   // TODO: fill this in to handle button pushes with respect to display interface
   uint8_t which_button = buttons_check();
 //  uint8_t button_state = buttons_get_state();  //TODO: delete this line probably
@@ -143,6 +143,7 @@ void buttons_update(void) {
         break;
     }
   }
+  return which_button;
 }
 
 uint8_t buttons_get_state(void) {

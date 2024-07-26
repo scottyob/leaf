@@ -45,7 +45,8 @@
     #define DEF_TIME_ZONE     				0     // mm (in minutes) UTC -8 (PDT) would therefor be -8*60, or 480.  This allows us to cover all time zones, including the :30 minute and :15 minute ones
     #define DEF_VOLUME_SYSTEM		      1	    // 0=off, 1=low, 2=med, 3=high
     #define DEF_CONTRAST			        10
-    #define DEF_ENTER_BOOTLOAD		    0	    // by default, don't enter bootloader on reset		      
+    #define DEF_ENTER_BOOTLOAD		    0	    // by default, don't enter bootloader on reset		
+    #define DEF_ECO_MODE              0     // default off to allow reprogramming easier.  TODO: switch to 'on' for production release      
     #define DEF_AUTO_OFF				      1	    // 1 = ENABLE, 0 = DISABLE
     #define DEF_WIFI_ON               0     // default wifi off
     #define DEF_BLUETOOTH_ON          0     // default bluetooth off
@@ -79,6 +80,7 @@
     extern int8_t VOLUME_SYSTEM;
     extern int16_t CONTRAST;
     extern bool ENTER_BOOTLOAD;
+    extern bool ECO_MODE;
     extern bool AUTO_OFF;
     extern bool WIFI_ON;
     extern bool BLUETOOTH_ON;

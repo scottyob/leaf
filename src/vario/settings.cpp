@@ -32,6 +32,7 @@
     int8_t VOLUME_SYSTEM;
     int16_t CONTRAST;
     bool ENTER_BOOTLOAD;
+    bool ECO_MODE;
     bool AUTO_OFF;
     bool WIFI_ON;
     bool BLUETOOTH_ON;
@@ -91,6 +92,7 @@ void settings_loadDefaults() {
     VOLUME_SYSTEM = DEF_VOLUME_SYSTEM;
     CONTRAST = DEF_CONTRAST;
     ENTER_BOOTLOAD = DEF_ENTER_BOOTLOAD;
+    ECO_MODE = DEF_ECO_MODE;
     AUTO_OFF = DEF_AUTO_OFF;
     WIFI_ON = DEF_WIFI_ON;
     BLUETOOTH_ON = DEF_BLUETOOTH_ON;
@@ -126,6 +128,7 @@ void settings_retrieve() {
     VOLUME_SYSTEM =   leafPrefs.getChar("VOLUME_SYSTEM");
     CONTRAST =        leafPrefs.getShort("CONTRAST");
     ENTER_BOOTLOAD =  leafPrefs.getBool("ENTER_BOOTLOAD");
+    ECO_MODE =        leafPrefs.getBool("ECO_MODE");
     AUTO_OFF =        leafPrefs.getBool("AUTO_OFF");
     WIFI_ON =         leafPrefs.getBool("WIFI_ON");
     BLUETOOTH_ON =    leafPrefs.getBool("BLUETOOTH_ON");
@@ -169,6 +172,7 @@ void settings_save() {
     leafPrefs.putChar("VOLUME_SYSTEM", VOLUME_SYSTEM);
     leafPrefs.putShort("CONTRAST", CONTRAST);
     leafPrefs.putBool("ENTER_BOOTLOAD", ENTER_BOOTLOAD);
+    leafPrefs.putBool("ECO_MODE", ECO_MODE);
     leafPrefs.putBool("AUTO_OFF", AUTO_OFF);
     leafPrefs.putBool("WIFI_ON", WIFI_ON);
     leafPrefs.putBool("BLUETOOTH_ON", BLUETOOTH_ON);    
