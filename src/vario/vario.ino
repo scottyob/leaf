@@ -30,7 +30,8 @@
   #define CHARGE_TIMER_FREQ 1000    // run at 40Hz 
   #define CHARGE_TIMER_LENGTH 500  // trigger the ISR every 500ms
   void onChargeTimer(void);
-  char chargeman_doTasks = 1;
+  char chargeman_doTasks = 0;     // let the ISR timer set this to 1 so we're on proper timing cycle each time
+  uint64_t sleepTimeStamp = 0;    // track micros() for how long we should sleep in charge mode between actions.
 
   // Counters for system task timer
   char counter_10ms_block = 0;
@@ -103,6 +104,7 @@ void IRAM_ATTR onTaskTimer() {
 
 // Charge Timer Interrupt
 void IRAM_ATTR onChargeTimer() {
+  sleepTimeStamp = micros();
   //do stuff every alarm cycle (default 10ms)
   chargeman_doTasks = 1; // next time through main loop, set tasks to do!
   // wakeup();  // go back to main loop and keep processing stuff that needs doing!
@@ -133,14 +135,36 @@ void loop() {
   else Serial.print("FAILED MAIN LOOP HANDLER");
 }
 
+bool sleeping = false;
+uint64_t taskTimeLast = 0;
+uint64_t taskTimeNow = 0;
+uint32_t taskDuration = 0;
+
 void main_CHARGE_loop() {
-  if (chargeman_doTasks) {
+  if (chargeman_doTasks) {    
+    taskTimeNow = micros();
+    taskDuration = taskTimeNow - taskTimeLast;
+    taskTimeLast = taskTimeNow;
+    Serial.println(" ");
+    Serial.print("taskDuration: "); Serial.println(taskDuration);
+
     display_setPage(page_charging);
     display_update();       // update display based on battery charge state etc
     buttons_update();       // check buttons for any presses (user can turn ON from charging state)
     chargeman_doTasks = 0;  // done with tasks this timer cycle
-  } else {
-    // sleep
+    sleeping = true;
+  } else {    
+    if (sleeping) {
+      uint64_t microsNow = micros();
+      uint64_t sleepMicros = sleepTimeStamp + (1000 * (CHARGE_TIMER_LENGTH - 2)) - microsNow;  // sleep until the expected next cycle of CHARGE_TIMER... minus 2 milliseconds to give some buffer);
+      Serial.print("microsNow:    "); Serial.println(microsNow);
+      Serial.print("sleepMicros:  "); Serial.println(sleepMicros);
+      Serial.print("wakeMicros:   "); Serial.println(microsNow + sleepMicros);
+      esp_sleep_enable_timer_wakeup(sleepMicros); //light sleep for 2 seconds
+      //delayMicroseconds(sleepMicros);
+      sleeping = false;
+      //esp_light_sleep_start();        
+    }
   }
 }
 
