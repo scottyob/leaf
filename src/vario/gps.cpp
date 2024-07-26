@@ -10,6 +10,7 @@
 #include "gps.h"
 #include "display.h"
 #include "settings.h"
+#include "log.h"
 
 // Setup GPS
 #define gpsPort Serial0         // This is the hardware communication port (UART0) for GPS Rx and Tx lines.  We use the default ESP32S3 pins so no need to set them specifically
@@ -25,6 +26,7 @@ const char disableGLL [] PROGMEM = "$PAIR062,1,0";  // disable message
 const char disableGSA [] PROGMEM = "$PAIR062,2,0";  // disable message
 const char disableVTG [] PROGMEM = "$PAIR062,5,0";  // disable message
 
+uint32_t gpsBootReady = 0;
 
 // Satellite tracking
 struct gps_sat_info sats[MAX_SATELLITES];          // GLOBAL GPS satellite info for storing values straight from the GPS
@@ -71,7 +73,22 @@ void gps_enterBackupMode(void) {
 }
 
 void gps_sleep() {
-  gpsPort.write("$PAIR650,0*25"); // shutdown command
+  
+  uint32_t millisNow = millis();
+  uint32_t delayTime = 0;
+  if (millisNow < gpsBootReady)
+    delayTime = gpsBootReady - millisNow;
+  if (delayTime > 300) delayTime = 300;
+  
+  Serial.print("now: "); Serial.println(millisNow);
+  Serial.print("ready: "); Serial.println(gpsBootReady);
+  Serial.print("delay: "); Serial.println(delayTime);
+
+  delay(delayTime);  // don't send a command until the GPS is booted up and ready
+  
+  gpsPort.write("$PAIR650,0*25\r\n"); // shutdown command
+  //delay(100);
+  Serial.println("************ !!!!!!!!!!! GPS SLEEPING COMMAND SENT !!!!!!!!!!! ************");
 }
 
 void gps_wake() {
@@ -96,6 +113,7 @@ void gps_init(void) {
   digitalWrite(GPS_RESET, LOW);   // 
   delay(100);
   digitalWrite(GPS_RESET, HIGH);  // 
+  gpsBootReady = millis() + 300;    // track when GPS was activated; we can't send any commands sooner than ~285ms (we'll use 300ms)
 
   Serial.print("GPS being serial port... ");
   gpsPort.begin(GPSBaud); 
@@ -258,12 +276,16 @@ uint8_t gps_getTurn() {
   return fakeTurn;
 }
 
+bool commandSent = false;
 
 bool gps_read_buffer_once() {
   if (gpsPort.available()) {    
-    gps.encode(gpsPort.read());
+    char a = gpsPort.read();
+    gps.encode(a);
+    //Serial.print(a);
+    //gps.encode(gpsPort.read());    
     return true;
-  } else {
+  } else {        
     return false;
   }
 }
@@ -385,67 +407,80 @@ void gps_test_sats() {
 }
 
 
-//int32_t dateYYYYMMDD = 20240724;
+// Functions to get local date & time with TIME_ZONE applied
 
-uint32_t gps_getDate() {
-  uint32_t returnDate = 0;    // return 0 if failure
   int16_t timeInMinutes = 0;  // used to check if time zone will change the date
-  int8_t timeZoneDay = 0;     // adjust a day if needed
-  uint8_t adjustedDay = 0;
-  uint8_t adjustedMonth = 0;
-  uint8_t adjustedYear = 0;
 
-  if (gps.date.isValid() && gps.time.isValid()) {    
-
-    uint8_t adjustedDay = gps.date.day();
-    uint8_t adjustedMonth = gps.date.month();
-    uint16_t adjustedYear = gps.date.year();
-
-    // check if time zone changes the date
-    timeInMinutes = gps.time.hour() * 60 + gps.time.minute() + TIME_ZONE;   // correct for local time zone
-    if (timeInMinutes < 0)
-      timeZoneDay = -1; 
-    else if (timeInMinutes >= 24*60)           
-      timeZoneDay = 1;
-    adjustedDay = gps.date.day() + timeZoneDay;
-
-    // handle rolling back a day
-    if (adjustedDay == 0) {
-      adjustedMonth -= 1;
-      if (adjustedMonth == 0) {
-        adjustedMonth = 12;
-        adjustedYear -= 1;
-      }
-      if (adjustedMonth == 4 || adjustedMonth == 6 || adjustedMonth == 9 || adjustedMonth == 11)
-        adjustedDay = 30;
-      else if (adjustedMonth == 2) {
-        if (adjustedYear % 4 == 0)
-          adjustedDay = 29;
-        else
-          adjustedDay = 28;
-      } else {
-        adjustedDay = 31;
-      }        
-      //handle rolling forward a day
-    } else if (adjustedDay == 31 && (adjustedMonth == 4 || adjustedMonth == 6 || adjustedMonth == 9 || adjustedMonth == 11)) {
-      adjustedDay = 1;
-      adjustedMonth++;
-    } else if ((adjustedDay == 29 && adjustedMonth == 2 && (adjustedYear % 4) != 0) || (adjustedDay == 30 && adjustedMonth == 2 && (adjustedYear % 4) == 0)) {
-      adjustedDay = 1;
-      adjustedMonth++;
-    } else if (adjustedDay == 32) {
-      adjustedDay = 1;
-      adjustedMonth++;
-      if (adjustedMonth == 13) {
-        adjustedMonth = 1;
-        adjustedYear++;
-      }
+  uint16_t gps_getLocalTimeHHMM() {
+    int16_t LocalTimeHHMM = -1; // use -1 as an error flag
+    if (gps.time.isValid()) {
+      timeInMinutes = gps.time.hour() * 60 + gps.time.minute() + TIME_ZONE;
+      if (timeInMinutes < 0) timeInMinutes += (24*60);            // if time zone moved us into negative time, scoot forward 24 hours.
+      else if (timeInMinutes >= (24*60)) timeInMinutes -= (24*60); // if time zone moved us past one full day, scoot backward 24 hours.
+      LocalTimeHHMM = (timeInMinutes / 60) * 100 + (timeInMinutes % 60);
     }
-
-    returnDate = adjustedYear * 10000 + adjustedMonth * 100 + adjustedDay;
+    return LocalTimeHHMM;
   }
-  return returnDate;
-}
+
+  uint32_t gps_getLocalDate() {
+    uint32_t returnDate = 0;    // return 0 if failure
+    int8_t timeZoneDay = 0;     // to track if we need to adjust a day
+    uint8_t adjustedDay = 0;
+    uint8_t adjustedMonth = 0;
+    uint8_t adjustedYear = 0;
+
+    if (gps.date.isValid() && gps.time.isValid()) {    
+
+      uint8_t adjustedDay = gps.date.day();
+      uint8_t adjustedMonth = gps.date.month();
+      uint16_t adjustedYear = gps.date.year();
+
+      // check if time zone changes the date
+      timeInMinutes = gps.time.hour() * 60 + gps.time.minute() + TIME_ZONE;   // correct for local time zone
+      if (timeInMinutes < 0)
+        timeZoneDay = -1; 
+      else if (timeInMinutes >= 24*60)           
+        timeZoneDay = 1;
+      adjustedDay = gps.date.day() + timeZoneDay;
+
+      // handle rolling back a day
+      if (adjustedDay == 0) {
+        adjustedMonth -= 1;
+        if (adjustedMonth == 0) {
+          adjustedMonth = 12;
+          adjustedYear -= 1;
+        }
+        if (adjustedMonth == 4 || adjustedMonth == 6 || adjustedMonth == 9 || adjustedMonth == 11)
+          adjustedDay = 30;
+        else if (adjustedMonth == 2) {
+          if (adjustedYear % 4 == 0)
+            adjustedDay = 29;
+          else
+            adjustedDay = 28;
+        } else {
+          adjustedDay = 31;
+        }        
+        //handle rolling forward a day
+      } else if (adjustedDay == 31 && (adjustedMonth == 4 || adjustedMonth == 6 || adjustedMonth == 9 || adjustedMonth == 11)) {
+        adjustedDay = 1;
+        adjustedMonth++;
+      } else if ((adjustedDay == 29 && adjustedMonth == 2 && (adjustedYear % 4) != 0) || (adjustedDay == 30 && adjustedMonth == 2 && (adjustedYear % 4) == 0)) {
+        adjustedDay = 1;
+        adjustedMonth++;
+      } else if (adjustedDay == 32) {
+        adjustedDay = 1;
+        adjustedMonth++;
+        if (adjustedMonth == 13) {
+          adjustedMonth = 1;
+          adjustedYear++;
+        }
+      }
+
+      returnDate = adjustedYear * 10000 + adjustedMonth * 100 + adjustedDay;
+    }
+    return returnDate;
+  }
+  //
 
 
 

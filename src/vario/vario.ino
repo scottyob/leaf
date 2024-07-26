@@ -28,7 +28,7 @@
 // Standby system timer (when on USB power and charging battery, but otherwise "off" (i.e., soft off))
   hw_timer_t *charge_timer = NULL;
   #define CHARGE_TIMER_FREQ 1000    // run at 40Hz 
-  #define CHARGE_TIMER_LENGTH 500  // trigger the ISR every 1s
+  #define CHARGE_TIMER_LENGTH 500  // trigger the ISR every 500ms
   void onChargeTimer(void);
   char chargeman_doTasks = 1;
 
@@ -87,8 +87,8 @@ void setup() {
   // All done!
     Serial.println("Finished Setup");
 
-    Serial.println("Testing SD Card");
-    SDcard_test();
+    //Serial.println("Testing SD Card");
+    //SDcard_test();
 }
 
 
@@ -219,6 +219,7 @@ void setTasks(void) {
       if (counter_100ms_block == 0 || counter_100ms_block == 5) taskman_gps = 1;         
       if (counter_100ms_block == 1) taskman_power = 1;                        // every second: power checks      
       if (counter_100ms_block == 2) taskman_log = 1;                          // every second: logging
+      //if (flightTimer_getTime() == 10 && counter_100ms_block == 4) power_sleep_peripherals(); // testing GPS shutdown command
 
       // Update LCD every half-second on the 3rd and 8th 100ms blocks
       if (counter_100ms_block == 3 || counter_100ms_block == 8) taskman_display = 1;  // every half-second: LCD update

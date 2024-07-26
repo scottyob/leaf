@@ -194,7 +194,7 @@ void flightTimer_updateStrings() {
 String log_createFileName() {
   
   String fileTitle = "FlightTrack";
-  String fileDate = String(gps_getDate());
+  String fileDate = String(gps_getLocalDate());
   int32_t timeInMinutes = (gps.time.hour()*60 + gps.time.minute() + 24*60 + TIME_ZONE) % (24*60);
   uint8_t timeHours = timeInMinutes/60;
   uint8_t timeMinutes = timeInMinutes % 60;

@@ -389,7 +389,7 @@ void settings_adjustVolumeSystem(int8_t dir) {
   speaker_playSound(sound); 
 }
 
-uint8_t timeZoneIncrement = 60;   // in tenths of an hour.  This allows us to change and adjust by 05, or half an hour, for some countries that have half-hour time zones.
+uint8_t timeZoneIncrement = 60;   // in minutes.  This allows us to change and adjust by 15 minutes for some regions that have half-hour and quarter-hour time zones.
 void settings_adjustTimeZone(int8_t dir) {
 
   if (dir == 0) { // switch from half-hour to full-hour increments

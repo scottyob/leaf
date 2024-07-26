@@ -184,6 +184,58 @@ void display_update_temp_vars() {
 // Display Components
 // Individual fields that can be called from many different pages, and/or placed in different positions
 
+    void display_clockTime(uint8_t x, uint8_t y) {
+      int16_t localTimeHHMM = gps_getLocalTimeHHMM();
+
+      u8g2.setCursor(x, y);
+      u8g2.setFont(leaf_6x12);
+      u8g2.setDrawColor(1);
+
+      if (localTimeHHMM <= -1) {    // will be -1 if GPS time is not current/valid
+        u8g2.print((char)137);
+        u8g2.print("NOGPS");
+      } else {                      // valid time
+        uint8_t hours = localTimeHHMM/100;
+        uint8_t minutes = localTimeHHMM % 100;
+
+        bool pm = false;
+        if (UNITS_hours) {
+          if (hours > 12) {
+            hours -= 12;
+            pm = true;
+          } else if (hours == 0) {
+            hours == 12;
+          }
+        }
+
+        // hours
+        if (hours < 10) {
+          if (UNITS_hours) u8g2.print(' ');           // blank character for 12 hour time
+          else             u8g2.print('0');           // leading 0 for 24-hour time
+        } else {
+          u8g2.print(hours/10);
+        }
+        u8g2.print(hours % 10);
+        
+        u8g2.print(':');
+
+        // minutes
+        if (minutes < 10) {
+          u8g2.print('0');
+        } else {
+          u8g2.print(minutes/10);
+        }
+        u8g2.print(minutes % 10);
+        
+        if (UNITS_hours) {
+          if (pm) u8g2.print("pm");
+          else    u8g2.print("am");
+        }          
+      }
+    }
+
+  
+
     void display_flightTimer(uint8_t x, uint8_t y, bool shortstring) {
       uint8_t h = 16;
       uint8_t w = 44;
@@ -619,7 +671,7 @@ void display_page_thermal() {
     display_varioBar(13, 111, 14, baro_getClimbRate());
     display_climbRatePointerBox(14, 59, 50, 17, 6, baro_getClimbRate());     // x, y, w, h, triangle size
     
-    display_temp(40, 174, baro_getTemp());
+    display_temp(48, 150, baro_getTemp());
 
     // batt stuff
     display_battIcon(20, 90);
@@ -632,7 +684,9 @@ void display_page_thermal() {
     display_flightTimer(2, 156, 0);
     display_flightTimer(2, 176, 1);
     u8g2.setCursor(2, 192);
-    u8g2.print(flightTimer_getTime());
+    //u8g2.print(flightTimer_getTime()); // just total seconds
+
+    display_clockTime(0, 192);
 
     //u8g2.drawBox(0,154,64,38);
 

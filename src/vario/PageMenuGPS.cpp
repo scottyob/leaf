@@ -153,7 +153,7 @@ void GPSMenuPage::drawConstellation(uint8_t x, uint8_t y, uint16_t size) {
   //draw lat long
     //u8g2.setFont(leaf_5h);
     u8g2.drawStr(0, size + y + 10, "Lat:");
-    u8g2.setCursor(16, size + y + 10);
+    u8g2.setCursor(16+8, size + y + 10);
     u8g2.print(gps.location.lat(), 7);
 
     u8g2.drawStr(0, size + y + 20, "Lon:");

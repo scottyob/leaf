@@ -48,6 +48,7 @@ void display_battery_icon(uint16_t x, uint16_t y, uint8_t battery_pct);
 // make these accessible so we can show these fields in other pages
   void display_alt(uint8_t cursor_x, uint8_t cursor_y, const uint8_t *font, int32_t displayAlt);
   void display_flightTimer(uint8_t x, uint8_t y, bool shortstring);
+  void display_clockTime(uint8_t x, uint8_t y);
 //
 
 void display_drawTrianglePointer(uint16_t x, uint16_t y, float angle, uint16_t radius);

@@ -64,33 +64,34 @@ void power_init_peripherals() {
       speaker_playSound(fx_enter);
     }    
     // then initialize the rest of the devices
+    gps_init();               Serial.println("Finished GPS");    
     spi_init();               Serial.println("Finished SPI");
     display_init();           Serial.println("Finished display");   // u8g2 library initializes SPI bus for itself, so this can come before spi_init()
     //TODO: show loading / splash Screen?
 
     //GLCD_init();            Serial.println("Finished GLCD");    // test SPI object to write directly to LCD (instead of using u8g2 library -- note it IS possible to have both enabled at once)
     baro_init();              Serial.println("Finished Baro");
-    imu_init();               Serial.println("Finished IMU");
-    gps_init();               Serial.println("Finished GPS");    
+    imu_init();               Serial.println("Finished IMU");        
     SDcard_init();            Serial.println("Finished SDcard");
 
     // then put devices to sleep as needed if we're in POWER_OFF_USB state (plugged into USB but vario not actively turned on)
-    if (powerOnState == POWER_OFF_USB) {
+    if (powerOnState == POWER_OFF_USB) {   
+      //delay(35);   
       power_sleep_peripherals();
     }
 }
 
 void power_sleep_peripherals() {
-    Serial.print("sleep_peripherals: ");
-    Serial.println(powerOnState);
+  Serial.print("sleep_peripherals: ");
+  Serial.println(powerOnState);
   //TODO: all the rest of the peripherals not needed while charging
-  gps_sleep();        Serial.println("Shut down GPS");  
+  gps_sleep();        Serial.println("Sleeping GPS");  
   //speaker_sleep();    Serial.println("Shut down speaker");
 }
 
 void power_wake_peripherals() {
   Serial.println("wake_peripherals: ");
-  gps_wake();
+  gps_wake();         
   speaker_wake();
 }
 

@@ -41,7 +41,8 @@ char gps_read_buffer(void);
 bool gps_read_buffer_once(void);
 void gps_update(void);
 
-uint32_t gps_getDate(void);
+uint32_t gps_getLocalDate(void);
+uint16_t gps_getLocalTimeHHMM(void);
 
 void gps_updateSatList(void);
 

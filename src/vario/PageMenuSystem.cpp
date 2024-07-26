@@ -23,7 +23,6 @@ enum system_menu_items {
 
 
 void SystemMenuPage::draw() {
-
   int16_t displayTimeZone = TIME_ZONE;
 
   u8g2.firstPage();
@@ -41,6 +40,7 @@ void SystemMenuPage::draw() {
     uint8_t setting_name_x = 3;
     uint8_t setting_choice_x = 38;    
     uint8_t menu_items_y[] = {190, 45, 60, 75, 90, 105, 120, 135};
+    char twoZeros[] = "00";
 
     //first draw cursor selection box
     u8g2.drawRBox(setting_choice_x-2, menu_items_y[cursor_position]-14, 22, 16, 2);
@@ -49,11 +49,11 @@ void SystemMenuPage::draw() {
     for (int i = 0; i <= cursor_max; i++) {      
       u8g2.setCursor(setting_name_x, menu_items_y[i]);
       u8g2.print(labels[i]);
-      u8g2.setCursor(setting_choice_x, menu_items_y[i]);
+      u8g2.setCursor(setting_choice_x-4, menu_items_y[i]);
       if (i == cursor_position) u8g2.setDrawColor(0);
       else u8g2.setDrawColor(1);
       switch (i) {
-        case cursor_system_timezone:      
+        case cursor_system_timezone:
           // sign
           if (displayTimeZone < 0) {
             u8g2.print('-');
@@ -64,7 +64,7 @@ void SystemMenuPage::draw() {
           //hours, :, minute
           u8g2.print(displayTimeZone/60);
           u8g2.print(':');
-          if (displayTimeZone % 60 == 0) u8g2.print("00");
+          if (displayTimeZone % 60 == 0) u8g2.print(twoZeros);
           else u8g2.print(displayTimeZone % 60);
           break;
         case cursor_system_volume:
@@ -102,6 +102,7 @@ void SystemMenuPage::draw() {
 
 
 void SystemMenuPage::setting_change(int8_t dir, uint8_t state, uint8_t count) {
+  bool redraw = false;
   switch (cursor_position) {
     case cursor_system_timezone:
       if (state == RELEASED && dir != 0) settings_adjustTimeZone(dir);
