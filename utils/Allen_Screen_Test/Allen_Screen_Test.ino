@@ -18,8 +18,8 @@ void GLCD_data(byte data);
 void GLCD_inst(byte data);
 void spi_writeGLCD(byte data);
 
-
-  U8G2_ST75256_JLX16080_F_4W_HW_SPI u8g2(U8G2_R0,  /* cs=*/ SPI_SS_LCD, /* dc=*/ LCD_RS, /* reset=*/ LCD_RESET);
+  
+  U8G2_ST75256_JLX19296_F_4W_HW_SPI u8g2(U8G2_R0,  /* cs=*/ SPI_SS_LCD, /* dc=*/ LCD_RS, /* reset=*/ LCD_RESET);
 
   //U8G2_ST75256_JLX19296_1_4W_SW_SPI(rotation, clock, data, cs, dc [, reset]) [page buffer, size = 192 bytes]
   //U8G2_ST75256_JLX19296_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ SPI_CLK, /* data=*/ SPI_MOSI, /* cs=*/ SPI_SS_LCD, /* dc=*/ LCD_RS, /* reset=*/ LCD_RESET);

@@ -7,15 +7,18 @@
 #include "IMU.h"
 #include "speaker.h"
 #include "settings.h"
+#include "SDcard.h"
 
-
-uint32_t flightTimerSec = 0;
-bool flightTimerRunning = 1;
-bool flightTimerResetting = 0;
-char flightTimerString[] = "0:00:00";    // H:MM:SS -> 7 characters max for string.  If it hits 10 hours, will re-format to _HH:MM_
-char flightTimerStringShort[] = "00:00"; // MM:SS -> 5 characters max for string.  If it hits 1 hour, will change to HH:MM
+// Flight Timer
+  uint32_t flightTimerSec = 0;
+  bool flightTimerRunning = 0;
+  bool flightTimerResetting = 0;
+  char flightTimerString[] = "0:00:00";    // H:MM:SS -> 7 characters max for string.  If it hits 10 hours, will re-format to _HH:MM_
+  char flightTimerStringShort[] = "00:00"; // MM:SS -> 5 characters max for string.  If it hits 1 hour, will change to HH:MM
 
 // values for logbook entries
+  bool logFlightTrackStarted = false;
+
   int32_t log_alt = 0;
   int32_t log_alt_start = 0;
   int32_t log_alt_end = 0;
@@ -23,6 +26,7 @@ char flightTimerStringShort[] = "00:00"; // MM:SS -> 5 characters max for string
   int32_t log_alt_min = 0;
   int32_t log_alt_above_launch = 0;
   int32_t log_alt_above_launch_max = 0;
+  //TODO: add max and min speed
 
   int16_t log_climb = 0;
   int16_t log_climb_max = 0;
@@ -41,37 +45,23 @@ void log_init() {
 // update function to run every second
 void log_update() {
   if (flightTimerRunning) {
-    flightTimerSec += 1;
+    flightTimerSec += 1;  
+
+    // start the Track if needed (we check every update, in case we didn't have a GPS fix.  This way we can start capture as soon as we DO get a fix)
+    if (!logFlightTrackStarted) {
+      if (gps.location.isValid()) {
+        logFlightTrackStarted = true;
+        SDcard_createLogFile();
+      }
+    }
+
+    // save datapoints to the track
+    if (logFlightTrackStarted) {
+      SDcard_writeLogData(log_getKMLCoordinates());
+    }
+
+    log_checkMinMaxValues();    
   }
-
-  //check altitude values for log
-  log_alt = baro_getAlt();
-  log_alt_above_launch = baro_getAltAboveLaunch();
-  if (log_alt > log_alt_max) {
-    log_alt_max = log_alt;
-    if (log_alt_above_launch > log_alt_above_launch_max) log_alt_above_launch_max = log_alt_above_launch; // we only need to check for max above-launch values if we're also setting a new altitude max.
-  } else if (log_alt < log_alt_min) {
-    log_alt_min = log_alt;
-  } 
-
-  //check climb values for log
-  log_climb = baro_getClimbRate();
-  if (log_climb > log_climb_max) {
-    log_climb_max = log_climb;
-  } else if (log_climb < log_climb_min) {
-    log_climb_min = log_climb;
-  } 
-
-  // check temperature values
-  log_temp = baro_getTemp();
-  if (log_temp > log_temp_max) {
-    log_temp_max = log_temp;
-  } else if (log_temp < log_temp_min) {
-    log_temp_min = log_temp;
-  } 
-
-  // save log values in SD card
-  // TODO
 }
 
 bool flightTimer_isRunning() {
@@ -87,12 +77,24 @@ void flightTimer_start() {
   log_alt_start = baro_getAltAtLaunch();  
 }
 
-void flightTimer_stop() {
-  flightTimerRunning = 0;
-
-  //ending values
-  log_alt_end = baro_getAlt();
+void flightTimer_stop() {  
+  // play stopping sound
   if (!flightTimerResetting) speaker_playSound(fx_cancel);    // only play sound if not in the process of resetting (the resetting sound will play from the reset function)
+
+  // finish up log file if timer was running
+  if (flightTimerRunning) {
+
+    //ending values
+    log_alt_end = baro_getAlt();    
+    // TODO: save other min/max values in a csv or similar log file.  Also description of KML file maybe?
+
+    // if a KML track log was started
+    if (logFlightTrackStarted) {
+      SDcard_writeLogFooter();
+      //TODO: other KML file additions; maybe adding description and min/max and other stuff
+    }
+  }
+  flightTimerRunning = 0;
 }
 
 void flightTimer_toggle() {  
@@ -190,6 +192,42 @@ void flightTimer_updateStrings() {
        
 }
 
+void log_checkMinMaxValues() {
+  //check altitude values for log
+  log_alt = baro_getAlt();
+  log_alt_above_launch = baro_getAltAboveLaunch();
+  if (log_alt > log_alt_max) {
+    log_alt_max = log_alt;
+    if (log_alt_above_launch > log_alt_above_launch_max) log_alt_above_launch_max = log_alt_above_launch; // we only need to check for max above-launch values if we're also setting a new altitude max.
+  } else if (log_alt < log_alt_min) {
+    log_alt_min = log_alt;
+  } 
+
+  //check climb values for log
+  log_climb = baro_getClimbRate();
+  if (log_climb > log_climb_max) {
+    log_climb_max = log_climb;
+  } else if (log_climb < log_climb_min) {
+    log_climb_min = log_climb;
+  } 
+
+  // check temperature values
+  log_temp = baro_getTemp();
+  if (log_temp > log_temp_max) {
+    log_temp_max = log_temp;
+  } else if (log_temp < log_temp_min) {
+    log_temp_min = log_temp;
+  } 
+}
+
+
+String log_getKMLCoordinates() {
+  String lonPoint = String(gps.location.lng(), 7);
+  String latPoint = String(gps.location.lat(), 7);  
+  String altPoint = String(gps.altitude.meters(), 2);
+  String logPointStr = lonPoint + "," + latPoint + "," + altPoint + "\n";
+  return logPointStr;
+}
 
 String log_createFileName() {
   

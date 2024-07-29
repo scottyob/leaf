@@ -282,7 +282,7 @@ bool gps_read_buffer_once() {
   if (gpsPort.available()) {    
     char a = gpsPort.read();
     gps.encode(a);
-    //Serial.print(a);
+    Serial.print(a);
     //gps.encode(gpsPort.read());    
     return true;
   } else {        
@@ -414,6 +414,9 @@ void gps_test_sats() {
   uint16_t gps_getLocalTimeHHMM() {
     int16_t LocalTimeHHMM = -1; // use -1 as an error flag
     if (gps.time.isValid()) {
+      Serial.println("GPS TIME");
+      Serial.print(gps.time.hour()); Serial.print(":"); Serial.println(gps.time.minute());
+      Serial.println(" ");
       timeInMinutes = gps.time.hour() * 60 + gps.time.minute() + TIME_ZONE;
       if (timeInMinutes < 0) timeInMinutes += (24*60);            // if time zone moved us into negative time, scoot forward 24 hours.
       else if (timeInMinutes >= (24*60)) timeInMinutes -= (24*60); // if time zone moved us past one full day, scoot backward 24 hours.

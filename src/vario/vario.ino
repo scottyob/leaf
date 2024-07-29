@@ -168,15 +168,19 @@ void main_CHARGE_loop() {
 
       // or wake up with timer
       uint64_t microsNow = micros();
-      uint64_t sleepMicros = sleepTimeStamp + (1000 * (CHARGE_TIMER_LENGTH - 1)) - microsNow;  // sleep until just 1ms before the expected next cycle of CHARGE_TIMER
-      //Serial.print("microsNow:    "); Serial.println(microsNow);
-      //Serial.print("sleepMicros:  "); Serial.println(sleepMicros);
-      //Serial.print("wakeMicros:   "); Serial.println(microsNow + sleepMicros);
-      
+      uint64_t sleepMicros = sleepTimeStamp + (1000 * (CHARGE_TIMER_LENGTH - 1)) - microsNow;  // sleep until just 1ms before the expected next cycle of CHARGE_TIMER      
       if(sleepMicros > 496*1000) sleepMicros = 496*1000;  // ensure we don't go to sleep for too long if there's some math issue (or micros rollover, etc).            
       esp_sleep_enable_timer_wakeup(sleepMicros);         // set timer to wake up
-      //delayMicroseconds(sleepMicros);                   // use delay instead of actual sleep to test sleep logic (allows us to serial print during 'fake sleep' and also re-program over USB mid-'fake sleep')
-      esp_light_sleep_start();        
+
+      // sleep for real if ECO_MODE is set, otherwise 'fake sleep' using delay
+      if (ECO_MODE) {
+        esp_light_sleep_start();        
+      } else {
+        Serial.print("microsNow:    "); Serial.println(microsNow);
+        Serial.print("sleepMicros:  "); Serial.println(sleepMicros);
+        Serial.print("wakeMicros:   "); Serial.println(microsNow + sleepMicros);
+        delayMicroseconds(sleepMicros);                   // use delay instead of actual sleep to test sleep logic (allows us to serial print during 'fake sleep' and also re-program over USB mid-'fake sleep')
+      }
     } else {
       if (buttons_update() != NONE) Serial.println("we see a button!");
     }

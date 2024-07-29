@@ -4,6 +4,7 @@
 #include "SDcard.h"
 #include "gps.h"
 #include "log.h"
+#include "kml.h"
 
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels) {
@@ -218,23 +219,33 @@ void SDcard_test(void) {
     Serial.printf("Used space: %lluMB\n", SD_MMC.usedBytes() / (1024 * 1024));
 }
 
-void SD_card_createLogFile() {
-  String saveDir = "/SavedTracks";
+
+
+// Creating and saving log files to SDCard
+
+String saveDir = "/Tracks";
+String currentTrackFile;
+bool trackFileStarted = false;
+
+void SDcard_createLogFile() {
+  
   createDir(SD_MMC, saveDir.c_str());
-  String path = saveDir + log_createFileName();
-  writeFile(SD_MMC, path.c_str(), "The Start Of A New Track File!\n");
+  currentTrackFile = saveDir + log_createFileName();
+  writeFile(SD_MMC, currentTrackFile.c_str(), KMLtrackHeader);
+  trackFileStarted = true;
 }
 
 void SDcard_writeLogHeader() {
   appendFile(SD_MMC, "/hello.txt", "World!\n");
 }
 
-void SDcard_writeLogData() {
-
+void SDcard_writeLogData(String coordinates) {
+  //String logData = log_getKMLCoordinates();
+  appendFile(SD_MMC, currentTrackFile.c_str(), coordinates.c_str());
 }
 
 void SDcard_writeLogFooter() {
-
+  appendFile(SD_MMC, currentTrackFile.c_str(), KMLtrackFooter);
 }
 
 

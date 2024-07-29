@@ -17,7 +17,8 @@ Firmware only
   Partition and Non volatile storage (for fonts, user settings, etc)
 
 
-
+gx:track kml intro:
+https://www.avenza.com/resources/blog/2016/11/30/difference-between-lines-and-tracks-when-exporting-from-avenza-maps/#:~:text=A%20Linestring%20element%20contains%20a,degrees%20and%20elevations%20in%20meters.&text=Tracks%20use%20the%20KML%20element,Track%E2%80%9D%20which%20contains%20several%20tags.&text=There%20are%20equal%20numbers%20of%20each%20of%20these%20tags.
 
 done: UART
 done: VSPI 

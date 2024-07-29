@@ -22,9 +22,8 @@
 
 // Log Files
 String log_createFileName(void);
-
-
-
+String log_getKMLCoordinates(void);
+void log_checkMinMaxValues(void);
 
 
 
