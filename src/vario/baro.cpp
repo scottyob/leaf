@@ -125,6 +125,9 @@ int32_t baro_getAltAtLaunch() {
   return P_ALT_launch;
 }
 
+int32_t baro_getAltInitial() {
+  return P_ALTinitial;
+}
 
 void baro_updateFakeNumbers(void) {
   fakeAlt = (float)(100 * change);
@@ -331,7 +334,7 @@ void baro_init(void)
     lastAlt = P_ALT;		          // assume we're stationary to start (previous Alt = Current ALt, so climb rate is zero)
     P_ALTfiltered = P_ALT;			  // filtered value should start with first reading
     P_ALTinitial = P_ALT;	        // also save first value to use as starting point    
-    P_ALT_launch = P_ALT;         // save the starting value 
+    P_ALT_launch = P_ALT;         // save the starting value as launch altitude (this will be updated when timer starts)
     P_ALTregression = P_ALT;
     
 

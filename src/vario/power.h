@@ -10,16 +10,24 @@
 #include <Arduino.h>
 
 //Pinout for Leaf V3.2.0
-#define POWER_CHARGE_I1   39
-#define POWER_CHARGE_I2   40
-#define POWER_LATCH       48  
-#define POWER_CHARGE_GOOD 47  // INPUT
-#define BATT_SENSE         1  // INPUT ADC
+  #define POWER_CHARGE_I1   39
+  #define POWER_CHARGE_I2   40
+  #define POWER_LATCH       48  
+  #define POWER_CHARGE_GOOD 47  // INPUT
+  #define BATT_SENSE         1  // INPUT ADC
 
-#define BATT_FULL_MV     4080  // mV full battery on which to base % full (100%)
-#define BATT_EMPTY_MV    3250  // mV empty battery on which to base % full (0%)
-#define BATT_SHUTDOWN_MV 3200  // mV at which to shutdown the system to prevent battery over-discharge 
-//Note: the battery also has over discharge protection, but we don't fully trust it, plus we want to shutdown while we have power to save logs etc
+// Battery Threshold values
+  #define BATT_FULL_MV     4080  // mV full battery on which to base % full (100%)
+  #define BATT_EMPTY_MV    3250  // mV empty battery on which to base % full (0%)
+  #define BATT_SHUTDOWN_MV 3200  // mV at which to shutdown the system to prevent battery over-discharge 
+  //Note: the battery apparently also has over discharge protection, but we don't fully trust it, plus we want to shutdown while we have power to save logs etc
+
+// Auto-Power-Off Threshold values
+  #define AUTO_OFF_MAX_SPEED   3     // mph max -- must be below this speed for timer to auto-stop
+  #define AUTO_OFF_MAX_ACCEL   10    // Max accelerometer signal 
+  #define AUTO_OFF_MAX_ALT    400    // cm altitude change for timer auto-stop
+  #define AUTO_OFF_MIN_SEC     20    // seconds of low speed / low accel for timer to auto-stop
+
 
 enum power_on_states {  
   POWER_OFF,       // power off we'll never use, because chip is unpowered and not running
@@ -46,6 +54,7 @@ void power_wake_peripherals(void);
 void power_switchToOnState(void);
 
 void power_update(void);
+bool power_autoOff(bool dontResetCounter);
 
 void power_adjustInputCurrent(int8_t dir);
 void power_set_input_current(uint8_t current);

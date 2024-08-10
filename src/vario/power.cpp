@@ -126,8 +126,48 @@ void power_update() {
   //TODO: fill this in
   // stuff like checking batt state, checking auto-off, etc
 
+  // check if we should auto turn off 
+  if (power_autoOff(true)) {
+    power_shutdown();
+  }
 }
 
+
+// check if we should turn off from  inactivity
+uint8_t autoOffCounter = 0;
+int32_t autoOffAltitude = 0;
+
+bool power_autoOff(bool dontResetCounter) {
+  bool autoShutOff = false;  // start with assuming we're not going to turn off
+
+  // dontResetCounter argument allows calling this function when, for example, a button is pushed, to reset the counter due to activity.
+  if (!dontResetCounter) {
+    autoOffCounter = 0;
+  } else {
+    // we will auto-stop only if BOTH the GPS speed AND the Altitude change trigger the stopping thresholds.
+
+    // First check if altitude is stable
+    uint32_t altDifference = baro_getAlt() - autoOffAltitude;    
+    if (altDifference < 0) altDifference *= -1;
+    if (altDifference < AUTO_OFF_MAX_ALT) {
+
+      // then check if GPS speed is slow enough
+      if (gps.speed.mph() < AUTO_OFF_MAX_SPEED) {
+        autoOffCounter++;
+        if (autoOffCounter >= AUTO_OFF_MIN_SEC) {
+          autoShutOff = true;
+        }
+      } else {
+        autoOffCounter = 0;
+      }
+
+    } else {
+      autoOffAltitude += altDifference;  //reset the comparison altitude to present altitude, since it's still changing
+    }
+  }
+
+  return autoShutOff;
+}
 
 
 uint32_t ADC_value;

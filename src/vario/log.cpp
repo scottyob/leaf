@@ -44,14 +44,15 @@ void log_init() {
 
 // update function to run every second
 void log_update() {
+
+  // everything log-related if the timer IS RUNNING
   if (flightTimerRunning) {
     flightTimerSec += 1;  
 
-    // start the Track if needed (we check every update, in case we didn't have a GPS fix.  This way we can start capture as soon as we DO get a fix)
+    // start the Track if needed (we check every update, in case we didn't have a GPS fix.  This way we can start track log writing as soon as we DO get a fix)
     if (!logFlightTrackStarted) {
-      if (gps.location.isValid()) {
-        logFlightTrackStarted = true;
-        SDcard_createLogFile();
+      if (gps.location.isValid()) {                
+        logFlightTrackStarted = SDcard_createLogFile(); //flag that we've started a log if we actually have successfully started a log file on SDCard.  If this returns false, we can keep trying to save a log file until it's successful.
       }
     }
 
@@ -60,55 +61,134 @@ void log_update() {
       SDcard_writeLogData(log_getKMLCoordinates());
     }
 
-    log_checkMinMaxValues();    
-  }
-}
+    // capture any records for this flight
+    log_checkMinMaxValues();  
 
-bool flightTimer_isRunning() {
-  return flightTimerRunning;
-}
+    // finally, check if we should auto-stop the timer because we've been sitting idle for long enough
+    if (flightTimer_autoStop()) {  
+      flightTimer_stop();
+    } 
 
-void flightTimer_start() {
-  speaker_playSound(fx_enter);
-  flightTimerRunning = 1;
-
-  //starting values
-  baro_resetLaunchAlt();
-  log_alt_start = baro_getAltAtLaunch();  
-}
-
-void flightTimer_stop() {  
-  // play stopping sound
-  if (!flightTimerResetting) speaker_playSound(fx_cancel);    // only play sound if not in the process of resetting (the resetting sound will play from the reset function)
-
-  // finish up log file if timer was running
-  if (flightTimerRunning) {
-
-    //ending values
-    log_alt_end = baro_getAlt();    
-    // TODO: save other min/max values in a csv or similar log file.  Also description of KML file maybe?
-
-    // if a KML track log was started
-    if (logFlightTrackStarted) {
-      SDcard_writeLogFooter();
-      //TODO: other KML file additions; maybe adding description and min/max and other stuff
+  } else { // if timer NOT running, check if we should auto-start it
+    if (flightTimer_autoStart()) {
+      flightTimer_start();
     }
   }
-  flightTimerRunning = 0;
 }
 
-void flightTimer_toggle() {  
-  if (flightTimerRunning) flightTimer_stop();
-  else flightTimer_start();
-}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Auto Start-Stop check functions.
 
-void flightTimer_reset() {
-  flightTimerResetting = true;
-  if (flightTimerRunning) flightTimer_stop();
-  speaker_playSound(fx_exit);
-  flightTimerSec = 0;  
-  flightTimerResetting = false;
-}
+  uint8_t autoStartCounter = 0;
+
+  bool flightTimer_autoStart() {
+    bool startTheTimer = false;  // default to not auto-start
+
+    // we will auto-start if EITHER the GPS speed or the Altitude change triggers the starting thresholds.
+
+    // keep track of how many times (seconds) we've been continuously over the min speed threshold
+    if (gps.speed.mph() > AUTO_START_MIN_SPEED) {
+      autoStartCounter++;
+      if (autoStartCounter >= AUTO_START_MIN_SEC) {
+        startTheTimer = true;
+      }
+    } else {
+      autoStartCounter = 0;
+    }
+
+    // check if current altitude has changed enough from startup to trigger timer start
+    uint32_t altDifference = baro_getAlt() - baro_getAltInitial();
+    if (altDifference < 0) altDifference *= -1;
+    if (altDifference > AUTO_START_MIN_ALT) {
+      startTheTimer = true;
+    }
+
+    return startTheTimer;
+  }
+
+  uint8_t autoStopCounter = 0;
+  int32_t autoStopAltitude = 0;
+
+  bool flightTimer_autoStop() {
+    bool stopTheTimer = false;  // default to not auto-stop
+
+    // we will auto-stop only if BOTH the GPS speed AND the Altitude change trigger the stopping thresholds.
+
+    // First check if altitude is stable
+    uint32_t altDifference = baro_getAlt() - autoStopAltitude;    
+    if (altDifference < 0) altDifference *= -1;
+    if (altDifference < AUTO_STOP_MAX_ALT) {
+
+      // then check if GPS speed is slow enough
+      if (gps.speed.mph() < AUTO_STOP_MAX_SPEED) {
+        autoStopCounter++;
+        if (autoStopCounter >= AUTO_STOP_MIN_SEC) {
+          stopTheTimer = true;
+        }
+      } else {
+        autoStopCounter = 0;
+      }
+
+    } else {
+      autoStopAltitude += altDifference;  //reset the comparison altitude to present altitude, since it's still changing
+    }
+
+    return stopTheTimer;
+  }
+
+
+
+//////////////////////////////////////////////////////////////////////////////////
+// FLight Timer Management Functions
+
+  bool flightTimer_isRunning() {
+    return flightTimerRunning;
+  }
+
+  void flightTimer_start() {
+    speaker_playSound(fx_enter);
+    flightTimerRunning = 1;
+
+    //starting values
+    baro_resetLaunchAlt();
+    log_alt_start = baro_getAltAtLaunch();  
+  }
+
+  void flightTimer_stop() {  
+    // play stopping sound
+    if (!flightTimerResetting) speaker_playSound(fx_cancel);    // only play sound if not in the process of resetting (the resetting sound will play from the reset function)
+
+    // finish up log file if timer was running
+    if (flightTimerRunning) {
+
+      //ending values
+      log_alt_end = baro_getAlt();    
+      // TODO: save other min/max values in a csv or similar log file.  Also description of KML file maybe?
+
+      // if a KML track log was started
+      if (logFlightTrackStarted) {
+        logFlightTrackStarted = false;
+        SDcard_writeLogFooter();
+        //TODO: other KML file additions; maybe adding description and min/max and other stuff
+      }
+    }
+    flightTimerRunning = 0;
+  }
+
+  void flightTimer_toggle() {  
+    if (flightTimerRunning) flightTimer_stop();
+    else flightTimer_start();
+  }
+
+  void flightTimer_reset() {
+    flightTimerResetting = true;
+    if (flightTimerRunning) flightTimer_stop();
+    speaker_playSound(fx_exit);
+    flightTimerSec = 0;  
+    flightTimerResetting = false;
+  }
+
+
 
 uint32_t flightTimer_getTime() {
   return flightTimerSec;
@@ -188,8 +268,6 @@ void flightTimer_updateStrings() {
       flightTimerStringShort[++position] = '0' + secs/10;
       flightTimerStringShort[++position] = '0' + secs % 10;
     }
-    
-       
 }
 
 void log_checkMinMaxValues() {
@@ -249,20 +327,3 @@ String log_createFileName() {
 
   return fileName;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

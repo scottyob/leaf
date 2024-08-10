@@ -18,71 +18,139 @@ void GLCD_data(byte data);
 void GLCD_inst(byte data);
 void spi_writeGLCD(byte data);
 
+
+
   
-  U8G2_ST75256_JLX19296_F_4W_HW_SPI u8g2(U8G2_R0,  /* cs=*/ SPI_SS_LCD, /* dc=*/ LCD_RS, /* reset=*/ LCD_RESET);
+  U8G2_ST75256_WO256X128_F_4W_HW_SPI u8g2(U8G2_R3,  /* cs=*/ SPI_SS_LCD, /* dc=*/ LCD_RS, /* reset=*/ LCD_RESET);
+    // works with June Huang
+
+  //U8G2_ST75256_JLX256128_F_4W_HW_SPI u8g2(U8G2_R3,  /* cs=*/ SPI_SS_LCD, /* dc=*/ LCD_RS, /* reset=*/ LCD_RESET);
+
+  //U8G2_ST75256_JLX19296_F_4W_HW_SPI u8g2(U8G2_R3,  /* cs=*/ SPI_SS_LCD, /* dc=*/ LCD_RS, /* reset=*/ LCD_RESET);
 
   //U8G2_ST75256_JLX19296_1_4W_SW_SPI(rotation, clock, data, cs, dc [, reset]) [page buffer, size = 192 bytes]
-  //U8G2_ST75256_JLX19296_1_4W_SW_SPI u8g2(U8G2_R0, /* clock=*/ SPI_CLK, /* data=*/ SPI_MOSI, /* cs=*/ SPI_SS_LCD, /* dc=*/ LCD_RS, /* reset=*/ LCD_RESET);
+
+  //U8G2_ST75256_JLX19296_1_4W_SW_SPI u8g2(U8G2_R1, /* clock=*/ SPI_CLK, /* data=*/ SPI_MOSI, /* cs=*/ SPI_SS_LCD, /* dc=*/ LCD_RS, /* reset=*/ LCD_RESET);
+    // works with alice GREEN
+
+uint8_t contrast_setting = 210;
+uint8_t drawColorSetting = 1;
 
 void setup() {
   Serial.begin(115200);
   delay(500);
-  pinMode(SPI_SS_LCD, OUTPUT);
-  digitalWrite(SPI_SS_LCD, HIGH);
+  Serial.println("Starting Setup");
 
-  SPI.begin(SPI_CLK, SPI_MISO, SPI_MOSI, SPI_SS_LCD);
+  // SPI Setup 
+    SPI.begin(SPI_CLK, SPI_MISO, SPI_MOSI, SPI_SS_LCD);
+    pinMode(SPI_SS_LCD, OUTPUT);
+    digitalWrite(SPI_SS_LCD, HIGH);
+    // additional LCD pins  
+      pinMode(LCD_RESET, OUTPUT);
+      pinMode(LCD_RS, OUTPUT);
 
+  // start u8g2 object
+    //u8g2.setBusClock(1000000);
+    bool result = u8g2.begin();
+    Serial.print("Result of u8g2.begin() was ");
+    Serial.println(result);
 
-  // put your setup code here, to run once:
-  pinMode(SPI_SS_LCD, OUTPUT);
-  pinMode(LCD_RESET, OUTPUT);
-  pinMode(LCD_RS, OUTPUT);
-  //u8g2.setBusClock(1000000);
-  //u8g2.begin();
+  // configure u8g2
+    //u8g2.setContrast(163);
+    //u8g2.clear();
+    //u8g2.sendF("c", 0b00100010); // all pixels off
+    //u8g2.sendF("ca", 0b10111100, 0b00000010);
   
-
-  //u8g2.setContrast(163);
-  //u8g2.clear();
-  //u8g2.sendF("c", 0b00100010); // all pixels off
-  //u8g2.sendF("ca", 0b10111100, 0b00000010);
-  //Serial.print("Result of u8g2.begin() was ");
-  //Serial.println(result);
-
-  GLCD_init();
-
+  //GLCD_init();
   Serial.println("done with setup");
+
+  u8g2.setContrast(contrast_setting);
 }
 
-uint8_t contrast_setting = 160;
+
 
 void loop() {
-    Serial.println("GO!");
-    
-    GLCD_inst(0b01011100);  //write data starting at 0
-      for (int i=0; i<3584; i++){
-          GLCD_data(0b00000000);    //clear LCD
-        delay(1);
+  //u8g2.setContrast(122);  //alice display
+  while(1) {
+  // DRAW BOX
+    Serial.println("u8g2 drawing start");
+    u8g2.firstPage();
+    do { 
+
+      for (int i = 96; i > 2; i-=3) {
+      u8g2.setDrawColor(drawColorSetting);
+      u8g2.drawBox(0,0,i,i*2);   
+      if (drawColorSetting) drawColorSetting--;
+      else drawColorSetting++;
       }
-    
-    delay(2000);
+      
+    } while ( u8g2.nextPage() ); 
 
-    GLCD_inst(0b01011100);  //write data starting at 0
-    display_test_big(3);  
-    display_test_big(4);  
+    delay(1000);
+    if (drawColorSetting) drawColorSetting--;
+    else drawColorSetting++;
+    Serial.println("u8g2 drawing end");
     while(1) {}
+  }
 
-    for (int i=1; i<5; i++) {
-      display_test_big(i);  
-      delay(2000);
+
+  /*
+  // Cycle Contrast
+  while (1) {
+
+    //GLCD_inst(0b10000001); //set Contrast
+    //GLCD_inst(contrast_setting++); //contrast value
+
+    Serial.println(contrast_setting);
+    u8g2.setContrast(contrast_setting++);
+    if (contrast_setting < 190) contrast_setting = 190;
+    delay(500);
+  }
+
+*/
+  
+
+
+  Serial.println("moving on to other things");
+
+
+
+  Serial.println("GO!");
+  
+  while (1) {
+  GLCD_inst(0b01011100);  //write data starting at 0
+    Serial.println("going light");
+    for (int i=0; i<2304; i++){
+        GLCD_data(0b00000000);    //clear LCD
+      delay(1);
+    }
+    Serial.println("going dark");
+   for (int i=0; i<2304; i++){
+        GLCD_data(0b11111111);    //clear LCD
+      delay(1);
+    }
+    
+  }
+
+  delay(2000);
+
+  GLCD_inst(0b01011100);  //write data starting at 0
+  display_test_big(3);  
+  display_test_big(4);  
+  while(1) {}
+
+  for (int i=1; i<5; i++) {
+    display_test_big(i);  
+    delay(2000);
+  }
+
+  GLCD_inst(0b01011100);  //write data starting at 0
+    for (int i=0; i<2304; i++){
+        GLCD_data(0b11111111);    //write LCD
+      delay(1);
     }
 
-    GLCD_inst(0b01011100);  //write data starting at 0
-      for (int i=0; i<3584; i++){
-          GLCD_data(0b11111111);    //write LCD
-        delay(1);
-      }
-
-    delay(2000);
+  delay(2000);
     
   /*
     while(1) {
@@ -150,15 +218,15 @@ void GLCD_init(void)
 
   GLCD_inst(0xBC);        // Data Scan Direction
   GLCD_data(0b00000001);
-  GLCD_inst(0xA6);        // Normal Display
+  //GLCD_inst(0xA6);        // Normal Display
 
-  GLCD_inst(0x15);        // Column address
-  GLCD_data(48);
-  GLCD_data(239);
+  //GLCD_inst(0x15);        // Column address
+  //GLCD_data(48);
+  //GLCD_data(239);
 
-  GLCD_inst(0x75);        // Page address
-  GLCD_data(5);
-  GLCD_data(20);
+  //GLCD_inst(0x75);        // Page address
+  //GLCD_data(4);
+  //GLCD_data(16);
 
 
   //GLCD_inst(0b00110001); //Instruction set 2

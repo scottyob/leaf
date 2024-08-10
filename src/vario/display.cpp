@@ -179,7 +179,6 @@ void display_update_temp_vars() {
 }
 
 
-
 /********************************************************************************************/
 // Display Components
 // Individual fields that can be called from many different pages, and/or placed in different positions
@@ -198,13 +197,16 @@ void display_update_temp_vars() {
         uint8_t hours = localTimeHHMM/100;
         uint8_t minutes = localTimeHHMM % 100;
 
+        Serial.print("hours: ");
+        Serial.println(hours);
+
         bool pm = false;
         if (UNITS_hours) {
           if (hours > 12) {
             hours -= 12;
             pm = true;
           } else if (hours == 0) {
-            hours == 12;
+            hours = 12;
           }
         }
 

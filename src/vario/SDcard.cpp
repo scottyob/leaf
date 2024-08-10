@@ -169,7 +169,7 @@ void SDcard_init(void) {
     }
     
     if(!SD_MMC.begin()){
-        Serial.println("SDcard Mount Failed");
+        Serial.println("SDcard Mount Failed");  
         return;
     }
 }
@@ -227,12 +227,13 @@ String saveDir = "/Tracks";
 String currentTrackFile;
 bool trackFileStarted = false;
 
-void SDcard_createLogFile() {
+bool SDcard_createLogFile() {
   
   createDir(SD_MMC, saveDir.c_str());
   currentTrackFile = saveDir + log_createFileName();
   writeFile(SD_MMC, currentTrackFile.c_str(), KMLtrackHeader);
   trackFileStarted = true;
+  return true;  //TODO: check if file was written properly, and return false if not
 }
 
 void SDcard_writeLogHeader() {

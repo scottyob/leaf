@@ -29,7 +29,7 @@ void SDcard_init(void);
 void SDcard_test(void);
 void SDcard_testStuff(void);
 
-void SDcard_createLogFile(void);
+bool SDcard_createLogFile(void);
 void SDcard_writeLogData(String coordinates);
 void SDcard_writeLogHeader(void);
 void SDcard_writeLogFooter(void);
