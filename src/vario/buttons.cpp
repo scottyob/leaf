@@ -15,6 +15,7 @@
 #include "settings.h"
 #include "pages.h"
 
+
 //button debouncing 
 uint8_t button_debounce_last = NONE;
 uint32_t button_debounce_time = 5;    // time in ms for stabilized button state before returning the button press
@@ -49,7 +50,10 @@ uint8_t buttons_init(void) {
 uint8_t buttons_update(void) {
   // TODO: fill this in to handle button pushes with respect to display interface
   uint8_t which_button = buttons_check();
-//  uint8_t button_state = buttons_get_state();  //TODO: delete this line probably
+  //  uint8_t button_state = buttons_get_state();  //TODO: delete this line probably
+
+  // pressing any button should reset the auto-off counter
+  if(which_button != NONE) power_resetAutoOffCounter();
 
   if (display_getPage() == page_menu) {
     bool draw_now = mainMenuPage.button_event(which_button, buttons_get_state(), buttons_get_hold_count());

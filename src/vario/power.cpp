@@ -10,6 +10,7 @@
   #include "IMU.h"
   #include "speaker.h"
   #include "settings.h"
+  #include "log.h"
 
 uint8_t current_setting;          // keep track of which input current setting we're using
 uint8_t powerOnState = POWER_OFF; // keep track of which power state we're in (ON & Runnning; or (soft)OFF and charging via USB, or dead OFF)
@@ -126,9 +127,12 @@ void power_update() {
   //TODO: fill this in
   // stuff like checking batt state, checking auto-off, etc
 
+
   // check if we should auto turn off 
-  if (power_autoOff(true)) {
-    power_shutdown();
+  if (AUTO_OFF && !flightTimer_isRunning()) { // only check if the AUTO_OFF user-setting is ON *AND* the flight timer is NOT running (don't turn off in the middle of a log recording)
+    if (power_autoOff()) {
+      power_shutdown();
+    }
   }
 }
 
@@ -137,34 +141,45 @@ void power_update() {
 uint8_t autoOffCounter = 0;
 int32_t autoOffAltitude = 0;
 
-bool power_autoOff(bool dontResetCounter) {
+void power_resetAutoOffCounter() {
+  autoOffCounter = 0;
+}
+
+bool power_autoOff() {
   bool autoShutOff = false;  // start with assuming we're not going to turn off
 
-  // dontResetCounter argument allows calling this function when, for example, a button is pushed, to reset the counter due to activity.
-  if (!dontResetCounter) {
-    autoOffCounter = 0;
-  } else {
-    // we will auto-stop only if BOTH the GPS speed AND the Altitude change trigger the stopping thresholds.
+  // we will auto-stop only if BOTH the GPS speed AND the Altitude change trigger the stopping thresholds.
 
-    // First check if altitude is stable
-    uint32_t altDifference = baro_getAlt() - autoOffAltitude;    
-    if (altDifference < 0) altDifference *= -1;
-    if (altDifference < AUTO_OFF_MAX_ALT) {
+  // First check if altitude is stable
+  int32_t altDifference = baro_getAlt() - autoOffAltitude;    
+  if (altDifference < 0) altDifference *= -1;
+  if (altDifference < AUTO_OFF_MAX_ALT) {
 
-      // then check if GPS speed is slow enough
-      if (gps.speed.mph() < AUTO_OFF_MAX_SPEED) {
-        autoOffCounter++;
-        if (autoOffCounter >= AUTO_OFF_MIN_SEC) {
-          autoShutOff = true;
-        }
-      } else {
-        autoOffCounter = 0;
+    // then check if GPS speed is slow enough
+    if (gps.speed.mph() < AUTO_OFF_MAX_SPEED) {
+      
+      autoOffCounter++;
+      if (autoOffCounter >= AUTO_OFF_MIN_SEC) {
+        autoShutOff = true;
+      } else if (autoOffCounter >= AUTO_OFF_MIN_SEC - 5) {
+        speaker_playSound(fx_decrease);  // start playing warning sounds 5 seconds before it auto-turns off
       }
-
     } else {
-      autoOffAltitude += altDifference;  //reset the comparison altitude to present altitude, since it's still changing
+      autoOffCounter = 0;
     }
+
+  } else {
+    autoOffAltitude += altDifference;  //reset the comparison altitude to present altitude, since it's still changing
   }
+
+
+
+  Serial.print("                                                   *************AUTO OFF***  Counter: ");
+  Serial.print(autoOffCounter);
+  Serial.print("   Alt Diff: ");
+  Serial.print(altDifference);
+  Serial.print("  AutoShutOff? : ");
+  Serial.println(autoShutOff);
 
   return autoShutOff;
 }

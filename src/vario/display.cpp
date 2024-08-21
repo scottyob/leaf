@@ -197,8 +197,8 @@ void display_update_temp_vars() {
         uint8_t hours = localTimeHHMM/100;
         uint8_t minutes = localTimeHHMM % 100;
 
-        Serial.print("hours: ");
-        Serial.println(hours);
+        //Serial.print("hours: ");
+        //Serial.println(hours);
 
         bool pm = false;
         if (UNITS_hours) {

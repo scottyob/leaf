@@ -322,11 +322,11 @@ void baro_init(void)
     Serial.print("C_TEMPSENS:"); Serial.println(C_TEMPSENS);
 
 	// after initialization, get first baro sensor reading to populate values
-    baro_update(1, 7);  
+    baro_update(1, true);  
     delay(10);					// wait for baro sensor to process
-    baro_update(2, 7);  
+    baro_update(2, true);  
     delay(10);					// wait for baro sensor to process
-    baro_update(3, 7);  
+    baro_update(3, true);  
     Serial.print("P_ALT:"); Serial.println(P_ALT);
     Serial.print("TEMP:"); Serial.println(TEMP);
 
@@ -351,7 +351,7 @@ void baro_init(void)
   //fakeAlt = altitude_values[altitude_values[0]];
   //lastAlt = fakeAlt;
 
-	baro_update(4, 7);  
+	baro_update(4, true);  
   
 
 
@@ -365,7 +365,7 @@ void baro_reset(void) {
 }
 
 
-char baro_update(char process_step, uint8_t Counter) {
+char baro_update(char process_step, bool doTemp) {    // (we don't need to update temp as frequently, so we can skip it most of the time)
   // the baro senor requires ~9ms between the command to prep the ADC and actually reading the value.
   // Since this delay is required between both pressure and temp values, we break the sensor processing 
   // up into several steps, to allow other code to process while we're waiting for the ADC to become ready.
@@ -381,10 +381,10 @@ char baro_update(char process_step, uint8_t Counter) {
       D1_P = spi_readBaroADC();                   // Read raw pressure value  
       if (D1_P == 0) D1_P = D1_Plast;             // use the last value if we get a misread
       else D1_Plast = D1_P;                       // otherwise save this value for next time if needed
-      if (Counter == 7) spi_writeBaroCommand(CMD_CONVERT_TEMP);     // Prep baro sensor ADC to read raw temperature value (then come back for step 3 in ~10ms)
+      if (doTemp) spi_writeBaroCommand(CMD_CONVERT_TEMP);     // Prep baro sensor ADC to read raw temperature value (then come back for step 3 in ~10ms)
       break;
     case 3:
-      if (Counter == 7) {
+      if (doTemp) {
         D2_T = spi_readBaroADC();						        // read digital temp data
         if (D2_T == 0) D2_T = D2_Tlast;             // use the last value if we get a misread
         else D2_Tlast = D2_T;                       // otherwise save this value for next time if needed
@@ -394,7 +394,7 @@ char baro_update(char process_step, uint8_t Counter) {
     case 4:
       baro_filterALT();							              // filter pressure alt value
 	    baro_updateClimb();							            // update and filter climb rate
-      //baro_debugPrint();
+      baro_debugPrint();
       break;   
   }
   if(++process_step > 4) process_step = 0;  // prep for the next step in the process (if we just did step 4, we're done so set to 0.  Elsewhere, Interrupt timer will set to 1 again eventually)  
@@ -601,7 +601,7 @@ char process_step_test = 0;
 
 void baro_test(void) {
   delay(10);  // delay for ADC processing bewteen update steps
-  process_step_test = baro_update(process_step_test, 7);
+  process_step_test = baro_update(process_step_test, true);
   if (process_step_test == 0) {
     process_step_test++;  
     Serial.print("PressureAltCm:");

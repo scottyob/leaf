@@ -39,7 +39,7 @@ int32_t VARIO_RATEfiltered;
 
 
 void baro_reset(void);
-char baro_update(char process_step, uint8_t Counter);
+char baro_update(char process_step, bool doTemp);
 
 void baro_write(unsigned char hexwrite);
 void baro_init(void);

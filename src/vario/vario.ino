@@ -146,8 +146,8 @@ void main_CHARGE_loop() {
     taskTimeNow = micros();
     taskDuration = taskTimeNow - taskTimeLast;
     taskTimeLast = taskTimeNow;
-    Serial.println(" ");
-    Serial.print("taskDuration: "); Serial.println(taskDuration);
+    //Serial.println(" ");
+    //Serial.print("taskDuration: "); Serial.println(taskDuration);
 
     display_setPage(page_charging);
     display_update();       // update display based on battery charge state etc
@@ -156,8 +156,8 @@ void main_CHARGE_loop() {
     if (buttonPushed == NONE) goToSleep = true; // get ready to sleep if no button is being pushed
   } else {    
     if (goToSleep && ECO_MODE) {  // don't allow sleep if ECO_MODE is off
-      // we don't want to sleep again as soon as we wake up; we want to wait until we've done 'doTasks' before sleeping again
-      goToSleep = false;
+
+      goToSleep = false;        // we don't want to sleep again as soon as we wake up; we want to wait until we've done 'doTasks' before sleeping again
 
       // Wake up if button pushes
       esp_sleep_enable_ext0_wakeup((gpio_num_t)BUTTON_PIN_CENTER, HIGH);
@@ -173,7 +173,7 @@ void main_CHARGE_loop() {
       esp_sleep_enable_timer_wakeup(sleepMicros);         // set timer to wake up
 
       // sleep for real if ECO_MODE is set, otherwise 'fake sleep' using delay
-      if (ECO_MODE) {
+      if (ECO_MODE) {         //TODO: this is doubling the condition since we already check ECO_MODE in the parent if() statement
         esp_light_sleep_start();        
       } else {
         Serial.print("microsNow:    "); Serial.println(microsNow);
@@ -182,7 +182,7 @@ void main_CHARGE_loop() {
         delayMicroseconds(sleepMicros);                   // use delay instead of actual sleep to test sleep logic (allows us to serial print during 'fake sleep' and also re-program over USB mid-'fake sleep')
       }
     } else {
-      if (buttons_update() != NONE) Serial.println("we see a button!");
+      //if (buttons_update() != NONE) Serial.println("we see a button!");  // TOOD: erase this
     }
   }
 }
@@ -212,6 +212,7 @@ void main_ON_loop() {
   //TODO: if gps serial buffer can fill while processor is sleeping, then we don't need to wait for serial port to be quiet
 }
 
+bool doBaroTemp = true;  // flag to track when to update temp reading from Baro Sensor (we can do temp every ~1 sec, even though we're doing pressure every 50ms)
 
 void setTasks(void) {    
   // increment time counters
@@ -258,14 +259,15 @@ void setTasks(void) {
       
       // Tasks every second complete here in the 9th 10ms block.  Pick a unique 100ms block for each task to space things out
 
-      // gps update every half second (this avoids any aliasing issues if we keep trying to update GPS in the middle of an NMEA sentence string)
-      if (counter_100ms_block == 0 || counter_100ms_block == 5) taskman_gps = 1;         
-      if (counter_100ms_block == 1) taskman_power = 1;                        // every second: power checks      
-      if (counter_100ms_block == 2) taskman_log = 1;                          // every second: logging
-      //if (flightTimer_getTime() == 10 && counter_100ms_block == 4) power_sleep_peripherals(); // testing GPS shutdown command
-
-      // Update LCD every half-second on the 3rd and 8th 100ms blocks
-      if (counter_100ms_block == 3 || counter_100ms_block == 8) taskman_display = 1;  // every half-second: LCD update
+      if (counter_100ms_block == 0 || counter_100ms_block == 5) taskman_gps = 1;      // gps update every half second (this avoids any aliasing issues if we keep trying to update GPS in the middle of an NMEA sentence string)
+      if (counter_100ms_block == 1) taskman_power = 1;                                // every second: power checks      
+      if (counter_100ms_block == 2) taskman_log = 1;                                  // every second: logging
+      if (counter_100ms_block == 3 || counter_100ms_block == 8) taskman_display = 1;  // Update LCD every half-second on the 3rd and 8th 100ms blocks
+      // 4
+      // 5 - gps
+      //if (counter_100ms_block == 7) doBaroTemp = true; else doBaroTemp = false;       // update the Baro temp reading every second (not needed as frequently as the pressure reading)
+      // 8 - LCD
+      // 9
       break;      
   }
 }
@@ -275,7 +277,7 @@ void setTasks(void) {
 // execute necessary tasks while we're awake and have things to do
 void taskManager(void) {    
   if (taskman_buttons) { buttons_update(); taskman_buttons = 0; }
-  if (taskman_baro)    { baro_update(taskman_baro, counter_100ms_block); taskman_baro = 0; }    // update baro, using the appropriate step number
+  if (taskman_baro)    { baro_update(taskman_baro, doBaroTemp); taskman_baro = 0; }    // update baro, using the appropriate step number
   if (taskman_imu)     { imu_update();     taskman_imu = 0; }
   if (taskman_gps)     { gps_update();     taskman_gps = 0; }
   if (taskman_power)   { power_update();   taskman_power = 0; }
@@ -361,7 +363,7 @@ void main_loop_test() {
 void full_system_test() {
   delay(500);
   // update baro sensor
-  taskman_baro = baro_update(taskman_baro, 7);
+  taskman_baro = baro_update(taskman_baro, true);
   if (taskman_baro == 0) taskman_baro = 1;
   
   //for (int i=0; i<300000; i++) {

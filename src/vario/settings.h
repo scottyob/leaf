@@ -40,14 +40,14 @@
     #define DEF_DISTANCE_FLOWN			  0	    // 0 = xc distance, 1 = path distance
     #define DEF_GPS_SETTING           1	    // 0 = GPS off, 1 = GPS on, 2 = power save every N sec, etc
     #define DEF_TRACK_SAVE				    1	    // save track log?
-    #define DEF_AUTO_START		        1	    // 1 = ENABLE, 0 = DISABLE
+    #define DEF_AUTO_START		        0	    // 1 = ENABLE, 0 = DISABLE
   // Default System Settings
     #define DEF_TIME_ZONE     				0     // mm (in minutes) UTC -8 (PDT) would therefor be -8*60, or 480.  This allows us to cover all time zones, including the :30 minute and :15 minute ones
     #define DEF_VOLUME_SYSTEM		      1	    // 0=off, 1=low, 2=med, 3=high
     #define DEF_CONTRAST			        10
     #define DEF_ENTER_BOOTLOAD		    0	    // by default, don't enter bootloader on reset		
     #define DEF_ECO_MODE              0     // default off to allow reprogramming easier.  TODO: switch to 'on' for production release      
-    #define DEF_AUTO_OFF				      1	    // 1 = ENABLE, 0 = DISABLE
+    #define DEF_AUTO_OFF				      0	    // 1 = ENABLE, 0 = DISABLE
     #define DEF_WIFI_ON               0     // default wifi off
     #define DEF_BLUETOOTH_ON          0     // default bluetooth off
   // Default Unit Values

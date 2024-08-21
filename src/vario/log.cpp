@@ -65,12 +65,12 @@ void log_update() {
     log_checkMinMaxValues();  
 
     // finally, check if we should auto-stop the timer because we've been sitting idle for long enough
-    if (flightTimer_autoStop()) {  
+    if (AUTO_START && flightTimer_autoStop()) {  
       flightTimer_stop();
     } 
 
   } else { // if timer NOT running, check if we should auto-start it
-    if (flightTimer_autoStart()) {
+    if (AUTO_START && flightTimer_autoStart()) {
       flightTimer_start();
     }
   }
@@ -87,21 +87,30 @@ void log_update() {
     // we will auto-start if EITHER the GPS speed or the Altitude change triggers the starting thresholds.
 
     // keep track of how many times (seconds) we've been continuously over the min speed threshold
-    if (gps.speed.mph() > AUTO_START_MIN_SPEED) {
+    if (gps.speed.mph() > AUTO_START_MIN_SPEED) {      
       autoStartCounter++;
       if (autoStartCounter >= AUTO_START_MIN_SEC) {
         startTheTimer = true;
+        Serial.println("****************************** autoStart TRUE via speed");
       }
     } else {
       autoStartCounter = 0;
     }
 
     // check if current altitude has changed enough from startup to trigger timer start
-    uint32_t altDifference = baro_getAlt() - baro_getAltInitial();
+    int32_t altDifference = baro_getAlt() - baro_getAltInitial();
     if (altDifference < 0) altDifference *= -1;
     if (altDifference > AUTO_START_MIN_ALT) {
       startTheTimer = true;
+      Serial.println("****************************** autoStart TRUE via alt");
     }
+
+  Serial.print("S T A R T   Counter: ");
+  Serial.print(autoStartCounter);
+  Serial.print("   Alt Diff: ");
+  Serial.print(altDifference);
+  Serial.print("  StartTheTimer? : ");
+  Serial.println(startTheTimer);
 
     return startTheTimer;
   }
@@ -115,7 +124,7 @@ void log_update() {
     // we will auto-stop only if BOTH the GPS speed AND the Altitude change trigger the stopping thresholds.
 
     // First check if altitude is stable
-    uint32_t altDifference = baro_getAlt() - autoStopAltitude;    
+    int32_t altDifference = baro_getAlt() - autoStopAltitude;    
     if (altDifference < 0) altDifference *= -1;
     if (altDifference < AUTO_STOP_MAX_ALT) {
 
@@ -132,6 +141,13 @@ void log_update() {
     } else {
       autoStopAltitude += altDifference;  //reset the comparison altitude to present altitude, since it's still changing
     }
+
+  Serial.print(" ** STOP ** Counter: ");
+  Serial.print(autoStopCounter);
+  Serial.print("   Alt Diff: ");
+  Serial.print(altDifference);
+  Serial.print("  stopTheTimer? : ");
+  Serial.println(stopTheTimer);
 
     return stopTheTimer;
   }

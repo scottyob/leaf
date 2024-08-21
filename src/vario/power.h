@@ -54,7 +54,9 @@ void power_wake_peripherals(void);
 void power_switchToOnState(void);
 
 void power_update(void);
-bool power_autoOff(bool dontResetCounter);
+bool power_autoOff();
+void power_resetAutoOffCounter(void);
+
 
 void power_adjustInputCurrent(int8_t dir);
 void power_set_input_current(uint8_t current);
