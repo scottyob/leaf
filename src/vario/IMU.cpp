@@ -5,10 +5,44 @@
  * 6 DOF Gyro+Accel plus 3-axis mag
  *
  */
+#include <ICM_20948.h>
 #include "IMU.h"
-#include "Leaf_SPI.h"
+#include "Leaf_I2C.h"
+
+#define DEBUG_IMU 1
+
+#define SERIAL_PORT Serial
+#define WIRE_PORT Wire
+#define AD0_VAL 0
+
+ICM_20948_I2C IMU;
+
+
 
 void imu_init() {
+  WIRE_PORT.begin();
+  WIRE_PORT.setClock(400000);
+
+  if(DEBUG_IMU) IMU.enableDebugging(); // enable helpful debug messages on Serial
+
+  bool initialized = false;
+  while (!initialized) {
+    IMU.begin(WIRE_PORT, AD0_VAL);
+    SERIAL_PORT.print(F("Initialization of the IMU returned: "));
+    SERIAL_PORT.println(IMU.statusString());
+    if (IMU.status != ICM_20948_Stat_Ok) {
+      SERIAL_PORT.println("Trying again...");
+      delay(500);
+    } else {
+      initialized = true;
+    }
+  }
+}
+
+
+
+
+/*
 
   pinMode(IMU_INTERRUPT, INPUT);
 
@@ -34,16 +68,9 @@ void imu_init() {
   Serial.print("Power Management 2: ");
   Serial.println(spi_readIMUByte(address_PWR_MGMT_2));
     
-}
+*/
 
-void imu_test() {
-  delay(100);
-  for(int i = 45; i<51; i++) {
-    Serial.print(spi_readIMUByte(i));        
-    Serial.print(" ");  
-  }
-  Serial.println("");
-}
+
 
 void imu_update() {
   //TODO: fill this in

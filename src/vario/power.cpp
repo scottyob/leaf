@@ -11,14 +11,16 @@
   #include "speaker.h"
   #include "settings.h"
   #include "log.h"
+  #include "Leaf_I2C.h"
+  #include "tempRH.h"
 
 uint8_t current_setting;          // keep track of which input current setting we're using
 uint8_t powerOnState = POWER_OFF; // keep track of which power state we're in (ON & Runnning; or (soft)OFF and charging via USB, or dead OFF)
 
 void power_simple_init(void) {
   
-  #define POWER_CHARGE_I1   39
-  #define POWER_CHARGE_I2   40
+  #define POWER_CHARGE_I1   41  //  39 Old version 3.2.0
+  #define POWER_CHARGE_I2   42  //  40
   #define POWER_LATCH       48  
 
   // enable 3.3V regulator
@@ -65,14 +67,16 @@ void power_init_peripherals() {
       speaker_playSound(fx_enter);
     }    
     // then initialize the rest of the devices
-    gps_init();               Serial.println("Finished GPS");    
+    gps_init();               Serial.println("Finished GPS");  
+    wire_init();              Serial.println("Finished I2C Wire");  
     spi_init();               Serial.println("Finished SPI");
     display_init();           Serial.println("Finished display");   // u8g2 library initializes SPI bus for itself, so this can come before spi_init()
     //TODO: show loading / splash Screen?
 
     //GLCD_init();            Serial.println("Finished GLCD");    // test SPI object to write directly to LCD (instead of using u8g2 library -- note it IS possible to have both enabled at once)
     baro_init();              Serial.println("Finished Baro");
-    imu_init();               Serial.println("Finished IMU");        
+    imu_init();               Serial.println("Finished IMU"); 
+    tempRH_init();       
     SDcard_init();            Serial.println("Finished SDcard");
 
     // then put devices to sleep as needed if we're in POWER_OFF_USB state (plugged into USB but vario not actively turned on)
@@ -106,7 +110,12 @@ void power_switchToOnState() {
 void power_shutdown() {
   Serial.println("power_shutdown"); 
   // TODO: maybe show shutting down screen?
-  // TODO: saving logs and system data  
+  
+  // saving logs and system data  
+  if (flightTimer_isRunning()) {
+    flightTimer_stop();
+  }
+  
   power_sleep_peripherals();
   delay(100);
   power_latch_off();  

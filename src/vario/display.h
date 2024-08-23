@@ -9,10 +9,16 @@
 #include <U8g2lib.h>
 
 #define LCD_BACKLIGHT    21  // can be used for backlight if desired (also broken out to header)
-#define LCD_RS           16
-#define LCD_RESET        17
+#define LCD_RS           17 // 16 on old V3.2.0
+#define LCD_RESET        18 // 17 on old V3.2.0
 
-extern U8G2_ST7539_192X64_F_4W_HW_SPI u8g2;
+#define CONTRAST_MAX 230
+#define CONTRAST_MIN 180
+
+
+//extern U8G2_ST7539_192X64_F_4W_HW_SPI u8g2;     // Leaf V3.2.0
+extern U8G2_ST75256_WO256X128_F_4W_HW_SPI u8g2;   // Leaf V3.2.2  June Huang
+//extern U8G2_ST75256_JLX19296_1_4W_SW_SPI u8g2;      // Alice Green
 
 void GLCD_inst(byte data);
 void GLCD_data(byte data);
@@ -32,7 +38,7 @@ enum display_main_pages {
   page_nav,
   page_menu,   
   page_last,
-  page_charging  
+  page_charging
 };
 
 void display_turnPage(uint8_t action);
@@ -42,6 +48,7 @@ uint8_t display_getPage(void);
 void display_init(void);
 void display_update(void);
 void display_clear(void);
+void display_setContrast(uint8_t contrast);
 
 void display_battery_icon(uint16_t x, uint16_t y, uint8_t battery_pct);
 

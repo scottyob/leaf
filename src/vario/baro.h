@@ -11,6 +11,9 @@
 #include <Arduino.h>
 #include "Leaf_SPI.h"
 
+// Sensor I2C address
+#define ADDR_BARO 0x77
+
 // Sensor commands
 #define CMD_CONVERT_PRESSURE	0b01001000
 #define CMD_CONVERT_TEMP		0b01011000
@@ -37,40 +40,36 @@ int16_t CLIMB_RATEfiltered;
 int32_t VARIO_RATEfiltered;	
 */
 
+// I2C Communication Functions
+  uint8_t baro_sendCommand(uint8_t command);
+  uint16_t baro_readCalibration(uint8_t PROMaddress);
+  uint32_t baro_readADC();
 
-void baro_reset(void);
-char baro_update(char process_step, bool doTemp);
+// Device Management
+  void baro_init(void);
+	void baro_reset(void);	
+	void baro_resetLaunchAlt(void);
+	char baro_update(char process_step, bool doTemp);
 
-void baro_write(unsigned char hexwrite);
-void baro_init(void);
-uint32_t baro_readADC(void);
+// Device reading & data processing  
+	int32_t baro_calculateAlt(void);
+	void baro_filterALT(void);
+	void baro_updateClimb(void);	
+	void baro_filterCLIMB(void);
 
+// Get values (mainly for display and log purposes)
+	int32_t baro_getTemp(void);
+	int32_t baro_getAlt (void);
+	int32_t baro_getOffsetAlt(void);
+	int32_t baro_getAltAtLaunch (void);
+	int32_t baro_getAltAboveLaunch(void);
+	int32_t baro_getAltInitial(void);
+	int32_t baro_getClimbRate (void);
+	int32_t baro_getVarioBar (void);
 
-void baro_convertPressure(unsigned char cmd);
-void baro_convertTemperature(unsigned char cmd);
-int32_t baro_calculateAlt(void);
-void baro_filterALT(void);
-void baro_updateClimb(void);
-void baro_debugPrint(void);
-void baro_filterCLIMB(void);
-
-void baro_test(void);
-
-int32_t baro_getTemp(void);
-
-int32_t baro_getAlt (void);
-int32_t baro_getOffsetAlt(void);
-int32_t baro_getAltAtLaunch (void);
-int32_t baro_getAltAboveLaunch(void);
-int32_t baro_getAltInitial(void);
-
-void baro_resetLaunchAlt(void);
-
-int32_t baro_getClimbRate (void);
-int32_t baro_getVarioBar (void);
-
-
-
-void baro_updateFakeNumbers(void);
+// Test Functions
+	void baro_debugPrint(void);
+	void baro_test(void);
+	void baro_updateFakeNumbers(void);
 
 #endif

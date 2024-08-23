@@ -147,7 +147,9 @@ void speaker_setVolume(unsigned char volume) {
 void speaker_playSound(uint16_t * sound)
 {	
   if (VOLUME_SYSTEM != 0) { // only play sound if the volume is non-zero
-    speaker_setVolume(VOLUME_SYSTEM);   // set volume to system level for playing system sounds.  (ISR will set speaker volume back to VOLUME_VARIO when the sound finishes);
+
+    // Dont' need this anymore since volume is set inside ISR as needed
+    //speaker_setVolume(VOLUME_SYSTEM);   // set volume to system level for playing system sounds.  (ISR will set speaker volume back to VOLUME_VARIO when the sound finishes);
 
     snd_index = sound;
     Serial.print("setting snd_index to: ");
@@ -430,7 +432,9 @@ void IRAM_ATTR onSpeakerTimerSample() {
   //Serial.print("ENTER ISR: ");
   
   //prioritize sound effects from UI & buttons etc before we get to vario beeps
-  if (sound_fx) {								
+  if (sound_fx) {					
+    speaker_setVolume(VOLUME_SYSTEM);    // play system sound effects at system volume setting
+    
     //Serial.print("FX: "); Serial.print(*snd_index); Serial.print(" @ "); Serial.println(millis());	
 		if (*snd_index != NOTE_END) {
 			if (*snd_index != sound_fxNoteLast) ledcWriteTone(SPEAKER_PIN, *snd_index);   // only change pwm if it's a different note, otherwise we get a little audio blip between the same notes           
@@ -446,10 +450,10 @@ void IRAM_ATTR onSpeakerTimerSample() {
       ledcWriteTone(SPEAKER_PIN, 0);    			
 			sound_fx = 0;
       sound_fxNoteLast = 0;
-      speaker_setVolume(VOLUME_VARIO);    // put volume back to volume_vario for playing vario notes (now that we're done with system sound effects)
 		} 
 
-  } else if (sound_varioNote > 0) {
+  } else if (sound_varioNote > 0 && VOLUME_VARIO) {   // if there's a note to play, and the vario volume isn't zero
+    speaker_setVolume(VOLUME_VARIO);    // play vario sounds at vario volume setting
 
     //Serial.print("Vario: "); Serial.print(sound_varioNote); Serial.print(" @ "); Serial.print(millis());
     // Handle the beeps and rests of a vario sound "measure"

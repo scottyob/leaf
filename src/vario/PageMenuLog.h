@@ -21,7 +21,7 @@ class LogMenuPage : public SettingsMenuPage {
       "Format",
       "SaveLog",
       "AutoStart",
-      "AA",
+      "AutoStop",
       "BB",
       "CC",
       "Timer"

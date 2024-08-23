@@ -7,6 +7,7 @@
 #include "speaker.h"
 #include "gps.h"
 #include "baro.h"
+#include "display.h"
 
 #define RW_MODE false
 #define RO_MODE true
@@ -27,10 +28,11 @@
     int8_t GPS_SETTING;
     bool TRACK_SAVE;
     bool AUTO_START;
+    bool AUTO_STOP;
   // System Settings
     int16_t TIME_ZONE;
     int8_t VOLUME_SYSTEM;
-    int16_t CONTRAST;
+    uint8_t CONTRAST;
     bool ENTER_BOOTLOAD;
     bool ECO_MODE;
     bool AUTO_OFF;
@@ -87,6 +89,7 @@ void settings_loadDefaults() {
     GPS_SETTING = DEF_GPS_SETTING;
     TRACK_SAVE = DEF_TRACK_SAVE;
     AUTO_START = DEF_AUTO_START;
+    AUTO_STOP = DEF_AUTO_STOP;
   // System Settings
     TIME_ZONE = DEF_TIME_ZONE;
     VOLUME_SYSTEM = DEF_VOLUME_SYSTEM;
@@ -126,7 +129,7 @@ void settings_retrieve() {
   // System Settings
     TIME_ZONE =       leafPrefs.getShort("TIME_ZONE");
     VOLUME_SYSTEM =   leafPrefs.getChar("VOLUME_SYSTEM");
-    CONTRAST =        leafPrefs.getShort("CONTRAST");
+    CONTRAST =        leafPrefs.getUChar("CONTRAST");
     ENTER_BOOTLOAD =  leafPrefs.getBool("ENTER_BOOTLOAD");
     ECO_MODE =        leafPrefs.getBool("ECO_MODE");
     AUTO_OFF =        leafPrefs.getBool("AUTO_OFF");
@@ -167,10 +170,11 @@ void settings_save() {
     leafPrefs.putChar("GPS_SETTING", GPS_SETTING);
     leafPrefs.putBool("TRACK_SAVE", TRACK_SAVE);
     leafPrefs.putBool("AUTO_START", AUTO_START);
+    leafPrefs.putBool("AUTO_STOP", AUTO_STOP);
   // System Settings
     leafPrefs.putShort("TIME_ZONE", TIME_ZONE);
     leafPrefs.putChar("VOLUME_SYSTEM", VOLUME_SYSTEM);
-    leafPrefs.putShort("CONTRAST", CONTRAST);
+    leafPrefs.putUChar("CONTRAST", CONTRAST);
     leafPrefs.putBool("ENTER_BOOTLOAD", ENTER_BOOTLOAD);
     leafPrefs.putBool("ECO_MODE", ECO_MODE);
     leafPrefs.putBool("AUTO_OFF", AUTO_OFF);
@@ -206,17 +210,29 @@ void settings_totallyEraseNVS() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Adjust individual settings
 
-// Contrast
-void settings_adjustContrast(uint16_t val) {
-  if (val == -1) {
-    // TODO: set contrast lower
-  } else if (val == 1) {
-    // TODO: set contrast higher
-  } else if (val == 0) {
-    // TODO: set contrast to default
-  } else if (val <= CONTRAST_MAX && val >= CONTRAST_MIN) {
-    // TODO: set contrast to val
+// Contrast Adjustment
+void settings_adjustContrast(int8_t dir) {
+  uint16_t * sound = fx_neutral;
+  if (dir) sound = fx_increase;
+  else if (dir < 0) sound = fx_decrease;
+  else if (dir == 0) {              // reset to default
+    speaker_playSound(fx_confirm);  
+    CONTRAST = DEF_CONTRAST;
+    display_setContrast(CONTRAST);
+    return;
   }
+
+  CONTRAST += dir;
+
+  if (CONTRAST > CONTRAST_MAX) {
+    CONTRAST = CONTRAST_MAX;
+    sound = fx_double;
+  } else if (CONTRAST < CONTRAST_MIN) {
+    CONTRAST = CONTRAST_MIN;
+    sound = fx_double;
+  }
+  display_setContrast(CONTRAST);
+  speaker_playSound(sound);
 }
 
 // Alt Offsets

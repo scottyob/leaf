@@ -3,6 +3,7 @@
 * TinyGPSPlus-ESP32 0.0.2
 * U8g2 LCD: 2.34.22
 * SparkFun 9DoF IMU Breakout - ICM 20948 - Arduino Library: 1.2.12
+* AHT20: 1.0.1
 
 ## ESP32 configuration
 

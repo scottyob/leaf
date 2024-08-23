@@ -9,17 +9,15 @@
 #include "speaker.h"
 #include "log.h"
 
-
 enum log_menu_items { 
-  cursor_units_back,
-  cursor_units_alt,
-  cursor_units_climb,
-  cursor_units_speed,
-  cursor_units_distance,
-  cursor_units_heading,
-  cursor_units_temp,
-  cursor_units_hours
-
+  cursor_log_back,
+  cursor_log_format,
+  cursor_log_saveLog,
+  cursor_log_autoStart,
+  cursor_log_autoStop,
+  cursor_log_BB,
+  cursor_log_CC,
+  cursor_log_timer
 };
 
 
@@ -36,12 +34,16 @@ void LogMenuPage::draw() {
   // Menu Items
     uint8_t start_y = 29;
     uint8_t y_spacing = 16;
-    uint8_t setting_name_x = 3;
-    uint8_t setting_choice_x = 44;    
+    uint8_t setting_name_x = 2;
+    uint8_t setting_choice_x = 70;    
     uint8_t menu_items_y[] = {190, 45, 60, 75, 90, 105, 120, 135};
 
     //first draw cursor selection box
-    u8g2.drawRBox(setting_choice_x-2, menu_items_y[cursor_position]-14, 22, 16, 2);
+    if (cursor_position == cursor_log_timer) {  // extend the selection box for the timer menu item.  ("START" is wider than all the other menu choices)
+      u8g2.drawRBox(setting_choice_x-18, menu_items_y[cursor_position]-14, 44, 16, 2);
+    } else {
+      u8g2.drawRBox(setting_choice_x-4, menu_items_y[cursor_position]-14, 30, 16, 2);
+    }
     
     // then draw all the menu items
     for (int i = 0; i <= cursor_max; i++) {      
@@ -51,72 +53,73 @@ void LogMenuPage::draw() {
       if (i == cursor_position) u8g2.setDrawColor(0);
       else u8g2.setDrawColor(1);
       switch (i) {
-        case cursor_units_alt:
+        case cursor_log_format:
           if (UNITS_alt) u8g2.print("ft");
           else u8g2.print(" m");
           break;
-        case cursor_units_climb:
-          if (UNITS_climb) u8g2.print("fpm");
-          else u8g2.print("m/s");    
+        case cursor_log_saveLog:
+          if (TRACK_SAVE) u8g2.print("ON");
+          else u8g2.print("OFF");    
           break;
-        case cursor_units_speed:
-          if (UNITS_speed) u8g2.print("mph");
-          else u8g2.print("kph");
+        case cursor_log_autoStart:
+          if (AUTO_START) u8g2.print("ON");
+          else u8g2.print("OFF");    
           break;
-        case cursor_units_distance:
-          if (UNITS_distance) u8g2.print("mi");
-          else u8g2.print("km");
+        case cursor_log_autoStop:
+          if (AUTO_STOP) u8g2.print("ON");
+          else u8g2.print("OFF");    
           break;
-        case cursor_units_heading:
-          if (UNITS_heading) u8g2.print("NNW");
-          else u8g2.print("deg");
+        case cursor_log_BB:
+          if (1) u8g2.print("BB");
+          else u8g2.print("OFF");
           break;
-        case cursor_units_temp:
-          if (UNITS_temp) u8g2.print("F");
-          else u8g2.print("C");
+        case cursor_log_CC:
+          if (1) u8g2.print("CC");
+          else u8g2.print("OFF");
           break;
-        case cursor_units_hours:
+        case cursor_log_timer:
+          u8g2.setCursor(setting_choice_x-14, menu_items_y[i]);
           if (flightTimer_isRunning()) u8g2.print("STOP");
           else u8g2.print("START");
           break;
-        case cursor_units_back:
+        case cursor_log_back:
           u8g2.print((char)124);
           break;        
       }
     u8g2.setDrawColor(1);
     }
-    display_flightTimer(4, 170, false);
+    display_flightTimer(10, 160, false);
   } while ( u8g2.nextPage() ); 
 }
 
 
 void LogMenuPage::setting_change(int8_t dir, uint8_t state, uint8_t count) {
   switch (cursor_position) {
-    case cursor_units_alt:
+    case cursor_log_format:
 
       break;
-    case cursor_units_climb:
+    case cursor_log_saveLog:
+      if (state == RELEASED) settings_toggleBoolOnOff(&TRACK_SAVE);
+      break;
+    case cursor_log_autoStart:
+      if (state == RELEASED) settings_toggleBoolOnOff(&AUTO_START);
+      break;
+    case cursor_log_autoStop:
+      if (state == RELEASED) settings_toggleBoolOnOff(&AUTO_STOP);
+      break;
+    case cursor_log_BB:
 
       break;
-    case cursor_units_speed:
+    case cursor_log_CC:
 
       break;
-    case cursor_units_distance:
-
-      break;
-    case cursor_units_heading:
-
-      break;
-    case cursor_units_temp:
-
-      break;
-    case cursor_units_hours:
+    case cursor_log_timer:
       if (dir == 0) {
         if (state == RELEASED) flightTimer_toggle();
         else if (state == HELD) flightTimer_reset();
       }
       break;
-    case cursor_units_back:
+    case cursor_log_back:
       if (state == RELEASED) {
         speaker_playSound(fx_cancel);
         settings_save(); 

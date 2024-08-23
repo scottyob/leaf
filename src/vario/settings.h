@@ -18,8 +18,8 @@
       #define CLIMB_START_MAX   		 50			// cm/s when climb note begins 
   // System
     // Display Contrast
-      #define CONTRAST_MAX		        14		// TODO: find max reasonable value for display we're using 
-      #define CONTRAST_MIN		        4		  // TODO: find min reasonable value for display we're using
+      #define CONTRAST_MAX		        230		// TODO: find max reasonable value for display we're using 
+      #define CONTRAST_MIN		        180	  // TODO: find min reasonable value for display we're using
     // Volume (max for both vario and system volume settings)
       #define VOLUME_MAX			 	      3
     // Time Zone Offsets from UTC
@@ -41,10 +41,11 @@
     #define DEF_GPS_SETTING           1	    // 0 = GPS off, 1 = GPS on, 2 = power save every N sec, etc
     #define DEF_TRACK_SAVE				    1	    // save track log?
     #define DEF_AUTO_START		        0	    // 1 = ENABLE, 0 = DISABLE
+    #define DEF_AUTO_STOP		          0	    // 1 = ENABLE, 0 = DISABLE
   // Default System Settings
     #define DEF_TIME_ZONE     				0     // mm (in minutes) UTC -8 (PDT) would therefor be -8*60, or 480.  This allows us to cover all time zones, including the :30 minute and :15 minute ones
     #define DEF_VOLUME_SYSTEM		      1	    // 0=off, 1=low, 2=med, 3=high
-    #define DEF_CONTRAST			        10
+    #define DEF_CONTRAST			        195
     #define DEF_ENTER_BOOTLOAD		    0	    // by default, don't enter bootloader on reset		
     #define DEF_ECO_MODE              0     // default off to allow reprogramming easier.  TODO: switch to 'on' for production release      
     #define DEF_AUTO_OFF				      0	    // 1 = ENABLE, 0 = DISABLE
@@ -75,10 +76,11 @@
     extern int8_t GPS_SETTING;
     extern bool TRACK_SAVE;
     extern bool AUTO_START;
+    extern bool AUTO_STOP;
   // System Settings
     extern int16_t TIME_ZONE;
     extern int8_t VOLUME_SYSTEM;
-    extern int16_t CONTRAST;
+    extern uint8_t CONTRAST;
     extern bool ENTER_BOOTLOAD;
     extern bool ECO_MODE;
     extern bool AUTO_OFF;
@@ -103,12 +105,10 @@ void factoryResetVario(void);
 
 
 // adjust-settings functions
-void settings_adjustContrast(uint16_t val);
-
+void settings_adjustContrast(int8_t dir);
 void settings_setAltOffset(int32_t value);
 void settings_adjustAltOffset(int8_t dir, uint8_t count);
 bool settings_matchGPSAlt(void);
-
 void settings_adjustSinkAlarm(int8_t dir);
 void settings_adjustVarioAverage(int8_t dir);
 void settings_adjustClimbAverage(int8_t dir);

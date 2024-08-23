@@ -8,8 +8,8 @@
 #define BUTTON_PIN_CENTER  2  // INPUT
 #define BUTTON_PIN_LEFT    3  // INPUT
 #define BUTTON_PIN_DOWN    4  // INPUT
-#define BUTTON_PIN_RIGHT   5  // INPUT
-#define BUTTON_PIN_UP      6  // INPUT
+#define BUTTON_PIN_UP      5  // INPUT
+#define BUTTON_PIN_RIGHT   6 // INPUT
 
 /*
 //Pinout for Breadboard

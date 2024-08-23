@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-#define IMU_INTERRUPT    14  // INPUT
+#define IMU_INTERRUPT    7	// 14 on V3.2.0  // INPUT
 
 #define address_WHO_AM_I  0
 #define address_USER_CTRL 3
@@ -24,7 +24,5 @@
 
 void imu_init(void);
 void imu_update(void);
-
-void imu_test(void);
 
 #endif

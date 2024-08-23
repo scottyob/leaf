@@ -35,12 +35,12 @@ void UnitsMenuPage::draw() {
   // Menu Items
     uint8_t start_y = 29;
     uint8_t y_spacing = 16;
-    uint8_t setting_name_x = 3;
-    uint8_t setting_choice_x = 44;    
+    uint8_t setting_name_x = 2;
+    uint8_t setting_choice_x = 68;    
     uint8_t menu_items_y[] = {190, 45, 60, 75, 90, 105, 120, 135};
 
     //first draw cursor selection box
-    u8g2.drawRBox(setting_choice_x-2, menu_items_y[cursor_position]-14, 22, 16, 2);
+    u8g2.drawRBox(setting_choice_x-6, menu_items_y[cursor_position]-14, 34, 16, 2);
     
     // then draw all the menu items
     for (int i = 0; i <= cursor_max; i++) {      

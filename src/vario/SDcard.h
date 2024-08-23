@@ -7,7 +7,7 @@
 
 
 //Pinout for Leaf V3.2.0
-#define SDIO_DETECT       22  // INPUT
+#define SDIO_DETECT       26  // INPUT
 //These should be default pins for ESP32S3, so technically no need to use these and set them.  But here for completeness
 #define SDIO_D2           33
 #define SDIO_D3           34

@@ -18,13 +18,13 @@ class UnitsMenuPage : public SettingsMenuPage {
   private:
     static constexpr char * labels[8] = {
       "Back",
-      "Alt:",
-      "Climb:",
-      "Speed:",
-      "Dist:",
-      "Head:",
-      "Temp:",
-      "Time:"
+      "Altitude",
+      "ClimbRate",
+      "Speed",
+      "Distance",
+      "Heading",
+      "Temp",
+      "Time"
     };
 };
 

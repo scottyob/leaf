@@ -10,6 +10,7 @@
   #include "gps.h"
   #include "baro.h"
   #include "IMU.h"
+  #include "tempRH.h"
   #include "speaker.h"
   #include "log.h"
   #include "settings.h"
@@ -28,7 +29,7 @@
 
 // Standby system timer (when on USB power and charging battery, but otherwise "off" (i.e., soft off))
   hw_timer_t *charge_timer = NULL;
-  #define CHARGE_TIMER_FREQ 1000    // run at 40Hz 
+  #define CHARGE_TIMER_FREQ 1000    // run at 1000Hz 
   #define CHARGE_TIMER_LENGTH 500  // trigger the ISR every 500ms
   void onChargeTimer(void);
   char chargeman_doTasks = 0;     // let the ISR timer set this to 1 so we're on proper timing cycle each time
@@ -51,6 +52,7 @@
   char taskman_display = 1;   // update display
   char taskman_power = 1;     // check battery, check auto-turn-off, etc
   char taskman_log = 1;       // check auto-start, increment timers, update log file, etc
+  char taskman_tempRH = 1;    // (1) trigger temp & humidity measurements, (2) process values and save
 
 // track current power on state to detect changes (if user turns device on or off while USB is plugged in, device can still run even when "off")
   uint8_t currentPowerOnState = POWER_OFF;
@@ -99,7 +101,6 @@ void IRAM_ATTR onTaskTimer() {
   //do stuff every alarm cycle (default 10ms)
   taskman_setTasks = 1; // next time through main loop, set tasks to do!
   // wakeup();  // go back to main loop and keep processing stuff that needs doing!
-  spi_checkFlag(1);
 }
 
 
@@ -263,11 +264,11 @@ void setTasks(void) {
       if (counter_100ms_block == 1) taskman_power = 1;                                // every second: power checks      
       if (counter_100ms_block == 2) taskman_log = 1;                                  // every second: logging
       if (counter_100ms_block == 3 || counter_100ms_block == 8) taskman_display = 1;  // Update LCD every half-second on the 3rd and 8th 100ms blocks
-      // 4
+      if (counter_100ms_block == 4) taskman_tempRH = 1;                               // trigger the start of a new temp & humidity measurement
       // 5 - gps
       //if (counter_100ms_block == 7) doBaroTemp = true; else doBaroTemp = false;       // update the Baro temp reading every second (not needed as frequently as the pressure reading)
       // 8 - LCD
-      // 9
+      if (counter_100ms_block == 9) taskman_tempRH = 2;                               // read and process temp & humidity measurement
       break;      
   }
 }
@@ -276,13 +277,15 @@ void setTasks(void) {
 
 // execute necessary tasks while we're awake and have things to do
 void taskManager(void) {    
-  if (taskman_buttons) { buttons_update(); taskman_buttons = 0; }
+  // Do Baro first, because the ADC prep & read cycle is time dependent (must have >9ms between prep & read).  If other tasks delay the start of the baro prep step by >1ms, then next cycle when we read ADC, the Baro won't be ready.
   if (taskman_baro)    { baro_update(taskman_baro, doBaroTemp); taskman_baro = 0; }    // update baro, using the appropriate step number
+  if (taskman_buttons) { buttons_update(); taskman_buttons = 0; }
   if (taskman_imu)     { imu_update();     taskman_imu = 0; }
   if (taskman_gps)     { gps_update();     taskman_gps = 0; }
   if (taskman_power)   { power_update();   taskman_power = 0; }
   if (taskman_log)     { log_update();     taskman_log = 0; }
   if (taskman_display) { display_update(); taskman_display = 0; }  
+  if (taskman_tempRH)  { tempRH_update(taskman_tempRH);  taskman_tempRH = 0; }
 }
 
 

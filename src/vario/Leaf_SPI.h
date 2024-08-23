@@ -15,18 +15,13 @@
 #define SPI_CLK          12
 #define SPI_MISO         13  
 
-#define SPI_SS_IMU       10
 #define SPI_SS_LCD       15
-#define SPI_SS_BARO      18
 
-void spi_checkFlag(uint8_t interruptNumber);
 
 void     spi_init(void);
 void     spi_writeGLCD(byte data);
+
 void     spi_writeIMUByte(byte address, byte data);
 uint8_t  spi_readIMUByte(byte address);
-uint32_t spi_writeBaroCommand(byte data);    // TODO change to return uint8_t ?
-uint16_t spi_readBaroCalibration(unsigned char PROMaddress);
-uint32_t spi_readBaroADC(void);
 
 #endif

@@ -12,6 +12,8 @@
 #include "settings.h"
 #include "log.h"
 
+#define DEBUG_GPS 0
+
 // Setup GPS
 #define gpsPort Serial0         // This is the hardware communication port (UART0) for GPS Rx and Tx lines.  We use the default ESP32S3 pins so no need to set them specifically
 #define GPSBaud 115200
@@ -282,7 +284,7 @@ bool gps_read_buffer_once() {
   if (gpsPort.available()) {    
     char a = gpsPort.read();
     gps.encode(a);
-    //Serial.print(a);
+    if (DEBUG_GPS) Serial.print(a);
     //gps.encode(gpsPort.read());    
     return true;
   } else {        

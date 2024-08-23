@@ -18,9 +18,9 @@ class SystemMenuPage : public SettingsMenuPage {
   private:
     static constexpr char * labels[9] = {
       "Back",
-      "TimeZn",
-      "Vol",
-      "AutoOff",
+      "TimeZone",
+      "Volume",
+      "Auto-Off",
       "Charge",
       "EcoMode",
       "Wifi",

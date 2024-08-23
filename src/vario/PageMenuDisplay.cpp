@@ -8,15 +8,15 @@
 #include "speaker.h"
 
 
-enum display_menu_items { 
-  cursor_units_back,
-  cursor_units_alt,
-  cursor_units_climb,
-  cursor_units_speed,
-  cursor_units_distance,
-  cursor_units_heading,
-  cursor_units_temp,
-  cursor_units_hours
+enum display_menu_items {
+  cursor_display_back,
+  cursor_display_contrast,
+  cursor_display_AA,
+  cursor_display_BB,
+  cursor_display_CC,
+  cursor_display_DD,
+  cursor_display_EE,
+  cursor_display_FF
 
 };
 
@@ -49,35 +49,28 @@ void DisplayMenuPage::draw() {
       if (i == cursor_position) u8g2.setDrawColor(0);
       else u8g2.setDrawColor(1);
       switch (i) {
-        case cursor_units_alt:
-          if (UNITS_alt) u8g2.print("ft");
-          else u8g2.print(" m");
+        case cursor_display_contrast:
+          u8g2.print(CONTRAST);
           break;
-        case cursor_units_climb:
-          if (UNITS_climb) u8g2.print("fpm");
-          else u8g2.print("m/s");    
+        case cursor_display_AA:
+          u8g2.print("AA");          
           break;
-        case cursor_units_speed:
-          if (UNITS_speed) u8g2.print("mph");
-          else u8g2.print("kph");
+        case cursor_display_BB:
+          u8g2.print("BB");          
           break;
-        case cursor_units_distance:
-          if (UNITS_distance) u8g2.print("mi");
-          else u8g2.print("km");
+        case cursor_display_CC:
+          u8g2.print("CC");          
           break;
-        case cursor_units_heading:
-          if (UNITS_heading) u8g2.print("NNW");
-          else u8g2.print("deg");
+        case cursor_display_DD:
+          u8g2.print("DD");          
           break;
-        case cursor_units_temp:
-          if (UNITS_temp) u8g2.print("F");
-          else u8g2.print("C");
+        case cursor_display_EE:
+          u8g2.print("EE");          
           break;
-        case cursor_units_hours:
-          if (UNITS_hours) u8g2.print("12h");
-          else u8g2.print("24h");
+        case cursor_display_FF:
+          u8g2.print("FF");          
           break;
-        case cursor_units_back:
+        case cursor_display_back:
           u8g2.print((char)124);
           break;        
       }
@@ -88,28 +81,29 @@ void DisplayMenuPage::draw() {
 
 void DisplayMenuPage::setting_change(int8_t dir, uint8_t state, uint8_t count) {
   switch (cursor_position) {
-    case cursor_units_alt:
+    case cursor_display_contrast:
+      if (state == RELEASED && dir != 0) settings_adjustContrast(dir);
+      else if (state == HELD && dir == 0) settings_adjustContrast(dir);
+      break;
+    case cursor_display_AA:
 
       break;
-    case cursor_units_climb:
+    case cursor_display_BB:
 
       break;
-    case cursor_units_speed:
+    case cursor_display_CC:
 
       break;
-    case cursor_units_distance:
+    case cursor_display_DD:
 
       break;
-    case cursor_units_heading:
+    case cursor_display_EE:
 
       break;
-    case cursor_units_temp:
+    case cursor_display_FF:
 
       break;
-    case cursor_units_hours:
-
-      break;
-    case cursor_units_back:
+    case cursor_display_back:
       if (state == RELEASED) {
         speaker_playSound(fx_cancel);
         settings_save(); 
