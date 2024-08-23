@@ -14,6 +14,8 @@
 #include "speaker.h"
 #include "settings.h"
 #include "pages.h"
+#include "PageThermal.h"
+
 
 
 //button debouncing 
@@ -48,17 +50,20 @@ uint8_t buttons_init(void) {
 }
 
 uint8_t buttons_update(void) {
-  // TODO: fill this in to handle button pushes with respect to display interface
-  uint8_t which_button = buttons_check();
-  //  uint8_t button_state = buttons_get_state();  //TODO: delete this line probably
 
-  // pressing any button should reset the auto-off counter
-  if(which_button != NONE) power_resetAutoOffCounter();
-
-  if (display_getPage() == page_menu) {
+  uint8_t which_button = buttons_check();  
+  if(which_button == NONE) return which_button;  // don't take any action if no button
+    
+  power_resetAutoOffCounter();                // pressing any button should reset the auto-off counter
+  uint8_t currentPage = display_getPage();    // actions depend on which page we're on
+  
+  if (currentPage == page_menu) {
     bool draw_now = mainMenuPage.button_event(which_button, buttons_get_state(), buttons_get_hold_count());
     if (draw_now) display_update();
 
+  } else if (currentPage == page_thermal) {
+    thermalPage_button(which_button, buttons_get_state(), buttons_get_hold_count());
+    display_update();
 
   } else if (display_getPage() == page_charging) {
     switch (which_button) {
