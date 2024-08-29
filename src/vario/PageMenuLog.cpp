@@ -4,6 +4,7 @@
 
 #include "buttons.h"
 #include "display.h"
+#include "displayFields.h"
 #include "fonts.h"
 #include "settings.h"
 #include "speaker.h"
@@ -88,7 +89,7 @@ void LogMenuPage::draw() {
       }
     u8g2.setDrawColor(1);
     }
-    display_flightTimer(10, 160, false);
+    display_flightTimer(10, 160, false, false);
   } while ( u8g2.nextPage() ); 
 }
 

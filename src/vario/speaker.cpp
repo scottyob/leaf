@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 #include "speaker.h"
 #include "Leaf_SPI.h"
 #include "settings.h"

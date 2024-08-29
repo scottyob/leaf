@@ -613,13 +613,13 @@ int32_t altitude_values[] = {
   char process_step_test = 0;
 
   void baro_debugPrint() {
-    /*
+    
     Serial.print("D1_P:");
     Serial.print(D1_P);
     Serial.print(", D2_T:");
     Serial.print(D2_T);         //has been zero, perhaps because GPS serial buffer processing delayed the ADC prep for reading this from baro chip
-    */
-    Serial.print("LastAlt:");
+    
+    Serial.print(" LastAlt:");
     Serial.print(lastAlt);// - P_ALTinitial);
     Serial.print(", ALT:");
     Serial.print(P_ALT);// - P_ALTinitial);

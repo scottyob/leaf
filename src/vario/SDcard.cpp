@@ -1,10 +1,17 @@
+#include <Arduino.h>
 #include <SD_MMC.h>
 #include <FS.h>
+
 
 #include "SDcard.h"
 #include "gps.h"
 #include "log.h"
 #include "kml.h"
+
+#define DEBUG_SDCARD true
+
+bool SDcardIsPresent = false;
+
 
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels) {
@@ -86,14 +93,66 @@ void writeFile(fs::FS &fs, const char * path, const char * message) {
     }
 }
 
+
+
+
 void appendFile(fs::FS &fs, const char * path, const char * message) {
-    Serial.printf("Appending to file: %s\n", path);
+
+    uint32_t append_time = micros();
+
+    
+    Serial.print("startAppend:   ");
+    Serial.println(append_time);
+
+
+    //Serial.printf("Appending to file: %s\n", path);
+    
+    //uint32_t time = micros();
 
     File file = fs.open(path, FILE_APPEND);
+
+    //time = micros()-time;
+    
+    //Serial.print("FileOpen: ");
+    //Serial.println(time);
+
     if(!file){
         Serial.println("Failed to open file for appending");
         return;
     }
+
+    //time = micros();
+
+    /*
+    if(file.print(message)){
+
+        //time = micros()-time;        
+        //Serial.print("Message appended: ");
+        //Serial.println(time);
+    } else {
+        //Serial.println("Append failed");
+    }
+    */
+
+    Serial.print("endAppend @  : ");
+    Serial.println(micros());
+
+
+    append_time = micros()-append_time;        
+    Serial.print("append_time: ");
+    Serial.println(append_time);
+
+    Serial.print("endAppend!! @: ");
+    Serial.println(micros());
+
+}
+
+
+
+
+void appendOpenFile(File file, const char * message) {
+    Serial.printf("Appending to open file");
+
     if(file.print(message)){
         Serial.println("Message appended");
     } else {
@@ -167,11 +226,25 @@ void SDcard_init(void) {
         Serial.println("Pin change failed!");
         return;
     }
-    
+
+    SDcard_mount();
+}
+
+
+bool SDcard_mount() {
     if(!SD_MMC.begin()){
-        Serial.println("SDcard Mount Failed");  
-        return;
+        if (DEBUG_SDCARD) Serial.println("SDcard Mount Failed");  
+        SDcardIsPresent = false;        
+    } else {
+        if (DEBUG_SDCARD) Serial.println("SDcard Mount Success");  
+        SDcardIsPresent = true;
     }
+
+    return SDcardIsPresent;
+}
+
+bool SDcard_present() {
+    return SDcardIsPresent;
 }
 
 void SDcard_test(void) {  
@@ -226,13 +299,18 @@ void SDcard_test(void) {
 String saveDir = "/Tracks";
 String currentTrackFile;
 bool trackFileStarted = false;
+File logFileOpen;
 
-bool SDcard_createLogFile() {
-  
+bool SDcard_createLogFile() {  
   createDir(SD_MMC, saveDir.c_str());
   currentTrackFile = saveDir + log_createFileName();
   writeFile(SD_MMC, currentTrackFile.c_str(), KMLtrackHeader);
+
+  logFileOpen = SD_MMC.open(currentTrackFile.c_str(), FILE_APPEND);
+
+
   trackFileStarted = true;
+  
   return true;  //TODO: check if file was written properly, and return false if not
 }
 
@@ -240,10 +318,31 @@ void SDcard_writeLogHeader() {
   appendFile(SD_MMC, "/hello.txt", "World!\n");
 }
 
+
+
+
 void SDcard_writeLogData(String coordinates) {
+
+  uint32_t time = micros();
+  Serial.print("startWriteLog: ");
+  Serial.println(time);
+
   //String logData = log_getKMLCoordinates();
   appendFile(SD_MMC, currentTrackFile.c_str(), coordinates.c_str());
+  //appendOpenFile(logFileOpen, coordinates.c_str());
+  
+    Serial.print("endWriteLog @: ");
+    Serial.println(micros());
+
+
+  time = micros()-time;        
+  Serial.print("writeLoggy: ");
+  Serial.println(time);
+
 }
+
+
+
 
 void SDcard_writeLogFooter() {
   appendFile(SD_MMC, currentTrackFile.c_str(), KMLtrackFooter);

@@ -25,12 +25,18 @@ void appendFile(fs::FS &fs, const char * path, const char * message);
 void renameFile(fs::FS &fs, const char * path1, const char * path2);
 void deleteFile(fs::FS &fs, const char * path);
 void testFileIO(fs::FS &fs, const char * path);
+
 void SDcard_init(void);
+
+bool SDcard_mount(void);
+bool SDcard_present(void);
+
 void SDcard_test(void);
 void SDcard_testStuff(void);
 
 bool SDcard_createLogFile(void);
 void SDcard_writeLogData(String coordinates);
+void appendOpenFile(File file, const char * message);
 void SDcard_writeLogHeader(void);
 void SDcard_writeLogFooter(void);
 

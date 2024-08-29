@@ -18,6 +18,7 @@
 
 
 
+
 //button debouncing 
 uint8_t button_debounce_last = NONE;
 uint32_t button_debounce_time = 5;    // time in ms for stabilized button state before returning the button press
@@ -52,7 +53,9 @@ uint8_t buttons_init(void) {
 uint8_t buttons_update(void) {
 
   uint8_t which_button = buttons_check();  
-  if(which_button == NONE) return which_button;  // don't take any action if no button
+  uint8_t button_state = buttons_get_state();
+  if(which_button == NONE || button_state == NO_STATE) return which_button;  // don't take any action if no button
+  //TODO: not jumping out of this function on NO_STATE was causing speaker issues... investigate!
     
   power_resetAutoOffCounter();                // pressing any button should reset the auto-off counter
   uint8_t currentPage = display_getPage();    // actions depend on which page we're on

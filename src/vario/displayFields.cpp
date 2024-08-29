@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <U8g2lib.h>
 
+#include "displayFields.h"
 #include "display.h"
 #include "fonts.h"
 
@@ -17,8 +18,7 @@
     void display_clockTime(uint8_t x, uint8_t y, bool show_ampm) {
       int16_t localTimeHHMM = gps_getLocalTimeHHMM();
 
-      u8g2.setCursor(x, y);
-      u8g2.setFont(leaf_6x12);
+      u8g2.setCursor(x, y);      
       u8g2.setDrawColor(1);
 
       if (localTimeHHMM <= -1) {    // will be -1 if GPS time is not current/valid
@@ -69,14 +69,18 @@
 
   
 
-    void display_flightTimer(uint8_t x, uint8_t y, bool shortstring) {
+    void display_flightTimer(uint8_t x, uint8_t y, bool shortstring, bool selected) {
       uint8_t h = 16;
       uint8_t w = 44;
       if (shortstring) w = 34;
 
       u8g2.setDrawColor(1);
-      u8g2.drawRBox(x, y-h, w, h, 2);
-      u8g2.setDrawColor(0);
+      if (selected) {
+        u8g2.drawRFrame(x-1, y-h-1, w+2, h+2, 3);
+      } else {        
+        u8g2.drawRBox(x, y-h, w, h, 2);
+        u8g2.setDrawColor(0);
+      }
       u8g2.setFont(leaf_6x12);
       u8g2.setCursor(x+2, y-2);
       u8g2.print(flightTimer_getString(shortstring));
@@ -109,6 +113,26 @@
       return (cursor_x += 7);
     }
 
+		void display_heading(uint8_t cursor_x, uint8_t cursor_y, bool degSymbol) {
+			u8g2.setCursor(cursor_x, cursor_y);
+
+			if(UNITS_heading) { // Cardinal heading direction  
+				const char *displayHeadingCardinal = gps.cardinal(gps.course.deg());  //gps_getCourseCardinal();  
+				if      (strlen(displayHeadingCardinal) == 1) u8g2.setCursor(cursor_x + 8, cursor_y);
+				else if (strlen(displayHeadingCardinal) == 2) u8g2.setCursor(cursor_x + 4, cursor_y);				
+
+				u8g2.print(displayHeadingCardinal);
+
+			} else { // Degrees heading direction
+				uint16_t displayHeadingDegrees = gps.course.deg();
+				if      (displayHeadingDegrees < 10)  u8g2.setCursor(cursor_x + 8, cursor_y);
+				else if (displayHeadingDegrees < 100) u8g2.setCursor(cursor_x + 4, cursor_y);		
+
+				u8g2.print(displayHeadingDegrees);
+				if (degSymbol) u8g2.print('*');
+			}
+		}
+
     void display_headingTurn(uint8_t cursor_x, uint8_t cursor_y) {
       u8g2.setCursor(cursor_x, cursor_y);
       u8g2.setFont(leaf_7x10);
@@ -117,13 +141,7 @@
       char displayTurn = '=' + gps_getTurn();   // in the 7x10 font, '=' is the "no turn" center state; 3 chars to each side are incresing amounts of turn arrow
       if (displayTurn < '=') u8g2.print(displayTurn);  
 
-      // Cardinal heading direction  
-      const char *displayHeadingCardinal = gps.cardinal(gps.course.deg());  //gps_getCourseCardinal();  
-      if      (strlen(displayHeadingCardinal) == 1) u8g2.setCursor(cursor_x + 16, cursor_y);
-      else if (strlen(displayHeadingCardinal) == 2) u8g2.setCursor(cursor_x + 12, cursor_y);
-      else                                          u8g2.setCursor(cursor_x +  8, cursor_y);
-
-      u8g2.print(displayHeadingCardinal);
+			display_heading(cursor_x+8, cursor_y, false);
 
       //Right turn arrow if needed
       u8g2.setCursor(cursor_x + 32, cursor_y);
@@ -131,7 +149,58 @@
     }
 
 
-    void display_alt(uint8_t cursor_x, uint8_t cursor_y, const uint8_t *font, int32_t displayAlt) {      
+	int32_t baro_getAlt (void);
+	int32_t baro_getOffsetAlt(void);
+	int32_t baro_getAltAtLaunch (void);
+	int32_t baro_getAltAboveLaunch(void);
+
+    void display_alt_type(uint8_t cursor_x, uint8_t cursor_y, const uint8_t * font, uint8_t altType) {
+
+      int32_t displayAlt= 0;
+
+      switch(altType) {
+        case alt_MSL:
+          displayAlt = baro_getOffsetAlt();
+          break;
+        case alt_AGL:
+          break;
+        case alt_GPS:
+          displayAlt = 100 * gps_getAltMeters();  // gps returns float in m, convert to int32_t in cm
+          break;
+        case alt_aboveLaunch:
+          displayAlt = baro_getAltAboveLaunch();
+          break;
+        case alt_aboveLZ:
+          break;
+        case alt_aboveWaypoint:
+          break;
+      }
+
+      display_alt(cursor_x, cursor_y, font, displayAlt);
+
+      u8g2.setFont(leaf_labels);
+
+      switch(altType) {
+        case alt_MSL:
+          u8g2.print(" MSL");
+          break;
+        case alt_AGL:
+          break;
+        case alt_GPS:
+          u8g2.print(" GPS");
+          break;
+        case alt_aboveLaunch:
+          u8g2.print(" ALH");
+          break;
+        case alt_aboveLZ:
+          u8g2.print(" ALZ");
+          break;
+        case alt_aboveWaypoint:
+          break;
+      }
+    }
+
+    void display_alt(uint8_t cursor_x, uint8_t cursor_y, const uint8_t * font, int32_t displayAlt) {      
       if (UNITS_alt) displayAlt = displayAlt *100 / 3048; // convert cm to ft
       else displayAlt /= 100;    //convert from cm to m
 
@@ -169,7 +238,7 @@
           u8g2.print(digits);
           u8g2.setCursor(cursor_x += fontWidth, cursor_y);
         }
-      } else { // no leading zeros for altitudes less than 1000
+      } else { // don't show leading zeros for altitudes less than 1000
         if (displayAlt < 100) cursor_x += fontWidth;
         if (displayAlt <  10) cursor_x += fontWidth;
         u8g2.setCursor(cursor_x, cursor_y);
@@ -252,7 +321,7 @@
     }
 
     void display_climbRatePointerBox(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t triSize, int16_t displayClimbRate) {
-      bool climbInFPM = false;
+
       float climbInMS = 0;
       u8g2.setDrawColor(1);  
       u8g2.drawBox(x, y, w, h);
@@ -270,39 +339,60 @@
       }
       x += fontWidth;
 
-      if (climbInFPM) {
+      if (UNITS_climb) {
         displayClimbRate = displayClimbRate * 197 / 100;    // convert from cm/s to fpm
         if (displayClimbRate < 1000) x += fontWidth;
         if (displayClimbRate < 100 ) x += fontWidth;
         if (displayClimbRate < 10  ) x += fontWidth;
         u8g2.setCursor(x, y);
         u8g2.print(displayClimbRate);
+        u8g2.setFont(leaf_5x8);
+        u8g2.setCursor(72, y);
+        u8g2.setFont(leaf_labels);
+        u8g2.print("fpm");
       } else {
         displayClimbRate = (displayClimbRate + 5) / 10;     // lose one decimal place and round off in the process
         climbInMS = (float)displayClimbRate/10;             // convert to float for ease of printing with the decimal in place
         if (climbInMS < 10  ) x += fontWidth;
         u8g2.setCursor(x, y);
         u8g2.print(climbInMS, 1);
+        u8g2.setFont(leaf_5x8);
+        u8g2.setCursor(72, y);
+        u8g2.setFont(leaf_labels);
+        u8g2.print("m/s");
       }
       u8g2.setDrawColor(1);   // always set back to 1 if we've been using 0, just in case the next draw function forgets  
     }
 
     void display_altAboveLaunch(uint8_t x, uint8_t y, int32_t aboveLaunchAlt) {
-      u8g2.setCursor(x, y - 16);
+      u8g2.setCursor(x, y - 14);
       u8g2.setFont(leaf_5h);
-      u8g2.print("Above Launch");
+      u8g2.print("ABOVE LAUNCH");
       display_alt(x, y, leaf_6x12, aboveLaunchAlt);
     }
 
-    void display_temp(uint8_t x, uint8_t y, uint16_t temperature) {
+    void display_temp(uint8_t x, uint8_t y, int16_t temperature) {
       u8g2.setCursor(x, y);
       u8g2.setDrawColor(1);
       u8g2.setFont(leaf_6x12);
-      u8g2.print(temperature/100);
-      u8g2.print((char)133);
-      u8g2.setCursor(x, y+14);
-      u8g2.print(temperature * 9 / 500 + 32);
-      u8g2.print((char)134);
+
+			if (UNITS_temp) {
+				temperature = temperature * 9 / 5 + 32;
+      	u8g2.print(temperature);
+				u8g2.print((char)134);
+			} else {
+				u8g2.print(temperature);
+				u8g2.print((char)133);
+			}
+    }
+
+    void display_humidity(uint8_t x, uint8_t y, uint8_t humidity) {
+      u8g2.setCursor(x, y);
+      u8g2.setDrawColor(1);
+      u8g2.setFont(leaf_6x12);
+
+     	u8g2.print(humidity);
+			u8g2.print('%');
     }
 
 

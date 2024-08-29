@@ -1,4 +1,5 @@
 
+#include <Arduino.h>
 #include <String>
 
 #include "log.h"
@@ -45,35 +46,54 @@ void log_init() {
 // update function to run every second
 void log_update() {
 
+  uint32_t time = micros();
+
   // everything log-related if the timer IS RUNNING
   if (flightTimerRunning) {
     flightTimerSec += 1;  
 
     // start the Track if needed (we check every update, in case we didn't have a GPS fix.  This way we can start track log writing as soon as we DO get a fix)
     if (!logFlightTrackStarted) {
-      if (gps.location.isValid()) {                
+      if (true) {//gps.location.isValid()) {                
         logFlightTrackStarted = SDcard_createLogFile(); //flag that we've started a log if we actually have successfully started a log file on SDCard.  If this returns false, we can keep trying to save a log file until it's successful.
       }
     }
+
+    uint32_t logSave_time = micros();
 
     // save datapoints to the track
     if (logFlightTrackStarted) {
       SDcard_writeLogData(log_getKMLCoordinates());
     }
 
+    logSave_time = micros() - logSave_time;
+    Serial.print("log save: ");
+    Serial.println(logSave_time);
+
     // capture any records for this flight
     log_checkMinMaxValues();  
+
+    uint32_t timer_time = micros();
 
     // finally, check if we should auto-stop the timer because we've been sitting idle for long enough
     if (AUTO_START && flightTimer_autoStop()) {  
       flightTimer_stop();
     } 
 
+    timer_time = micros() - timer_time;
+    Serial.print("timerCheck: ");
+    Serial.println(timer_time);
+
   } else { // if timer NOT running, check if we should auto-start it
     if (AUTO_START && flightTimer_autoStart()) {
       flightTimer_start();
     }
   }
+
+  time = micros() - time;
+  Serial.print("log update: ");
+  Serial.println(time);
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -287,6 +307,9 @@ void flightTimer_updateStrings() {
 }
 
 void log_checkMinMaxValues() {
+
+  uint32_t time = micros();
+
   //check altitude values for log
   log_alt = baro_getAlt();
   log_alt_above_launch = baro_getAltAboveLaunch();
@@ -312,14 +335,29 @@ void log_checkMinMaxValues() {
   } else if (log_temp < log_temp_min) {
     log_temp_min = log_temp;
   } 
+
+  time = micros() - time;
+  Serial.print("checkMinMax: ");
+  Serial.println(time);
+
 }
 
 
 String log_getKMLCoordinates() {
+
+
+  uint32_t time = micros();
+
   String lonPoint = String(gps.location.lng(), 7);
   String latPoint = String(gps.location.lat(), 7);  
   String altPoint = String(gps.altitude.meters(), 2);
   String logPointStr = lonPoint + "," + latPoint + "," + altPoint + "\n";
+
+  time = micros()-time;
+    
+  Serial.print("Get KML Coords: ");
+  Serial.println(time);
+
   return logPointStr;
 }
 

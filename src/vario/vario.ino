@@ -275,10 +275,36 @@ void setTasks(void) {
 
 
 
+uint32_t taskman_timeStamp = 0;
+uint8_t taskman_didSomeTasks = 0;
+
 // execute necessary tasks while we're awake and have things to do
 void taskManager(void) {    
+
+  if (taskman_buttons) {
+    taskman_timeStamp = micros();
+    taskman_didSomeTasks = 1;
+  }
   // Do Baro first, because the ADC prep & read cycle is time dependent (must have >9ms between prep & read).  If other tasks delay the start of the baro prep step by >1ms, then next cycle when we read ADC, the Baro won't be ready.
-  if (taskman_baro)    { baro_update(taskman_baro, doBaroTemp); taskman_baro = 0; }    // update baro, using the appropriate step number
+  if (taskman_baro)    { 
+    /*
+    baro_timeStamp = micros();
+    baro_timeStamp_diff = baro_timeStamp - baro_timeStamp_last;
+    baro_timeStamp_last = baro_timeStamp;
+    if (true) {//baro_timeStamp_diff < 9500) {
+
+      Serial.print("10ms: ");
+      Serial.print((uint8_t)counter_10ms_block);
+      Serial.print(" 100ms: ");
+      Serial.print((uint8_t)counter_100ms_block);
+      Serial.print(" BARO TIME! ");
+      Serial.println(baro_timeStamp_diff);
+    } 
+    */
+
+    baro_update(taskman_baro, doBaroTemp); taskman_baro = 0; 
+    
+    }    // update baro, using the appropriate step number
   if (taskman_buttons) { buttons_update(); taskman_buttons = 0; }
   if (taskman_imu)     { imu_update();     taskman_imu = 0; }
   if (taskman_gps)     { gps_update();     taskman_gps = 0; }
@@ -286,6 +312,17 @@ void taskManager(void) {
   if (taskman_log)     { log_update();     taskman_log = 0; }
   if (taskman_display) { display_update(); taskman_display = 0; }  
   if (taskman_tempRH)  { tempRH_update(taskman_tempRH);  taskman_tempRH = 0; }
+
+  if (taskman_didSomeTasks) {
+    taskman_didSomeTasks = 0;
+    taskman_timeStamp = micros() - taskman_timeStamp;
+    Serial.print("10ms: ");
+    Serial.print((uint8_t)counter_10ms_block);
+    Serial.print(" 100ms: ");
+    Serial.print((uint8_t)counter_100ms_block);
+    Serial.print(" taskTime: ");
+    Serial.println(taskman_timeStamp);
+  }
 }
 
 

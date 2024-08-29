@@ -1,7 +1,7 @@
 #include "tempRH.h"
 #include "Leaf_I2C.h"
 
-#define DEBUG_TEMPRH 1            // flag for outputting debugf messages on UBS serial port
+#define DEBUG_TEMPRH 0            // flag for outputting debugf messages on UBS serial port
 
 bool measurementStarted = false;
 
