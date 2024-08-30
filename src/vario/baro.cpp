@@ -338,9 +338,9 @@ int32_t altitude_values[] = {
     // after initialization, get first baro sensor reading to populate values
       baro_update(1, true);   // send convert-pressure command
       delay(10);					    // wait for baro sensor to process
-      baro_update(2, true);   // read pressure, send convert-temp command
+      baro_update(0, true);   // read pressure, send convert-temp command
       delay(10);					    // wait for baro sensor to process
-      baro_update(3, true);   // read temp, and calculate adjusted altitude
+      baro_update(0, true);   // read temp, and calculate adjusted altitude
 
       // initialize all the other reference variables with current altitude to start
       lastAlt = P_ALT;		          // assume we're stationary to start (previous Alt = Current ALt, so climb rate is zero)
@@ -361,7 +361,7 @@ int32_t altitude_values[] = {
     //fakeAlt = altitude_values[altitude_values[0]];
     //lastAlt = fakeAlt;
 
-    baro_update(4, true);  
+    baro_update(0, true);  
 
     //alt_lr.update((double)millis(), (double)P_ALTinitial);
     
@@ -396,40 +396,88 @@ int32_t altitude_values[] = {
     P_ALT_launch = baro_getAlt();
   }
 
-  char baro_update(char process_step, bool doTemp) {    // (we don't need to update temp as frequently, so we can skip it most of the time)
+  uint32_t baroTimeStampPressure = 0;
+  uint32_t baroTimeStampTemp = 0;
+  uint32_t baroADCStartTime = 0;
+  uint8_t process_step = 0;
+  bool baroADCBusy = false;
+  bool baroADCPressure = false;
+  bool baroADCTemp = false;
+
+  char baro_update(bool startNewCycle, bool doTemp) {    // (we don't need to update temp as frequently, so we can skip it most of the time)
     // the baro senor requires ~9ms between the command to prep the ADC and actually reading the value.
     // Since this delay is required between both pressure and temp values, we break the sensor processing 
     // up into several steps, to allow other code to process while we're waiting for the ADC to become ready.
     
+
+    // First check if ADC is not busy (i.e., it's been at least 9ms since we sent a "convert ADC" command)
+    if (micros() - baroADCStartTime > 9000) baroADCBusy = false;
+
+    if (startNewCycle) process_step = 0;
+
+    Serial.print("baro step: ");
+    Serial.print(process_step);
+    Serial.print(" NewCycle? ");
+    Serial.print(startNewCycle);
+    Serial.print(" time: ");
+    Serial.println(micros());
+
+
+
+
     switch (process_step) {
-      case 0:
-        return process_step;                        // if baro_update is called on step 0, do nothing, and return step 0.
-        break;
-      case 1:
-        baro_sendCommand(CMD_CONVERT_PRESSURE); // Prep baro sensor ADC to read raw pressure value (then come back for step 2 in ~10ms)      
-        break;
-      case 2:
-        D1_P = baro_readADC();                   // Read raw pressure value  
-        if (D1_P == 0) D1_P = D1_Plast;             // use the last value if we get a misread
-        else D1_Plast = D1_P;                       // otherwise save this value for next time if needed
-        if (doTemp) baro_sendCommand(CMD_CONVERT_TEMP);     // Prep baro sensor ADC to read raw temperature value (then come back for step 3 in ~10ms)
-        break;
-      case 3:
-        if (doTemp) {
-          D2_T = baro_readADC();						        // read digital temp data
-          if (D2_T == 0) D2_T = D2_Tlast;             // use the last value if we get a misread
-          else D2_Tlast = D2_T;                       // otherwise save this value for next time if needed
+      case 0:     // SEND CONVERT PRESSURE COMMAND
+        if (!baroADCBusy) {
+          baroADCStartTime = micros();
+          baro_sendCommand(CMD_CONVERT_PRESSURE); // Prep baro sensor ADC to read raw pressure value (then come back for step 2 in ~10ms)        
+          baroADCBusy = true;                     // ADC will be busy now since we sent a conversion command
+          baroADCPressure = true;                 // We will have a Pressure value in the ADC when ready
+          baroADCTemp = false;                    // We won't have a Temp value (even if the ADC was holding an unread Temperature value, we're clearning that out since we sent a Pressure command)
         }
+        break;
+
+      case 1:     // READ PRESSURE THEN SEND CONVERT TEMP COMMAND
+        if (!baroADCBusy && baroADCPressure) {          
+          D1_P = baro_readADC();                    // Read raw pressure value  
+          baroADCPressure = false;
+          //baroTimeStampPressure = micros() - baroTimeStampPressure; // capture duration between prep and read
+          if (D1_P == 0) D1_P = D1_Plast;           // use the last value if we get an invalid read
+          else D1_Plast = D1_P;                     // otherwise save this value for next time if needed          
+          //baroTimeStampTemp = micros();
+        
+          if (doTemp) {
+            baroADCStartTime = micros();
+            baro_sendCommand(CMD_CONVERT_TEMP);     // Prep baro sensor ADC to read raw temperature value (then come back for step 3 in ~10ms)
+            baroADCBusy = true;
+            baroADCTemp = true;                     // We will have a Temperature value in the ADC when ready
+            baroADCPressure = false;                // We won't have a Pressure value (even if the ADC was holding an unread Pressure value, we're clearning that out since we sent a Temperature command)
+          }
+        }
+        break;
+
+      case 2:     // READ TEMP THEN CALCULATE ALTITUDE
+        if (doTemp) {
+          if (!baroADCBusy && baroADCTemp) {  
+            D2_T = baro_readADC();						        // read digital temp data
+            baroADCTemp = false;
+            //baroTimeStampTemp = micros() - baroTimeStampTemp; // capture duration between prep and read
+            if (D2_T == 0) D2_T = D2_Tlast;             // use the last value if we get a misread
+            else D2_Tlast = D2_T;                       // otherwise save this value for next time if needed
+          }
+        }
+        // (even if we skipped some steps above because of mis-reads or mis-timing, we can still calculate a "new" altitude based on the old ADC values.  It will be a repeat value, but it keeps the filter buffer moving on time)
         P_ALT = baro_calculateAlt();                // calculate Pressure Altitude in cm
         break;
-      case 4:
+
+      case 3:     // FILTER VALUES TO AVERAGE OUT THE NOISE
         baro_filterALT();							              // filter pressure alt value
         baro_updateClimb();							            // update and filter climb rate
         if (DEBUG_BARO) baro_debugPrint();
         break;   
     }
-    if(++process_step > 4) process_step = 0;  // prep for the next step in the process (if we just did step 4, we're done so set to 0.  Elsewhere, Interrupt timer will set to 1 again eventually)  
-    return process_step;
+    process_step++;
+    //if(++process_step > 4) process_step = 0;  // prep for the next step in the process (if we just did step 4, we're done so set to 0.  Elsewhere, Interrupt timer will set to 1 again eventually)  
+    return (process_step - 1); //return what step was just completed
   }
 // Device Management 
 

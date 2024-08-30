@@ -17,6 +17,7 @@ uint32_t time_create;
 uint32_t time_append;
 uint32_t time_open;
 uint32_t time_print;
+File openLogFile;
 
 
 void appendFile(fs::FS &fs, const char *path, const char *message) {
@@ -42,6 +43,14 @@ void appendFile(fs::FS &fs, const char *path, const char *message) {
     Serial.println("Message appended");
   } else {
     Serial.println("Append failed");
+  }
+}
+
+void appendOpenFile(File &f, const char *message) {
+  if (f.print(message)) {    
+    Serial.println("Message appended!!!");
+  } else {
+    Serial.println("Append failed!!!");
   }
 }
 
@@ -247,6 +256,8 @@ void setup() {
 void createLogFile() {  
   time_create = micros();
   writeFile(SD_MMC, "/logfile.txt", "<KML Header Info>\n");   
+  openLogFile = SD_MMC.open("/logfile.txt", FILE_APPEND);
+
   time_create = micros() - time_create;
   Serial.print(time_create);
   Serial.println(" - Creating");   
@@ -255,7 +266,8 @@ void createLogFile() {
 
 void appendDataPoint() {
   time_append = micros();
-  appendFile(SD_MMC, "/logfile.txt", "<New Coordinates and Data>\n");
+  //appendFile(SD_MMC, "/logfile.txt", "<New Coordinates and Data>\n");
+  appendOpenFile(openLogFile, "<New Coordinates and Data>\n");
   time_append = micros() - time_append;
   Serial.print(time_append);
   Serial.println(" - Appending");   

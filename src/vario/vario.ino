@@ -213,7 +213,8 @@ void main_ON_loop() {
   //TODO: if gps serial buffer can fill while processor is sleeping, then we don't need to wait for serial port to be quiet
 }
 
-bool doBaroTemp = true;  // flag to track when to update temp reading from Baro Sensor (we can do temp every ~1 sec, even though we're doing pressure every 50ms)
+bool doBaroTemp = true;           // flag to track when to update temp reading from Baro Sensor (we can do temp every ~1 sec, even though we're doing pressure every 50ms)
+bool baro_startNewCycle = false;   // flag to track when Baro should start over processing a new pressure measurement
 
 void setTasks(void) {    
   // increment time counters
@@ -226,35 +227,38 @@ void setTasks(void) {
 
   // tasks to complete every 10ms
   taskman_buttons = 1;
+  taskman_baro = 1;
 
   // set additional tasks to complete, broken down into 10ms block cycles.  (embedded if() statements allow for tasks every second, spaced out on different 100ms blocks)
   switch (counter_10ms_block) {
     case 0:
-      taskman_baro = 1;  // begin updating baro every 50ms on the 0th and 5th blocks
+      //taskman_baro = 1;  // begin updating baro every 50ms on the 0th and 5th blocks
+      baro_startNewCycle = true;  // begin updating baro every 50ms on the 0th and 5th blocks
       break;
     case 1:
-      taskman_baro = 2;
+      //taskman_baro = 2;
       break;
     case 2:
-      taskman_baro = 3;
+      //taskman_baro = 3;
       break;
     case 3:
-      taskman_baro = 4;
+      //taskman_baro = 4;
       break;
     case 4:
       taskman_imu = 1;  // update accel every 100ms during the 4th block
       break;
     case 5:
-      taskman_baro = 1;  // begin updating baro every 50ms on the 0th and 5th blocks
+      baro_startNewCycle = true;  // begin updating baro every 50ms on the 0th and 5th blocks
+      //taskman_baro = 1;  // begin updating baro every 50ms on the 0th and 5th blocks
       break;
     case 6:
-      taskman_baro = 2;
+      //taskman_baro = 2;
       break;
     case 7:
-      taskman_baro = 3;
+      //taskman_baro = 3;
       break;
     case 8:
-      taskman_baro = 4;
+      //taskman_baro = 4;
       break;
     case 9:
       
@@ -281,10 +285,12 @@ uint8_t taskman_didSomeTasks = 0;
 // execute necessary tasks while we're awake and have things to do
 void taskManager(void) {    
 
+  // just for capturing start time of taskmanager loop
   if (taskman_buttons) {
     taskman_timeStamp = micros();
     taskman_didSomeTasks = 1;
   }
+
   // Do Baro first, because the ADC prep & read cycle is time dependent (must have >9ms between prep & read).  If other tasks delay the start of the baro prep step by >1ms, then next cycle when we read ADC, the Baro won't be ready.
   if (taskman_baro)    { 
     /*
@@ -302,7 +308,7 @@ void taskManager(void) {
     } 
     */
 
-    baro_update(taskman_baro, doBaroTemp); taskman_baro = 0; 
+    baro_update(baro_startNewCycle, doBaroTemp); taskman_baro = 0; baro_startNewCycle = false;
     
     }    // update baro, using the appropriate step number
   if (taskman_buttons) { buttons_update(); taskman_buttons = 0; }

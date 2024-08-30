@@ -55,7 +55,7 @@ void log_update() {
     // start the Track if needed (we check every update, in case we didn't have a GPS fix.  This way we can start track log writing as soon as we DO get a fix)
     if (!logFlightTrackStarted) {
       if (true) {//gps.location.isValid()) {                
-        logFlightTrackStarted = SDcard_createLogFile(); //flag that we've started a log if we actually have successfully started a log file on SDCard.  If this returns false, we can keep trying to save a log file until it's successful.
+        logFlightTrackStarted = SDcard_createTrackFile(log_createFileName()); //flag that we've started a log if we actually have successfully started a log file on SDCard.  If this returns false, we can keep trying to save a log file until it's successful.
       }
     }
 
@@ -89,11 +89,6 @@ void log_update() {
       flightTimer_start();
     }
   }
-
-  time = micros() - time;
-  Serial.print("log update: ");
-  Serial.println(time);
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -204,6 +199,7 @@ void log_update() {
       // if a KML track log was started
       if (logFlightTrackStarted) {
         logFlightTrackStarted = false;
+        Serial.println("closing Log");
         SDcard_writeLogFooter();
         //TODO: other KML file additions; maybe adding description and min/max and other stuff
       }
@@ -369,7 +365,9 @@ String log_createFileName() {
   uint8_t timeHours = timeInMinutes/60;
   uint8_t timeMinutes = timeInMinutes % 60;
   String fileTime = String(timeHours/10) + String(timeHours % 10) + String(timeMinutes / 10) + String(timeMinutes % 10);
-  
+  // TODO: add seconds in case two files are started within a minute
+
+
   Serial.println(timeInMinutes);
   Serial.println(timeHours);
   Serial.println(timeMinutes);

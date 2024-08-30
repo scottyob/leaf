@@ -34,9 +34,9 @@ bool SDcard_present(void);
 void SDcard_test(void);
 void SDcard_testStuff(void);
 
-bool SDcard_createLogFile(void);
+bool SDcard_createTrackFile(String filename);
 void SDcard_writeLogData(String coordinates);
-void appendOpenFile(File file, const char * message);
+void appendOpenFile(File &file, const char * message);
 void SDcard_writeLogHeader(void);
 void SDcard_writeLogFooter(void);
 

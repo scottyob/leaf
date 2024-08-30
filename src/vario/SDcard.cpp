@@ -150,7 +150,7 @@ void appendFile(fs::FS &fs, const char * path, const char * message) {
 
 
 
-void appendOpenFile(File file, const char * message) {
+void appendOpenFile(File &file, const char * message) {
     Serial.printf("Appending to open file");
 
     if(file.print(message)){
@@ -296,22 +296,26 @@ void SDcard_test(void) {
 
 // Creating and saving log files to SDCard
 
-String saveDir = "/Tracks";
+String saveDir = "/Tracks/";
 String currentTrackFile;
 bool trackFileStarted = false;
-File logFileOpen;
+File trackFile;
 
-bool SDcard_createLogFile() {  
+bool SDcard_createTrackFile(String filename) {  
   createDir(SD_MMC, saveDir.c_str());
-  currentTrackFile = saveDir + log_createFileName();
+  currentTrackFile = saveDir + filename;
   writeFile(SD_MMC, currentTrackFile.c_str(), KMLtrackHeader);
 
-  logFileOpen = SD_MMC.open(currentTrackFile.c_str(), FILE_APPEND);
-
+  trackFile = SD_MMC.open(currentTrackFile.c_str(), FILE_APPEND);
 
   trackFileStarted = true;
   
-  return true;  //TODO: check if file was written properly, and return false if not
+  // check if file was written properly, and return false if not
+  if (!trackFile) {
+    return false;
+  } else {
+    return true;
+  }
 }
 
 void SDcard_writeLogHeader() {
@@ -328,7 +332,7 @@ void SDcard_writeLogData(String coordinates) {
   Serial.println(time);
 
   //String logData = log_getKMLCoordinates();
-  appendFile(SD_MMC, currentTrackFile.c_str(), coordinates.c_str());
+  appendOpenFile(trackFile, coordinates.c_str());
   //appendOpenFile(logFileOpen, coordinates.c_str());
   
     Serial.print("endWriteLog @: ");
@@ -345,7 +349,9 @@ void SDcard_writeLogData(String coordinates) {
 
 
 void SDcard_writeLogFooter() {
-  appendFile(SD_MMC, currentTrackFile.c_str(), KMLtrackFooter);
+  appendOpenFile(trackFile, KMLtrackFooter);
+
+  trackFile.close();
 }
 
 

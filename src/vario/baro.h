@@ -49,7 +49,7 @@ int32_t VARIO_RATEfiltered;
   void baro_init(void);
 	void baro_reset(void);	
 	void baro_resetLaunchAlt(void);
-	char baro_update(char process_step, bool doTemp);
+	char baro_update(bool startNewCycle, bool doTemp);
 
 // Device reading & data processing  
 	int32_t baro_calculateAlt(void);
