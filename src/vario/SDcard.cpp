@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <SD_MMC.h>
 #include <FS.h>
+//#include <PinChangeInterrupt.h>
+
 
 
 #include "SDcard.h"
@@ -10,6 +12,7 @@
 
 #define DEBUG_SDCARD true
 
+bool remountSDCard = false; // flag set if the SD_DETECT pin changes state, so we know to attempt a re-mounting if the card is inserted or removed
 bool SDcardIsPresent = false;
 
 
@@ -220,6 +223,11 @@ void testFileIO(fs::FS &fs, const char * path) {
     file.close();
 }
 
+void IRAM_ATTR SDIO_DETECT_ISR() {
+    remountSDCard = true;
+}
+
+
 void SDcard_init(void) {
     // Shouldn't need to call set pins since we're using the default pins TODO: try removing this setPins call  
     if(!SD_MMC.setPins(SDIO_CLK, SDIO_CMD, SDIO_D0, SDIO_D1, SDIO_D2, SDIO_D3)){
@@ -227,11 +235,25 @@ void SDcard_init(void) {
         return;
     }
 
+    // attempt to remount the card if the SDIO_DETECT pin changes  (i.e. card state is changed by inserting or removing)
+    pinMode(SDIO_DETECT, INPUT_PULLUP);
+    attachInterrupt(SDIO_DETECT, SDIO_DETECT_ISR, CHANGE);
+
     SDcard_mount();
 }
 
+// called every second in case the SD card state has changed and we need to try remounting
+void SDcard_update() {
+    if (remountSDCard) SDcard_mount();
+    remountSDCard = false;
+}
 
 bool SDcard_mount() {
+
+    // we may be re-mounting after changing power states (from ON to CHARGE and back to ON). 
+    // If the SD card was removed during that process, we need to force-end the SD_MCC object so we can try to restart it, so we can properly tell if re-mounting fails (otherwise the SD_MCC object would falsely persist)
+    SD_MMC.end();
+
     if(!SD_MMC.begin()){
         if (DEBUG_SDCARD) Serial.println("SDcard Mount Failed");  
         SDcardIsPresent = false;        

@@ -39,9 +39,8 @@ char string_heading[] = " WNW ";
 // uint8_t contrast_setting = 80;
 
 // Leaf V3.2.2
-U8G2_ST75256_WO256X128_F_4W_HW_SPI u8g2(U8G2_R3,  /* cs=*/ SPI_SS_LCD, /* dc=*/ LCD_RS, /* reset=*/ LCD_RESET);  // June Huang
-//U8G2_ST75256_JLX19296_1_4W_SW_SPI u8g2(U8G2_R1, /* clock=*/ SPI_CLK, /* data=*/ SPI_MOSI, /* cs=*/ SPI_SS_LCD, /* dc=*/ LCD_RS, /* reset=*/ LCD_RESET); // Alice Green SW
-//U8G2_ST75256_JLX19296_F_4W_HW_SPI u8g2(U8G2_R1, /* cs=*/ SPI_SS_LCD, /* dc=*/ LCD_RS, /* reset=*/ LCD_RESET); // Alice Green HW
+//U8G2_ST75256_WO256X128_F_4W_HW_SPI u8g2(U8G2_R3,  /* cs=*/ SPI_SS_LCD, /* dc=*/ LCD_RS, /* reset=*/ LCD_RESET);  // June Huang
+U8G2_ST75256_JLX19296_F_4W_HW_SPI u8g2(U8G2_R1, /* cs=*/ SPI_SS_LCD, /* dc=*/ LCD_RS, /* reset=*/ LCD_RESET); // Alice Green HW
 
 int8_t display_page = page_thermal;
 uint8_t display_page_prior = page_thermal; // track the page we used to be on, so we can "go back" if needed (like cancelling out of a menu heirarchy)
@@ -61,7 +60,9 @@ void display_init(void) {
 }
 
 void display_setContrast(uint8_t contrast) {
-  u8g2.setContrast(contrast); ///2+15);
+  //u8g2.setContrast(contrast);   // JUne Huang
+  u8g2.setContrast(contrast/2+25);   // Alice Green
+  //u8g2.setContrast(contrast/3+15);   // 192x64 original
 }
 
 void display_turnPage(uint8_t action) {

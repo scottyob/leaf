@@ -17,6 +17,7 @@
 uint8_t current_setting;          // keep track of which input current setting we're using
 uint8_t powerOnState = POWER_OFF; // keep track of which power state we're in (ON & Runnning; or (soft)OFF and charging via USB, or dead OFF)
 
+/* was here for testing, can delete
 void power_simple_init(void) {
   
   #define POWER_CHARGE_I1   41  //  39 Old version 3.2.0
@@ -32,16 +33,16 @@ void power_simple_init(void) {
   pinMode(POWER_CHARGE_I2, OUTPUT);  
   digitalWrite(POWER_CHARGE_I1, HIGH);
   digitalWrite(POWER_CHARGE_I2, LOW);
-}
+}*/
 
 void power_bootUp() {
 
-  power_init(); 
-  uint8_t button = buttons_init(); 
-  if (button == CENTER) powerOnState = POWER_ON; 
-  else powerOnState = POWER_OFF_USB;
-  settings_init();
-  power_init_peripherals();
+  power_init();                                     // configure power supply
+  uint8_t button = buttons_init();                  // initialize buttons and check if holding the center button is what turned us on
+  if (button == CENTER) powerOnState = POWER_ON;    // if center button, then latch on and start operating!
+  else powerOnState = POWER_OFF_USB;                // if not center button, then USB power turned us on, go into charge mode
+  settings_init();                                  // grab user settings (or populate defaults if no saved settings)
+  power_init_peripherals();                         // init peripherals (even if we're not turning on and just going into charge mode, we still need to initialize devices so we can put some of them back to sleep)
 }
 
 // Initialize the power system itself (battery charger and 3.3V regulator etc)
@@ -96,6 +97,7 @@ void power_sleep_peripherals() {
 
 void power_wake_peripherals() {
   Serial.println("wake_peripherals: ");
+  SDcard_mount();                        // re-initialize SD card in case card state was changed while in charging/USB mode
   gps_wake();         
   speaker_wake();
 }

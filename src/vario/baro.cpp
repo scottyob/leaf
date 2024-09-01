@@ -415,12 +415,14 @@ int32_t altitude_values[] = {
 
     if (startNewCycle) process_step = 0;
 
-    Serial.print("baro step: ");
-    Serial.print(process_step);
-    Serial.print(" NewCycle? ");
-    Serial.print(startNewCycle);
-    Serial.print(" time: ");
-    Serial.println(micros());
+    if (DEBUG_BARO) {
+      Serial.print("baro step: ");
+      Serial.print(process_step);
+      Serial.print(" NewCycle? ");
+      Serial.print(startNewCycle);
+      Serial.print(" time: ");
+      Serial.println(micros());
+    }
 
 
 

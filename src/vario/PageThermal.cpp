@@ -24,11 +24,16 @@ enum thermal_page_items {
 };
 int8_t cursor_position = cursor_thermalPage_none;
 uint8_t cursor_max = 2;
+uint8_t cursor_timeCount = 0;	// count up for every page_draw, and if no button is pressed, then reset cursor to "none" after the timeOut value is reached.
+uint8_t cursor_timeOut = 12;	// after 12 page draws (6 seconds) reset the cursor if a button hasn't been pushed.
 
 void thermalPage_draw() {
-  //baro_updateFakeNumbers();
-  //gps_updateFakeNumbers();
-  //display_update_temp_vars();
+
+	// if cursor is selecting something, count toward the timeOut value before we reset cursor
+	if (cursor_position != cursor_thermalPage_none && cursor_timeCount++ >= cursor_timeOut) {
+		cursor_position = cursor_thermalPage_none;
+		cursor_timeCount = 0;		
+	}
 
   u8g2.firstPage();
   do { 
@@ -97,7 +102,7 @@ void thermalPage_draw() {
 				// SD Card Present
 				char SDicon = 60;
 				if(!SDcard_present()) SDicon = 61;
-				u8g2.setCursor(12, 192);
+				u8g2.setCursor(12, 191);
 				u8g2.setFont(leaf_icons);
 				u8g2.print((char)SDicon);
 			
@@ -128,7 +133,8 @@ void cursor_move(uint8_t button) {
 
 void thermalPage_button(uint8_t button, uint8_t state, uint8_t count) {
 
-	
+	// reset cursor time out count if a button is pushed
+	cursor_timeCount = 0;
 
 	switch (cursor_position) {
 		case cursor_thermalPage_none:

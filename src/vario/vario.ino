@@ -15,6 +15,7 @@
   #include "log.h"
   #include "settings.h"
 
+#define DEBUG_MAIN_LOOP false
 
 // Pinout for ESP32 Leaf V2
   #define AVAIL_GPIO_0       0  // unused, broken out to header
@@ -53,6 +54,7 @@
   char taskman_power = 1;     // check battery, check auto-turn-off, etc
   char taskman_log = 1;       // check auto-start, increment timers, update log file, etc
   char taskman_tempRH = 1;    // (1) trigger temp & humidity measurements, (2) process values and save
+  char taskman_SDCard = 1;    // check if SD card state has changed and attempt remount if needed
 
 // track current power on state to detect changes (if user turns device on or off while USB is plugged in, device can still run even when "off")
   uint8_t currentPowerOnState = POWER_OFF;
@@ -270,7 +272,8 @@ void setTasks(void) {
       if (counter_100ms_block == 3 || counter_100ms_block == 8) taskman_display = 1;  // Update LCD every half-second on the 3rd and 8th 100ms blocks
       if (counter_100ms_block == 4) taskman_tempRH = 1;                               // trigger the start of a new temp & humidity measurement
       // 5 - gps
-      //if (counter_100ms_block == 7) doBaroTemp = true; else doBaroTemp = false;       // update the Baro temp reading every second (not needed as frequently as the pressure reading)
+      if (counter_100ms_block == 6) taskman_SDCard = 1;                               // check if SD card state has changed and remount if needed
+      // 7 - available
       // 8 - LCD
       if (counter_100ms_block == 9) taskman_tempRH = 2;                               // read and process temp & humidity measurement
       break;      
@@ -286,7 +289,7 @@ uint8_t taskman_didSomeTasks = 0;
 void taskManager(void) {    
 
   // just for capturing start time of taskmanager loop
-  if (taskman_buttons) {
+  if (taskman_buttons && DEBUG_MAIN_LOOP) {
     taskman_timeStamp = micros();
     taskman_didSomeTasks = 1;
   }
@@ -318,8 +321,9 @@ void taskManager(void) {
   if (taskman_log)     { log_update();     taskman_log = 0; }
   if (taskman_display) { display_update(); taskman_display = 0; }  
   if (taskman_tempRH)  { tempRH_update(taskman_tempRH);  taskman_tempRH = 0; }
+  if (taskman_SDCard)  { SDcard_update();  taskman_SDCard = 0; }
 
-  if (taskman_didSomeTasks) {
+  if (taskman_didSomeTasks && DEBUG_MAIN_LOOP) {
     taskman_didSomeTasks = 0;
     taskman_timeStamp = micros() - taskman_timeStamp;
     Serial.print("10ms: ");
