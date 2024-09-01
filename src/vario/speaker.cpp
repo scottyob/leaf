@@ -219,6 +219,7 @@ void speaker_updateVarioNoteSample(int32_t verticalRate) {
   uint16_t sound_vario_rest_samplesTEMP;
 
   if(verticalRate > CLIMB_START) {
+
     // first clamp to thresholds if climbRate is over the max
     if (verticalRate >= CLIMB_MAX) {
       sound_varioNoteTEMP = verticalRate * (CLIMB_NOTE_MAX - CLIMB_NOTE_MIN) / CLIMB_MAX + CLIMB_NOTE_MIN;
@@ -230,7 +231,9 @@ void speaker_updateVarioNoteSample(int32_t verticalRate) {
       sound_vario_play_samplesTEMP = CLIMB_PLAY_SAMPLES_MAX - (verticalRate * (CLIMB_PLAY_SAMPLES_MAX - CLIMB_PLAY_SAMPLES_MIN) / CLIMB_MAX);
       sound_vario_rest_samplesTEMP = CLIMB_REST_SAMPLES_MAX - (verticalRate * (CLIMB_REST_SAMPLES_MAX - CLIMB_REST_SAMPLES_MIN) / CLIMB_MAX);
     }
-  } else if (verticalRate < SINK_ALARM) {    
+
+  // if we trigger sink threshold
+  } else if (verticalRate < (SINK_ALARM * 100) ) {    // sink alarm is in meters, so *100 to get cm to compare to verticalRate
     // first clamp to thresholds if sinkRate is over the max
     if (verticalRate <= SINK_MAX) {
       sound_varioNoteTEMP = SINK_NOTE_MIN - verticalRate * (SINK_NOTE_MIN - SINK_NOTE_MAX) / SINK_MAX;
@@ -242,6 +245,7 @@ void speaker_updateVarioNoteSample(int32_t verticalRate) {
       sound_vario_play_samplesTEMP = SINK_PLAY_SAMPLES_MIN + (verticalRate * (SINK_PLAY_SAMPLES_MAX - SINK_PLAY_SAMPLES_MIN) / SINK_MAX);
       sound_vario_rest_samplesTEMP = SINK_REST_SAMPLES_MIN + (verticalRate * (SINK_REST_SAMPLES_MAX - SINK_REST_SAMPLES_MIN) / SINK_MAX);
     }
+
   } else {
     sound_varioNote = 0;
   }
