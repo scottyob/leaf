@@ -11,6 +11,7 @@
 #include "display.h"
 #include "settings.h"
 #include "log.h"
+#include "baro.h"
 
 #define DEBUG_GPS 0
 
@@ -196,11 +197,28 @@ float fakeSpeed = 0;
 float fakeSpeedIncrement = 3;
 float fakeCourse = 0;
 
+float glideRatio;
+
+void gps_calculateGlideRatio() {
+
+  int32_t climb = baro_getClimbRate();
+  float speed = gps.speed.kmph();
+
+  if (climb == 0 || speed == 0) {
+    glideRatio = 0;
+  } else {
+    //             km per hour    /   cm per sec * sec per hour / cm per km
+    glideRatio = gps.speed.kmph() / (baro_getClimbRate() * 3600 / 100000); 
+  }
+}
+
+
 void gps_update() {
 
   // update sats if we're tracking sat NMEA sentences
   gps_updateSatList();
 
+  gps_calculateGlideRatio();
   /*
   //TODO: fill this in
   Serial.print("Valid: ");
@@ -242,6 +260,8 @@ float gps_getCourseDeg() { return fakeCourse;  } //gps.course.deg(); }
 const char *gps_getCourseCardinal() { return gps.cardinal(gps_getCourseDeg()); }
 
 float gps_getWaypointBearing() { return fakeWaypointBearing;  }
+float gps_getGlideRatio() { return glideRatio; }
+
 
 
 float gps_getRelativeBearing() {

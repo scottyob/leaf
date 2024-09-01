@@ -25,4 +25,6 @@
 void imu_init(void);
 void imu_update(void);
 
+float IMU_getAccel(void);
+
 #endif

@@ -156,7 +156,7 @@
 
     void display_alt_type(uint8_t cursor_x, uint8_t cursor_y, const uint8_t * font, uint8_t altType) {
 
-      int32_t displayAlt= 0;
+      int32_t displayAlt = 0;
 
       switch(altType) {
         case alt_MSL:
@@ -340,7 +340,7 @@
       x += fontWidth;
 
       if (UNITS_climb) {
-        displayClimbRate = displayClimbRate * 197 / 100;    // convert from cm/s to fpm
+        displayClimbRate = displayClimbRate * 197 / 1000 * 10;    // convert from cm/s to fpm (lose one significant digit)
         if (displayClimbRate < 1000) x += fontWidth;
         if (displayClimbRate < 100 ) x += fontWidth;
         if (displayClimbRate < 10  ) x += fontWidth;
@@ -370,6 +370,23 @@
       u8g2.print("ABOVE LAUNCH");
       display_alt(x, y, leaf_6x12, aboveLaunchAlt);
     }
+
+    void display_accel(uint8_t x, uint8_t y, float accel) {
+      u8g2.setCursor(x, y);
+      u8g2.setDrawColor(1);
+      u8g2.setFont(leaf_6x12);
+	    u8g2.print(accel, 1);
+      u8g2.print(" g");
+    }
+
+    void display_glide(uint8_t x, uint8_t y, float glide) {
+      if (glide < 10) x += 7;
+      u8g2.setCursor(x, y);
+      u8g2.setDrawColor(1);
+      u8g2.setFont(leaf_6x12);
+	    u8g2.print(glide, 1);      
+    }
+
 
     void display_temp(uint8_t x, uint8_t y, int16_t temperature) {
       u8g2.setCursor(x, y);
@@ -453,7 +470,7 @@
     void display_batt_charging_fullscreen() {
 
       // position of battery
-        uint8_t x = 32; // center of battery left/right
+        uint8_t x = 48; // center of battery left/right
         uint8_t y = 20; // top of battery nib
 
       // size of battery
@@ -521,7 +538,7 @@
       uint16_t battADC = power_getBattLevel(2);
 
       y += h+3;
-      x = 18;
+      x = 34;
 
       u8g2.setFont(leaf_6x12);
       u8g2.setCursor(x, y+=15);

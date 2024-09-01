@@ -66,6 +66,7 @@ float gps_getCourseDeg(void);
 const char *gps_getCourseCardinal(void);
 uint8_t gps_getTurn();
 float gps_getRelativeBearing(void);
+float gps_getGlideRatio(void);
 
 
 

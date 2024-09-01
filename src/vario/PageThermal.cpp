@@ -12,6 +12,8 @@
 #include "tempRH.h"
 #include "SDcard.h"
 #include "log.h"
+#include "IMU.h"
+#include "gps.h"
 
 
 enum thermal_page_items { 
@@ -71,6 +73,7 @@ void thermalPage_draw() {
 
 			//air data
 			display_alt_type(24, 90, leaf_8x14, alt_MSL);
+
 			display_climbRatePointerBox(20, 92, 76, 17, 6, baro_getClimbRate());     // x, y, w, h, triangle size
 			display_altAboveLaunch(24, 129, baro_getAltAboveLaunch());
 		
@@ -91,6 +94,8 @@ void thermalPage_draw() {
 
 			display_temp(varioBarWidth+5, userFieldsMid-1, (int16_t)tempRH_getTemp());
 			display_humidity(userSecondColumn+3, userFieldsMid-1, (uint8_t)tempRH_getHumidity());
+			display_accel(varioBarWidth+5, userFieldsBottom-1, IMU_getAccel());
+			display_glide(userSecondColumn+3, userFieldsBottom-1, gps_getGlideRatio());
 
 
     // Footer Info ****************************************************

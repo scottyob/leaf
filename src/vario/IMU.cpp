@@ -13,7 +13,7 @@
 
 #define SERIAL_PORT Serial
 #define WIRE_PORT Wire
-#define AD0_VAL 0
+#define AD0_VAL 0     // I2C address bit
 
 ICM_20948_I2C IMU;
 
@@ -39,6 +39,35 @@ void imu_init() {
   }
 }
 
+float ax, ay, az, at;
+
+void imu_update() {
+  //TODO: fill this in with everything
+
+  if (IMU.dataReady()) {
+    IMU.getAGMT();
+    ax = IMU.accX();
+    ay = IMU.accY();
+    az = IMU.accZ();
+
+    at = sqrt(ax*ax + ay*ay+az*az)/1000;
+  }
+  
+  if (DEBUG_IMU) {
+    Serial.print("tot: ");
+    Serial.print(at);
+    Serial.print("x: ");
+    Serial.print(ax);
+    Serial.print(" y: ");
+    Serial.print(ay);
+    Serial.print(" z: ");
+    Serial.println(az);
+  }
+}
+
+float IMU_getAccel() {
+  return at;
+}
 
 
 
@@ -71,7 +100,3 @@ void imu_init() {
 */
 
 
-
-void imu_update() {
-  //TODO: fill this in
-}

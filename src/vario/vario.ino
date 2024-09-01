@@ -146,17 +146,27 @@ uint32_t taskDuration = 0;
 
 void main_CHARGE_loop() {
   if (chargeman_doTasks) {    
-    taskTimeNow = micros();
-    taskDuration = taskTimeNow - taskTimeLast;
-    taskTimeLast = taskTimeNow;
-    //Serial.println(" ");
-    //Serial.print("taskDuration: "); Serial.println(taskDuration);
+    /* //debug print for checking timing 
+      taskTimeNow = micros();
+      taskDuration = taskTimeNow - taskTimeLast;
+      taskTimeLast = taskTimeNow;
+      //Serial.println(" ");
+      //Serial.print("taskDuration: "); Serial.println(taskDuration);
+    */
 
-    display_setPage(page_charging);
-    display_update();       // update display based on battery charge state etc
-    uint8_t buttonPushed = buttons_update();       // check buttons for any presses (user can turn ON from charging state)
-    chargeman_doTasks = 0;  // done with tasks this timer cycle
-    if (buttonPushed == NONE) goToSleep = true; // get ready to sleep if no button is being pushed
+    // Display Charging Page
+      display_setPage(page_charging);
+      display_update();       // update display based on battery charge state etc
+
+    // Check SD Card State and remount if card was inserted 
+      SDcard_update();
+
+    // Check Buttons
+      uint8_t buttonPushed = buttons_update();       // check buttons for any presses (user can turn ON from charging state)
+
+    // Prep to end this cycle and sleep
+      chargeman_doTasks = 0;  // done with tasks this timer cycle
+      if (buttonPushed == NONE) goToSleep = true; // get ready to sleep if no button is being pushed
   } else {    
     if (goToSleep && ECO_MODE) {  // don't allow sleep if ECO_MODE is off
 

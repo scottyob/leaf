@@ -12,7 +12,7 @@
 #include "fonts.h"
 
 #include "pages.h"
-#include "PageThermal.h";
+#include "PageThermal.h"
 
 #include "Leaf_SPI.h"
 #include "gps.h"
@@ -22,6 +22,7 @@
 #include "settings.h"
 #include "speaker.h"
 #include "power.h"
+#include "SDcard.h"
 
 //#define GLCD_RS LCD_RS
 //#define GLCD_RESET LCD_RESET
@@ -208,13 +209,19 @@ void display_page_charging() {
 
 
     u8g2.setFont(leaf_6x12);
-    u8g2.setCursor(18, 14);
+    u8g2.setCursor(34, 14);
     if      (power_getInputCurrent() == i100mA)  u8g2.print("100mA");
     else if (power_getInputCurrent() == i500mA)  u8g2.print("500mA");
     else if (power_getInputCurrent() == iMax)  u8g2.print("810mA");
     else if (power_getInputCurrent() == iStandby)  u8g2.print(" OFF");
     
-    
+    // Bottom Status Icons	
+      // SD Card Present
+      char SDicon = 60;
+      if(!SDcard_present()) SDicon = 61;
+      u8g2.setCursor(12, 191);
+      u8g2.setFont(leaf_icons);
+      u8g2.print((char)SDicon);
 
   } while ( u8g2.nextPage() ); 
   

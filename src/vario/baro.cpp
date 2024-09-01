@@ -409,7 +409,6 @@ int32_t altitude_values[] = {
     // Since this delay is required between both pressure and temp values, we break the sensor processing 
     // up into several steps, to allow other code to process while we're waiting for the ADC to become ready.
     
-
     // First check if ADC is not busy (i.e., it's been at least 9ms since we sent a "convert ADC" command)
     if (micros() - baroADCStartTime > 9000) baroADCBusy = false;
 
@@ -423,9 +422,6 @@ int32_t altitude_values[] = {
       Serial.print(" time: ");
       Serial.println(micros());
     }
-
-
-
 
     switch (process_step) {
       case 0:     // SEND CONVERT PRESSURE COMMAND

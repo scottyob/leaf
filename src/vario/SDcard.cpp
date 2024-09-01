@@ -225,6 +225,7 @@ void testFileIO(fs::FS &fs, const char * path) {
 
 void IRAM_ATTR SDIO_DETECT_ISR() {
     remountSDCard = true;
+    Serial.println("SD_DETECT");
 }
 
 
@@ -242,14 +243,23 @@ void SDcard_init(void) {
     SDcard_mount();
 }
 
+
+//TODO: we probably don't need ISR anymore to manage SD card since we're just checking the state change each second
+uint8_t SDcard_detectState = 1;       // flag for SD card insertion state (assume SD card is inserted)
+uint8_t SDcard_detectStateLast = 1;   // flag so we can see if there was a state change (and remount card if inserted while in charging state)
 // called every second in case the SD card state has changed and we need to try remounting
 void SDcard_update() {
-    if (remountSDCard) SDcard_mount();
-    remountSDCard = false;
+    SDcard_detectState = !digitalRead(SDIO_DETECT);
+
+    if (remountSDCard || (SDcard_detectState && !SDcard_detectStateLast)) {
+        SDcard_mount();
+        remountSDCard = false;
+    }
+    
+    SDcard_detectStateLast = SDcard_detectState;
 }
 
 bool SDcard_mount() {
-
     // we may be re-mounting after changing power states (from ON to CHARGE and back to ON). 
     // If the SD card was removed during that process, we need to force-end the SD_MCC object so we can try to restart it, so we can properly tell if re-mounting fails (otherwise the SD_MCC object would falsely persist)
     SD_MMC.end();
