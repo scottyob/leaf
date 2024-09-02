@@ -17,14 +17,14 @@ void display_headingTurn(uint8_t cursor_x, uint8_t cursor_y);
 
 void display_alt(uint8_t cursor_x, uint8_t cursor_y, const uint8_t *font, int32_t displayAlt);
 void display_altAboveLaunch(uint8_t x, uint8_t y, int32_t aboveLaunchAlt);
-void display_alt_type(uint8_t cursor_x, uint8_t cursor_y, const uint8_t * font, uint8_t altType);
+void display_alt_type(uint8_t cursor_x, uint8_t cursor_y, const uint8_t * font, uint8_t altType, bool selected);
 enum altTypes { 
   alt_MSL,
-	alt_AGL,
-	alt_GPS,
+	alt_GPS,	
 	alt_aboveLaunch,
 	alt_aboveLZ,
-	alt_aboveWaypoint
+	alt_aboveWaypoint,
+	alt_AGL
 };
 
 void display_varioBar(uint8_t varioBarFrame_top, uint8_t varioBarFrame_length, uint8_t varioBarFrame_width, int32_t displayBarClimbRate);

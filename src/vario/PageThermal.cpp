@@ -14,6 +14,7 @@
 #include "log.h"
 #include "IMU.h"
 #include "gps.h"
+#include "settings.h"
 
 
 enum thermal_page_items { 
@@ -72,8 +73,7 @@ void thermalPage_draw() {
 			display_varioBar(topOfFrame, 141, varioBarWidth, baro_getClimbRate());
 
 			//air data
-			display_alt_type(24, 90, leaf_8x14, alt_MSL);
-
+			display_alt_type(22, 89, leaf_8x14, DISPLAY_FIELD_ALT1, (cursor_position == cursor_thermalPage_alt1));
 			display_climbRatePointerBox(20, 92, 76, 17, 6, baro_getClimbRate());     // x, y, w, h, triangle size
 			display_altAboveLaunch(24, 129, baro_getAltAboveLaunch());
 		
@@ -101,7 +101,7 @@ void thermalPage_draw() {
     // Footer Info ****************************************************
 		
 			//flight timer (display selection box if selected)
-			display_flightTimer(52, 191, 0, (cursor_position == cursor_thermalPage_timer));			
+			display_flightTimer(51, 191, 0, (cursor_position == cursor_thermalPage_timer));			
 
 			// Bottom Status Icons	
 				// SD Card Present
@@ -171,10 +171,26 @@ void thermalPage_button(uint8_t button, uint8_t state, uint8_t count) {
 					if (state == RELEASED) cursor_move(button);     					
 					break;
 				case LEFT:
+					if (DISPLAY_FIELD_ALT1 == alt_MSL && (state == PRESSED || state == HELD || state == HELD_LONG)) {
+          	settings_adjustAltOffset(-1, count);
+          	speaker_playSound(fx_neutral);
+        	}
 					break;
 				case RIGHT:
+					if (DISPLAY_FIELD_ALT1 == alt_MSL && (state == PRESSED || state == HELD || state == HELD_LONG)) {
+          	settings_adjustAltOffset(1, count);
+          	speaker_playSound(fx_neutral);
+        	}
 					break;
 				case CENTER:
+					if (state == RELEASED) settings_adjustDisplayFieldAlt1(1);
+					else if (state == HELD && count == 1 && DISPLAY_FIELD_ALT1 == alt_MSL)  {
+						if (settings_matchGPSAlt()) { // successful reset of AltOffset to match GPS altitude
+          		speaker_playSound(fx_enter);  
+        		} else {                      // unsuccessful 
+          	speaker_playSound(fx_cancel);
+        		}
+					}
 					break;
 			}
 			break;

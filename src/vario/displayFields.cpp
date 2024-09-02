@@ -154,7 +154,12 @@
 	int32_t baro_getAltAtLaunch (void);
 	int32_t baro_getAltAboveLaunch(void);
 
-    void display_alt_type(uint8_t cursor_x, uint8_t cursor_y, const uint8_t * font, uint8_t altType) {
+    void display_alt_type(uint8_t cursor_x, uint8_t cursor_y, const uint8_t * font, uint8_t altType, bool selected) {
+      u8g2.setDrawColor(1);
+      if (selected) {
+        u8g2.drawRFrame(cursor_x, cursor_y-16, 96-cursor_x, 18, 3);
+      }
+      
 
       int32_t displayAlt = 0;
 
@@ -198,6 +203,7 @@
         case alt_aboveWaypoint:
           break;
       }
+      u8g2.setDrawColor(1);
     }
 
     void display_alt(uint8_t cursor_x, uint8_t cursor_y, const uint8_t * font, int32_t displayAlt) {      
@@ -296,7 +302,7 @@
         varioBarFill_end   = varioBarFrame_mid;
       }
 
-      u8g2.drawBox(1, varioBarFill_start, 12, varioBarFill_end - varioBarFill_start + 1);
+      u8g2.drawBox(1, varioBarFill_start, varioBarFrame_width-2, varioBarFill_end - varioBarFill_start + 1);
       
       // Tick marks on varioBar 
       uint8_t tickSpacing = varioBarFill_top_length / 5;  // start with top half tick spacing
@@ -315,7 +321,7 @@
           } else {
             u8g2.setDrawColor(1);
           }
-          u8g2.drawLine(1, line_y, 6, line_y);
+          u8g2.drawLine(1, line_y, varioBarFrame_width/2-1, line_y);
         }
       }
     }

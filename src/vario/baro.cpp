@@ -712,8 +712,3 @@ int32_t altitude_values[] = {
       Serial.println(P_ALTregression);
     }
   }
-
-
-
-
-

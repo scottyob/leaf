@@ -23,21 +23,27 @@
     int8_t LIFTY_AIR;    
     int8_t SINK_ALARM;
     int32_t ALT_OFFSET;    
+
   // GPS & Track Log Settings
     bool DISTANCE_FLOWN;
     int8_t GPS_SETTING;
     bool TRACK_SAVE;
     bool AUTO_START;
     bool AUTO_STOP;
+
   // System Settings
     int16_t TIME_ZONE;
-    int8_t VOLUME_SYSTEM;
-    uint8_t CONTRAST;
+    int8_t VOLUME_SYSTEM;    
     bool ENTER_BOOTLOAD;
     bool ECO_MODE;
     bool AUTO_OFF;
     bool WIFI_ON;
     bool BLUETOOTH_ON;
+
+  // Display Settings
+    uint8_t CONTRAST;
+    uint8_t DISPLAY_FIELD_ALT1;
+
   // Unit Values
     bool UNITS_climb;
     bool UNITS_alt;
@@ -84,21 +90,27 @@ void settings_loadDefaults() {
     VARIO_TONES = DEF_VARIO_TONES;
     LIFTY_AIR = DEF_LIFTY_AIR;
     ALT_OFFSET = DEF_ALT_OFFSET;
+
   // GPS & Track Log Settings
     DISTANCE_FLOWN = DEF_DISTANCE_FLOWN;
     GPS_SETTING = DEF_GPS_SETTING;
     TRACK_SAVE = DEF_TRACK_SAVE;
     AUTO_START = DEF_AUTO_START;
     AUTO_STOP = DEF_AUTO_STOP;
+
   // System Settings
     TIME_ZONE = DEF_TIME_ZONE;
     VOLUME_SYSTEM = DEF_VOLUME_SYSTEM;
-    CONTRAST = DEF_CONTRAST;
     ENTER_BOOTLOAD = DEF_ENTER_BOOTLOAD;
     ECO_MODE = DEF_ECO_MODE;
     AUTO_OFF = DEF_AUTO_OFF;
     WIFI_ON = DEF_WIFI_ON;
     BLUETOOTH_ON = DEF_BLUETOOTH_ON;
+
+  // Display Settings
+    CONTRAST = DEF_CONTRAST;
+    DISPLAY_FIELD_ALT1 = DEF_DISPLAY_FIELD_ALT1;
+
   // Unit Values
     UNITS_climb = DEF_UNITS_climb;
     UNITS_alt = DEF_UNITS_alt;
@@ -121,20 +133,25 @@ void settings_retrieve() {
     VARIO_TONES =     leafPrefs.getChar("VARIO_TONES");
     LIFTY_AIR =       leafPrefs.getChar ("LIFTY_AIR");
     ALT_OFFSET =      leafPrefs.getLong ("ALT_OFFSET");
+
   // GPS & Track Log Settings
     DISTANCE_FLOWN =  leafPrefs.getBool("DISTANCE_FLOWN");
     GPS_SETTING =     leafPrefs.getChar("GPS_SETTING");
     TRACK_SAVE =      leafPrefs.getBool("TRACK_SAVE");
     AUTO_START =      leafPrefs.getBool("AUTO_START");
+
   // System Settings
     TIME_ZONE =       leafPrefs.getShort("TIME_ZONE");
-    VOLUME_SYSTEM =   leafPrefs.getChar("VOLUME_SYSTEM");
-    CONTRAST =        leafPrefs.getUChar("CONTRAST");
+    VOLUME_SYSTEM =   leafPrefs.getChar("VOLUME_SYSTEM");    
     ENTER_BOOTLOAD =  leafPrefs.getBool("ENTER_BOOTLOAD");
     ECO_MODE =        leafPrefs.getBool("ECO_MODE");
     AUTO_OFF =        leafPrefs.getBool("AUTO_OFF");
     WIFI_ON =         leafPrefs.getBool("WIFI_ON");
     BLUETOOTH_ON =    leafPrefs.getBool("BLUETOOTH_ON");
+
+  // Display Settings
+    CONTRAST =        leafPrefs.getUChar("CONTRAST");
+    DISPLAY_FIELD_ALT1 = leafPrefs.getUChar("FIELD_ALT1");
 
   // Unit Values
     UNITS_climb =     leafPrefs.getBool("UNITS_climb");
@@ -173,13 +190,15 @@ void settings_save() {
     leafPrefs.putBool("AUTO_STOP", AUTO_STOP);
   // System Settings
     leafPrefs.putShort("TIME_ZONE", TIME_ZONE);
-    leafPrefs.putChar("VOLUME_SYSTEM", VOLUME_SYSTEM);
-    leafPrefs.putUChar("CONTRAST", CONTRAST);
+    leafPrefs.putChar("VOLUME_SYSTEM", VOLUME_SYSTEM);  
     leafPrefs.putBool("ENTER_BOOTLOAD", ENTER_BOOTLOAD);
     leafPrefs.putBool("ECO_MODE", ECO_MODE);
     leafPrefs.putBool("AUTO_OFF", AUTO_OFF);
     leafPrefs.putBool("WIFI_ON", WIFI_ON);
-    leafPrefs.putBool("BLUETOOTH_ON", BLUETOOTH_ON);    
+    leafPrefs.putBool("BLUETOOTH_ON", BLUETOOTH_ON);   
+  // Display Settings
+    leafPrefs.putUChar("CONTRAST", CONTRAST);
+    leafPrefs.putUChar("FIELD_ALT1", DISPLAY_FIELD_ALT1);
   // Unit Values
     leafPrefs.putBool("UNITS_climb", UNITS_climb);
     leafPrefs.putBool("UNITS_alt", UNITS_alt);
@@ -252,7 +271,10 @@ void settings_adjustContrast(int8_t dir) {
   void settings_adjustAltOffset(int8_t dir, uint8_t count) {
     int increase = 100;                 // 1m increments (100cm)
     if (UNITS_alt == 1) increase = 30;  // 1 ft increments (30cm)
-    if (count >= 4) increase *= 5;
+    if (count >= 1) increase *= 5;
+    if (count >= 8) increase *= 4;
+
+
     if (dir >= 1) ALT_OFFSET += increase;
     else if (dir <= -1) ALT_OFFSET -= increase;	
   }
@@ -438,6 +460,17 @@ void settings_adjustTimeZone(int8_t dir) {
       speaker_playSound(fx_neutral);
     }
   }
+}
+
+void settings_adjustDisplayFieldAlt1(int8_t dir) {
+  if (dir >0) {
+    DISPLAY_FIELD_ALT1++;
+    if (DISPLAY_FIELD_ALT1 >= 2) DISPLAY_FIELD_ALT1 = 0;
+  } else {
+    if (DISPLAY_FIELD_ALT1 == 0) DISPLAY_FIELD_ALT1 = 1;
+    else DISPLAY_FIELD_ALT1--;
+  }
+  speaker_playSound(fx_neutral);
 }
 
 // swap unit settings and play a neutral sound
