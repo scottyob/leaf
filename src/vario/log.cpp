@@ -9,13 +9,15 @@
 #include "speaker.h"
 #include "settings.h"
 #include "SDcard.h"
+#include "tempRH.h"
 
 // Flight Timer
   uint32_t flightTimerSec = 0;
   bool flightTimerRunning = 0;
-  bool flightTimerResetting = 0;
+  bool flightTimerResetting = 0;  
   char flightTimerString[] = "0:00:00";    // H:MM:SS -> 7 characters max for string.  If it hits 10 hours, will re-format to _HH:MM_
   char flightTimerStringShort[] = "00:00"; // MM:SS -> 5 characters max for string.  If it hits 1 hour, will change to HH:MM
+  char flightTimerStringLong[] = "00:00:00"; // HH:MM:SS -> 8 characters.
 
 // values for logbook entries
   bool logFlightTrackStarted = false;
@@ -27,23 +29,27 @@
   int32_t log_alt_min = 0;
   int32_t log_alt_above_launch = 0;
   int32_t log_alt_above_launch_max = 0;
-  //TODO: add max and min speed
 
-  int16_t log_climb = 0;
-  int16_t log_climb_max = 0;
-  int16_t log_climb_min = 0;
+  int32_t log_climb = 0;
+  int32_t log_climb_max = 0;
+  int32_t log_climb_min = 0;
 
-  int32_t log_temp = 0;
-  int32_t log_temp_max = 0;
-  int32_t log_temp_min = 0;
+  float log_temp = 0;
+  float log_temp_max = 0;
+  float log_temp_min = 0;
+
+  int32_t log_speed = 0;
+  int32_t log_speed_max = 0;
+  int32_t log_speed_min = 0;
+
 
 
 void log_init() {
 
 }
 
-
-// update function to run every second
+//////////////////////////////////////////////////////////////////////////////////////////
+// UPDATE - Main function to run every second
 void log_update() {
 
   uint32_t time = micros();
@@ -71,6 +77,7 @@ void log_update() {
     Serial.println(logSave_time);
 
     // capture any records for this flight
+    log_captureValues();
     log_checkMinMaxValues();  
 
     uint32_t timer_time = micros();
@@ -182,8 +189,19 @@ void log_update() {
 
     //starting values
     baro_resetLaunchAlt();
-    log_alt_start = baro_getAltAtLaunch();  
+    log_alt_start = baro_getAltAtLaunch();
+
+    //get first set of log values
+    log_captureValues();
+
+    // initial min/max values
+    log_alt_max = log_alt_min = log_alt_start;
+    log_climb_max = log_climb_min = log_climb;
+    log_speed_max = log_speed_min = log_speed;
+    log_temp_max = log_temp_min = log_temp;
+    
   }
+
 
   void flightTimer_stop() {  
     // play stopping sound
@@ -200,7 +218,7 @@ void log_update() {
       if (logFlightTrackStarted) {
         logFlightTrackStarted = false;
         Serial.println("closing Log");
-        SDcard_writeLogFooter();
+        SDcard_writeLogFooter(log_createTrackFileName(), log_createTrackDescription());
         //TODO: other KML file additions; maybe adding description and min/max and other stuff
       }
     }
@@ -281,34 +299,60 @@ void flightTimer_updateStrings() {
       flightTimerString[++position] = ' ';
   }
 
-    position = 0;
+  position = 0;
 
-    // update flightTimerStringShort
-      // char * flightTimerStringShort = "00:00"; // MM:SS -> 5 characters max for string.  If it hits 1 hour, will change to HH:MM
-    if (hours > 0) {
-      if (hours > 9) flightTimerStringShort[position] = '0' + hours/10;
-      else flightTimerStringShort[position] = ' ';
-      flightTimerStringShort[++position] = '0' + hours % 10;
-      flightTimerStringShort[++position] = ':';
-      flightTimerStringShort[++position] = '0' + mins/10;
-      flightTimerStringShort[++position] = '0' + mins % 10;
-    } else {
-      if (mins > 9) flightTimerStringShort[position] = '0' + mins/10;
-      else flightTimerStringShort[position] = ' ';
-      flightTimerStringShort[++position] = '0' + mins % 10;
-      flightTimerStringShort[++position] = ':';
-      flightTimerStringShort[++position] = '0' + secs/10;
-      flightTimerStringShort[++position] = '0' + secs % 10;
-    }
+  // update flightTimerStringShort
+    // char * flightTimerStringShort = "00:00"; // MM:SS -> 5 characters max for string.  If it hits 1 hour, will change to HH:MM
+  if (hours > 0) {
+    if (hours > 9) flightTimerStringShort[position] = '0' + hours/10;
+    else flightTimerStringShort[position] = ' ';
+    flightTimerStringShort[++position] = '0' + hours % 10;
+    flightTimerStringShort[++position] = ':';
+    flightTimerStringShort[++position] = '0' + mins/10;
+    flightTimerStringShort[++position] = '0' + mins % 10;
+  } else {
+    if (mins > 9) flightTimerStringShort[position] = '0' + mins/10;
+    else flightTimerStringShort[position] = ' ';
+    flightTimerStringShort[++position] = '0' + mins % 10;
+    flightTimerStringShort[++position] = ':';
+    flightTimerStringShort[++position] = '0' + secs/10;
+    flightTimerStringShort[++position] = '0' + secs % 10;
+  }
+
+  position = 0;
+
+  // update flightTimerStringLong    
+  if (hours > 99) {
+  //      "000:00 "  HHH:MM__
+    flightTimerStringLong[position] = '0' + hours/100;
+  } else {            
+  //      "00:00:00" HH:MM:SS      
+    flightTimerStringLong[++position] = '0' + hours/10;
+    flightTimerStringLong[++position] = '0' + hours % 10;
+    flightTimerStringLong[++position] = ':';
+    flightTimerStringLong[++position] = '0' + mins/10;
+    flightTimerStringLong[++position] = '0' + mins % 10;
+    flightTimerStringLong[++position] = ':';
+    flightTimerStringLong[++position] = '0' + secs/10;
+    flightTimerStringLong[++position] = '0' + secs % 10;
+  } 
 }
+
+void log_captureValues() {
+  log_alt = baro_getAlt();
+  log_alt_above_launch = baro_getAltAboveLaunch();
+  log_climb = baro_getClimbRate();
+  log_speed = gps.speed.kmph();
+  log_temp = tempRH_getTemp();
+}
+
+
 
 void log_checkMinMaxValues() {
 
   uint32_t time = micros();
 
-  //check altitude values for log
-  log_alt = baro_getAlt();
-  log_alt_above_launch = baro_getAltAboveLaunch();
+  //check altitude values for log records
   if (log_alt > log_alt_max) {
     log_alt_max = log_alt;
     if (log_alt_above_launch > log_alt_above_launch_max) log_alt_above_launch_max = log_alt_above_launch; // we only need to check for max above-launch values if we're also setting a new altitude max.
@@ -316,7 +360,7 @@ void log_checkMinMaxValues() {
     log_alt_min = log_alt;
   } 
 
-  //check climb values for log
+  //check climb values for log records
   log_climb = baro_getClimbRate();
   if (log_climb > log_climb_max) {
     log_climb_max = log_climb;
@@ -324,8 +368,8 @@ void log_checkMinMaxValues() {
     log_climb_min = log_climb;
   } 
 
-  // check temperature values
-  log_temp = baro_getTemp();
+  // check temperature values for log records
+  log_temp = tempRH_getTemp();
   if (log_temp > log_temp_max) {
     log_temp_max = log_temp;
   } else if (log_temp < log_temp_min) {
@@ -352,13 +396,14 @@ String log_getKMLCoordinates() {
   time = micros()-time;
     
   Serial.print("Get KML Coords: ");
+
   Serial.println(time);
+  Serial.println(logPointStr);
 
   return logPointStr;
 }
 
-String log_createFileName() {
-  
+String log_createFileName() {  
   String fileTitle = "FlightTrack";
   String fileDate = String(gps_getLocalDate());
   int32_t timeInMinutes = (gps.time.hour()*60 + gps.time.minute() + 24*60 + TIME_ZONE) % (24*60);
@@ -378,4 +423,56 @@ String log_createFileName() {
   Serial.println(fileName);
 
   return fileName;
+}
+
+String log_createTrackFileName() {
+  Serial.print("creating track file name...");
+  String trackname = "Flight Time: ";
+  trackname.concat(flightTimerStringLong);
+  Serial.println("finished");
+  return trackname;
+}
+
+String log_createTrackDescription() {
+  Serial.print("creating track description...");
+
+  String alt_units;
+  if(UNITS_alt) alt_units = "(ft)";
+  else alt_units = "(m)";
+
+  String climb_units;
+  if(UNITS_climb) climb_units = "(fpm)";
+  else climb_units = "(m/s)";
+
+  String temp_units;
+  if(UNITS_temp) temp_units = "(F)";
+  else temp_units = "(C)";
+
+  // convert values to proper units before printing/saving
+  log_alt_start = baro_altToUnits(log_alt_start, UNITS_alt);
+  log_alt_max = baro_altToUnits(log_alt_max, UNITS_alt);
+  log_alt_min = baro_altToUnits(log_alt_min, UNITS_alt);
+  log_alt_end = baro_altToUnits(log_alt_end, UNITS_alt);
+  log_alt_above_launch_max = baro_altToUnits(log_alt_above_launch_max, UNITS_alt);
+  
+  String stringClimbMax;
+  String stringClimbMin;
+  if (UNITS_climb) {
+    stringClimbMax = String(baro_climbToUnits(log_climb_max, UNITS_climb), 0);
+    stringClimbMin = String(baro_climbToUnits(log_climb_min, UNITS_climb), 0);
+  } else {
+    stringClimbMax = String(baro_climbToUnits(log_climb_max, UNITS_climb), 1);
+    stringClimbMin = String(baro_climbToUnits(log_climb_min, UNITS_climb), 1); 
+  }
+
+
+  String trackdescription = "Altitude " + alt_units + " Start: " +  log_alt_start + " Max: " + log_alt_max + " Above Launch: " + log_alt_above_launch_max + " Min: " + log_alt_min + " End: " + log_alt_end + "\n" +
+                            "Climb " + climb_units + " Max: " + stringClimbMax + " Min: " + stringClimbMin + "\n" +
+                            "Temp " + temp_units + " Max: " + log_temp_max + " Min: " + log_temp_min + "\n" +
+                            "Max Speed: 41 mph\n" +
+                            "Distance (mi) Direct: 2.3 Path: 35.1\n";
+
+  Serial.println("finished");
+
+  return trackdescription;
 }

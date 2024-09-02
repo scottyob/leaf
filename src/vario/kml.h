@@ -4,22 +4,16 @@
 const char KMLtrackHeader[] = R"--8<--8<--(<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
-    <name>Paths</name>
-    <description>Examples of paths. Note that the tessellate tag is by default
-      set to 0. If you want to create tessellated lines, they must be authored
-      (or edited) directly in KML.</description>
     <Style id="yellowLineGreenPoly">
       <LineStyle>
-        <color>7f00ffff</color>
+        <color>7fF0A014</color>
         <width>4</width>
       </LineStyle>
       <PolyStyle>
-        <color>7f00ff00</color>
+        <color>7fB43C14</color>
       </PolyStyle>
     </Style>
-    <Placemark>
-      <name>Absolute Extruded</name>
-      <description>Transparent green wall with yellow outlines</description>
+    <Placemark>      
       <styleUrl>#yellowLineGreenPoly</styleUrl>
       <LineString>
         <extrude>1</extrude>
@@ -33,14 +27,33 @@ const char KMLtrackHeader[] = R"--8<--8<--(<?xml version="1.0" encoding="UTF-8"?
 // LONG_DEC, LAT_DEC, ALT
 // .. etc.  Note no comma after ALT
 
-const char KMLtrackFooter[] = R"--8<--8<--(        </coordinates>
+
+// Footer is broken into several sub-pieces, so you can insert names and descriptions in between.
+
+const char KMLtrackFooterA[] = R"--8<--8<--(        </coordinates>
       </LineString>
+      <name>)--8<--8<--";
+
+// Print Track Name Here
+
+const char KMLtrackFooterB[] = R"--8<--8<--(</name>
+      <description>)--8<--8<--";
+
+// Print Track Description Here
+
+const char KMLtrackFooterC[] = R"--8<--8<--(</description>
     </Placemark>
+    <name>)--8<--8<--";
+
+// Print File Name Here
+
+const char KMLtrackFooterD[] = R"--8<--8<--(</name>
+    <description>)--8<--8<--";
+
+// Print File Description Here
+
+const char KMLtrackFooterE[] = R"--8<--8<--(</description>
   </Document>
 </kml>)--8<--8<--";
-
-
-
-
 
 #endif

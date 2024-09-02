@@ -332,8 +332,10 @@ String saveDir = "/Tracks/";
 String currentTrackFile;
 bool trackFileStarted = false;
 File trackFile;
+String trackFileName;
 
 bool SDcard_createTrackFile(String filename) {  
+  trackFileName = filename;
   createDir(SD_MMC, saveDir.c_str());
   currentTrackFile = saveDir + filename;
   writeFile(SD_MMC, currentTrackFile.c_str(), KMLtrackHeader);
@@ -350,13 +352,6 @@ bool SDcard_createTrackFile(String filename) {
   }
 }
 
-void SDcard_writeLogHeader() {
-  appendFile(SD_MMC, "/hello.txt", "World!\n");
-}
-
-
-
-
 void SDcard_writeLogData(String coordinates) {
 
   uint32_t time = micros();
@@ -367,6 +362,8 @@ void SDcard_writeLogData(String coordinates) {
   appendOpenFile(trackFile, coordinates.c_str());
   //appendOpenFile(logFileOpen, coordinates.c_str());
   
+  Serial.println(coordinates);
+
     Serial.print("endWriteLog @: ");
     Serial.println(micros());
 
@@ -380,8 +377,16 @@ void SDcard_writeLogData(String coordinates) {
 
 
 
-void SDcard_writeLogFooter() {
-  appendOpenFile(trackFile, KMLtrackFooter);
+void SDcard_writeLogFooter(String trackName, String trackDescription) {
+  appendOpenFile(trackFile, KMLtrackFooterA);
+  appendOpenFile(trackFile, trackName.c_str());
+  appendOpenFile(trackFile, KMLtrackFooterB);
+  appendOpenFile(trackFile, trackDescription.c_str());
+  appendOpenFile(trackFile, KMLtrackFooterC);
+  appendOpenFile(trackFile, trackFileName.c_str());     // KML file title (in google earth) same as long file name on SDcard
+  appendOpenFile(trackFile, KMLtrackFooterD);
+  // skipping KML file description.  Not needed and clogs up the google earth places list
+  appendOpenFile(trackFile, KMLtrackFooterE);
 
   trackFile.close();
 }

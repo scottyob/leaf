@@ -39,6 +39,6 @@ bool SDcard_createTrackFile(String filename);
 void SDcard_writeLogData(String coordinates);
 void appendOpenFile(File &file, const char * message);
 void SDcard_writeLogHeader(void);
-void SDcard_writeLogFooter(void);
+void SDcard_writeLogFooter(String trackName, String trackDescription);
 
 #endif

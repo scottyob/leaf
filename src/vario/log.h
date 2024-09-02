@@ -39,6 +39,10 @@
 // Log Files
   String log_createFileName(void);
   String log_getKMLCoordinates(void);
+  String log_createTrackFileName(void);
+  String log_createTrackDescription(void);
+
+  void log_captureValues(void);
   void log_checkMinMaxValues(void);
   bool flightTimer_autoStop(void);
   bool flightTimer_autoStart(void);

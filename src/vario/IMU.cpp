@@ -9,7 +9,7 @@
 #include "IMU.h"
 #include "Leaf_I2C.h"
 
-#define DEBUG_IMU 1
+#define DEBUG_IMU 0
 
 #define SERIAL_PORT Serial
 #define WIRE_PORT Wire

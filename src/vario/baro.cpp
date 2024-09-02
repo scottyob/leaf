@@ -264,8 +264,25 @@ int32_t altitude_values[] = {
   int32_t baro_getVarioBar() {       return fakeVarioRate; }        // climb rate for vario var visuals and perhaps sound.  This is separate in case we want to average/filter it differently
 // Get values (mainly for display and log purposes)
 
+//Conversion functions to change units
+  int32_t baro_altToUnits(int32_t alt_input, bool units_feet) {
 
+    if (units_feet) alt_input = alt_input *100 / 3048; // convert cm to ft
+    else alt_input /= 100;                             // convert cm to m
 
+    return alt_input;
+  }
+
+  float baro_climbToUnits(int32_t climbrate, bool units_fpm) {
+    float climbrate_converted;
+    if (units_fpm) {
+      climbrate_converted = (int32_t)(climbrate * 197 / 1000 * 10);    // convert from cm/s to fpm (lose one significant digit and all decimal places)
+    } else {
+      climbrate = (climbrate + 5) / 10;           // lose one decimal place and round off in the process (cm->decimeters)
+      climbrate_converted = (float)climbrate/10;  // Lose the other decimal place (decimeters->meters) and convert to float for ease of printing with the decimal in place
+    } 
+    return climbrate_converted;
+  }
 
 
 // I2C Communication Functions

@@ -67,6 +67,10 @@ int32_t VARIO_RATEfiltered;
 	int32_t baro_getClimbRate (void);
 	int32_t baro_getVarioBar (void);
 
+// Converstion functions
+	int32_t baro_altToUnits(int32_t alt_input, bool units_feet);  
+  float baro_climbToUnits(int32_t climbrate, bool units_fpm);
+
 // Test Functions
 	void baro_debugPrint(void);
 	void baro_test(void);
