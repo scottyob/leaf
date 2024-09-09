@@ -23,6 +23,7 @@
     int8_t LIFTY_AIR;    
     int8_t SINK_ALARM;
     int32_t ALT_OFFSET;    
+    bool ALT_SYNC_GPS;
 
   // GPS & Track Log Settings
     bool DISTANCE_FLOWN;
@@ -90,6 +91,7 @@ void settings_loadDefaults() {
     VARIO_TONES = DEF_VARIO_TONES;
     LIFTY_AIR = DEF_LIFTY_AIR;
     ALT_OFFSET = DEF_ALT_OFFSET;
+    ALT_SYNC_GPS = DEF_ALT_SYNC_GPS;
 
   // GPS & Track Log Settings
     DISTANCE_FLOWN = DEF_DISTANCE_FLOWN;
@@ -130,9 +132,10 @@ void settings_retrieve() {
     CLIMB_AVERAGE =   leafPrefs.getChar("CLIMB_AVERAGE");
     CLIMB_START =     leafPrefs.getChar("CLIMB_START");
     VOLUME_VARIO =    leafPrefs.getChar("VOLUME_VARIO");
-    VARIO_TONES =     leafPrefs.getChar("VARIO_TONES");
+    VARIO_TONES =     leafPrefs.getBool("VARIO_TONES");
     LIFTY_AIR =       leafPrefs.getChar ("LIFTY_AIR");
     ALT_OFFSET =      leafPrefs.getLong ("ALT_OFFSET");
+    ALT_SYNC_GPS =    leafPrefs.getBool ("ALT_SYNC_GPS");
 
   // GPS & Track Log Settings
     DISTANCE_FLOWN =  leafPrefs.getBool("DISTANCE_FLOWN");
@@ -182,6 +185,7 @@ void settings_save() {
     leafPrefs.putBool("VARIO_TONES", VARIO_TONES);
     leafPrefs.putChar("LIFTY_AIR", LIFTY_AIR);
     leafPrefs.putLong("ALT_OFFSET", ALT_OFFSET);
+    leafPrefs.putBool("ALT_SYNC_GPS", ALT_SYNC_GPS);
   // GPS & Track Log Settings
     leafPrefs.putBool("DISTANCE_FLOWN", DISTANCE_FLOWN);
     leafPrefs.putChar("GPS_SETTING", GPS_SETTING);

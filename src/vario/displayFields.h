@@ -12,6 +12,7 @@ void display_flightTimer(uint8_t x, uint8_t y, bool shortstring, bool selected);
 uint8_t display_speed(uint8_t cursor_x, uint8_t cursor_y);
 uint8_t display_speed(uint8_t x, uint8_t y, const uint8_t *font);
 uint8_t display_speed(uint8_t x, uint8_t y, const uint8_t *font, bool units);
+void display_distance(uint8_t cursor_x, uint8_t cursor_y, double distance);
 void display_heading(uint8_t cursor_x, uint8_t cursor_y, bool degSymbol);
 void display_headingTurn(uint8_t cursor_x, uint8_t cursor_y);
 

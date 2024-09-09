@@ -7,6 +7,7 @@
 #include "LinearRegression.h"
 #include "settings.h"
 #include "Leaf_I2C.h"
+#include "TempRH.h"
 
 #define DEBUG_BARO 0  // flag for printing serial debugging messages
 
@@ -31,6 +32,8 @@
     int32_t climbSecVals[9];
 
 // Baro Values
+  float baroAltimeterSetting = 29.920;
+
   int32_t CLIMB_RATE = 0;
   int32_t CLIMB_RATEfiltered = 0;      
   int32_t VARIO_RATEfiltered = 0;
@@ -251,6 +254,17 @@ int32_t altitude_values[] = {
   }
 // Test Functions
 
+
+
+  void baro_adjustAltOffset(int8_t dir, uint8_t count) {
+    float increase = .001;              //     
+    if (count >= 1) increase *= 5;
+    if (count >= 8) increase *= 4;
+
+
+    if (dir >= 1) baroAltimeterSetting += increase;
+    else if (dir <= -1) baroAltimeterSetting -= increase;	
+  }
 
 
 // Get values (mainly for display and log purposes)
@@ -498,6 +512,8 @@ int32_t altitude_values[] = {
 
 
 // Device reading & data processing  
+  int32_t FloatAltCMinHg;
+  int32_t FloatAltCMinHgTemp;
 
   int32_t baro_calculateAlt() {
     // calculate temperature (in 100ths of degrees C, from -4000 to 8500)
@@ -533,7 +549,23 @@ int32_t altitude_values[] = {
       PRESSURE = ((uint64_t)D1_P * SENS1 / (int64_t)pow(2,21) - OFF1)/pow(2,15);
 
     // calculate pressure altitude in cm
-      return 4433100.0*(1.0-pow((float)PRESSURE/101325.0,(.190264)));   // TODO  check accuracy of this, seems to be off by ~900 ft over 10500 feet
+    int32_t FloatAltCM = 4433100.0*(1.0-pow((float)PRESSURE/101325.0,(.190264)));   // TODO  check accuracy of this, seems to be off by ~900 ft over 10500 feet
+    
+// calculate pressure altitude in cm
+    FloatAltCMinHg = 4433100.0*(1.0-pow((float)PRESSURE/(baroAltimeterSetting*3386.389),(.190264)));   // TODO  check accuracy of this, seems to be off by ~900 ft over 10500 feet
+
+    FloatAltCMinHgTemp = (pow(((3386.389*baroAltimeterSetting)/(float)PRESSURE),(1/5.257))-1)*(tempRH_getTemp()+273.15)/0.0065;
+
+    /*
+    double FloatAltDouble = 4433100.0*(1.0-pow((double)PRESSURE/101325.0,(.190264)));   // TODO  check accuracy of this, seems to be off by ~900 ft over 10500 feet
+    Serial.print(FloatAltCM);
+    Serial.println(" float ");
+    Serial.print(FloatAltDouble);
+    Serial.println(" double ");
+    Serial.println(" ");
+    */
+
+    return FloatAltCM;
   }
 
   uint8_t fakeAltCounter = 0;

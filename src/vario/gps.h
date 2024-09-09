@@ -29,7 +29,7 @@
 extern TinyGPSPlus gps;    
 
 // GPS Satellites
-#define MAX_SATELLITES 40
+#define MAX_SATELLITES 80
 struct gps_sat_info{bool active; int elevation; int azimuth; int snr;};
 extern struct gps_sat_info sats[MAX_SATELLITES];
 extern struct gps_sat_info satsDisplay[MAX_SATELLITES];
@@ -64,7 +64,6 @@ float gps_getSpeed_kph(void);
 float gps_getSpeed_mph(void);
 float gps_getCourseDeg(void);
 const char *gps_getCourseCardinal(void);
-uint8_t gps_getTurn();
 float gps_getRelativeBearing(void);
 float gps_getGlideRatio(void);
 

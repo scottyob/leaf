@@ -18,7 +18,9 @@
 #define CMD_CONVERT_PRESSURE	0b01001000
 #define CMD_CONVERT_TEMP		0b01011000
 
-
+extern float baroAltimeterSetting;
+extern  int32_t FloatAltCMinHg;
+extern  int32_t FloatAltCMinHgTemp;
 
 /* 
 // Temperature Calculations
@@ -39,6 +41,8 @@ int16_t CLIMB_RATE;
 int16_t CLIMB_RATEfiltered;					
 int32_t VARIO_RATEfiltered;	
 */
+
+void baro_adjustAltOffset(int8_t dir, uint8_t count);
 
 // I2C Communication Functions
   uint8_t baro_sendCommand(uint8_t command);

@@ -3,6 +3,7 @@
 
 #include "PageMenuMain.h"
 
+#include "PageMenuAltimeter.h"
 #include "PageMenuVario.h"
 #include "PageMenuDisplay.h"
 #include "PageMenuUnits.h"
@@ -12,6 +13,7 @@
 
 extern MainMenuPage mainMenuPage;
 
+extern AltimeterMenuPage altimeterMenuPage;
 extern VarioMenuPage varioMenuPage;
 extern DisplayMenuPage displayMenuPage;
 extern UnitsMenuPage unitsMenuPage;

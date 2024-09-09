@@ -17,8 +17,8 @@
 
 
 //extern U8G2_ST7539_192X64_F_4W_HW_SPI u8g2;     // Leaf V3.2.0
-//extern U8G2_ST75256_WO256X128_F_4W_HW_SPI u8g2;   // Leaf V3.2.2  June Huang
-extern U8G2_ST75256_JLX19296_F_4W_HW_SPI u8g2;              // Alice Green HW
+extern U8G2_ST75256_WO256X128_F_4W_HW_SPI u8g2;   // Leaf V3.2.2  June Huang
+//extern U8G2_ST75256_JLX19296_F_4W_HW_SPI u8g2;              // Alice Green HW
 
 void GLCD_inst(byte data);
 void GLCD_data(byte data);

@@ -8,6 +8,7 @@
 #include <String.h>
 
 #include "gps.h"
+#include "gpx.h"
 #include "display.h"
 #include "settings.h"
 #include "log.h"
@@ -107,6 +108,9 @@ void gps_shutdown() {
 
 
 void gps_init(void) {
+
+  // init nav struct (TODO: may not need this here, just for testing at startup for ease)
+  gpx_initNav();
 
   // Set pins
   Serial.print("GPS set pins... ");
@@ -212,13 +216,12 @@ void gps_calculateGlideRatio() {
   }
 }
 
-
 void gps_update() {
 
   // update sats if we're tracking sat NMEA sentences
   gps_updateSatList();
-
   gps_calculateGlideRatio();
+  updateGPXnav();
   /*
   //TODO: fill this in
   Serial.print("Valid: ");
@@ -274,29 +277,6 @@ float gps_getRelativeBearing() {
   return offCourse;
 }
 
-
-
-float turnThreshold1 = 20;
-float turnThreshold2 = 40;
-float turnThreshold3 = 60;
-
-uint8_t gps_getTurn() { 
-  
-  float offCourse = gps_getRelativeBearing();
-  uint8_t fakeTurn = 0;
-
-  if (offCourse > turnThreshold1) {
-    if (offCourse > turnThreshold3) fakeTurn = 3;
-    else if (offCourse > turnThreshold2) fakeTurn = 2;
-    else fakeTurn = 1;    
-  } else if (offCourse < -turnThreshold1) {
-    if (offCourse < -turnThreshold3) fakeTurn = -3;
-    else if (offCourse < -turnThreshold2) fakeTurn = -2;
-    else fakeTurn = -1;    
-  }  
-
-  return fakeTurn;
-}
 
 bool commandSent = false;
 

@@ -15,6 +15,8 @@
 #include "settings.h"
 #include "pages.h"
 #include "PageThermal.h"
+#include "PageNavigate.h"
+#include "baro.h"
 
 
 
@@ -66,6 +68,10 @@ uint8_t buttons_update(void) {
 
   } else if (currentPage == page_thermal) {
     thermalPage_button(which_button, buttons_get_state(), buttons_get_hold_count());
+    display_update();
+
+  } else if (currentPage == page_nav) {
+    navigatePage_button(which_button, buttons_get_state(), buttons_get_hold_count());
     display_update();
 
   } else if (display_getPage() == page_charging) {
@@ -134,22 +140,26 @@ uint8_t buttons_update(void) {
       case UP:
         switch (button_state) {
           case RELEASED:
-            settings_adjustVolumeVario(1);            
+            baro_adjustAltOffset(1, 0);
             break;
           case HELD:
-            power_adjustInputCurrent(1);
-            speaker_playSound(fx_enter);
+            baro_adjustAltOffset(1, 1);
+            break;
+          case HELD_LONG:
+            baro_adjustAltOffset(1, 10);
             break;
         }
         break;
       case DOWN:
         switch (button_state) {
           case RELEASED:
-            settings_adjustVolumeVario(-1);            
+            baro_adjustAltOffset(-1, 0);            
             break;
           case HELD:
-            power_adjustInputCurrent(-1);
-            speaker_playSound(fx_exit);
+            baro_adjustAltOffset(-1, 1) ;
+            break;
+          case HELD_LONG:
+            baro_adjustAltOffset(-1, 10);
             break;
         }
         break;

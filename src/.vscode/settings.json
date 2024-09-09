@@ -1,6 +1,9 @@
 {
 	"C_Cpp.errorSquiggles": "enabled",
 	"files.associations": {
-		"compare": "cpp"
+		"compare": "cpp",
+		"typeinfo": "cpp",
+		"cmath": "cpp",
+		"complex": "cpp"
 	}
 }

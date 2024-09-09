@@ -10,6 +10,7 @@
 #include "baro.h"
 #include "settings.h"
 #include "log.h"
+#include "gpx.h"
 
 /********************************************************************************************/
 // Display Components
@@ -113,6 +114,38 @@
       return (cursor_x += 7);
     }
 
+    // Display distance
+    void display_distance(uint8_t cursor_x, uint8_t cursor_y, double distance) {   
+      u8g2.setCursor(cursor_x, cursor_y);    
+      uint8_t decimalPlaces = 0;
+      uint8_t unitsSmall = true;                 // assume m or ft, switch to km or mi if needed
+
+      if (UNITS_distance) {
+        distance *= 3.28084;                      // convert to feet
+        if (distance > 1000) {
+          distance /= 5280;                       // convert to miles if >1000
+          unitsSmall = false;
+          if (distance < 1000) decimalPlaces = 1; // show x.1 decimal places if under 1000 miles
+          if (distance > 9999) distance = 9999;   // cap max distance
+        }
+      } else {
+        if (distance >= 1000) {                  
+          distance /= 1000;   //switch to km          
+          unitsSmall = false;
+          if (distance > 9999) distance = 9999;          
+          if (distance < 1000) decimalPlaces = 1;
+        }
+      }
+
+      if (gpxNav.navigating) u8g2.print(distance, decimalPlaces);
+      else u8g2.print("----");
+      
+      if (unitsSmall && UNITS_distance) u8g2.print((char)128);
+      if (!unitsSmall && UNITS_distance) u8g2.print((char)130);
+      if (unitsSmall && !UNITS_distance) u8g2.print((char)127);
+      if (!unitsSmall && !UNITS_distance) u8g2.print((char)129);      
+    }
+
 		void display_heading(uint8_t cursor_x, uint8_t cursor_y, bool degSymbol) {
 			u8g2.setCursor(cursor_x, cursor_y);
 
@@ -133,12 +166,30 @@
 			}
 		}
 
+
+    uint8_t turnThreshold1 = 20;
+    uint8_t turnThreshold2 = 40;
+    uint8_t turnThreshold3 = 60;
+
     void display_headingTurn(uint8_t cursor_x, uint8_t cursor_y) {
       u8g2.setCursor(cursor_x, cursor_y);
       u8g2.setFont(leaf_7x10);
 
+      double offCourse = gpxNav.turnToActive;
+      int8_t turn = 0;
+
+      if (offCourse > turnThreshold1) {
+        if (offCourse > turnThreshold3) turn = 3;
+        else if (offCourse > turnThreshold2) turn = 2;
+        else turn = 1;    
+      } else if (offCourse < -turnThreshold1) {
+        if (offCourse < -turnThreshold3) turn = -3;
+        else if (offCourse < -turnThreshold2) turn = -2;
+        else turn = -1;    
+      }  
+
       //Left turn arrow if needed
-      char displayTurn = '=' + gps_getTurn();   // in the 7x10 font, '=' is the "no turn" center state; 3 chars to each side are incresing amounts of turn arrow
+      char displayTurn = '=' + turn;    // in the 7x10 font, '=' is the "no turn" center state; 3 chars to each side are incresing amounts of turn arrow
       if (displayTurn < '=') u8g2.print(displayTurn);  
 
 			display_heading(cursor_x+8, cursor_y, false);
@@ -149,10 +200,10 @@
     }
 
 
-	int32_t baro_getAlt (void);
-	int32_t baro_getOffsetAlt(void);
-	int32_t baro_getAltAtLaunch (void);
-	int32_t baro_getAltAboveLaunch(void);
+    int32_t baro_getAlt (void);
+    int32_t baro_getOffsetAlt(void);
+    int32_t baro_getAltAtLaunch (void);
+    int32_t baro_getAltAboveLaunch(void);
 
     void display_alt_type(uint8_t cursor_x, uint8_t cursor_y, const uint8_t * font, uint8_t altType, bool selected) {
       u8g2.setDrawColor(1);
@@ -170,7 +221,7 @@
         case alt_AGL:
           break;
         case alt_GPS:
-          displayAlt = 100 * gps_getAltMeters();  // gps returns float in m, convert to int32_t in cm
+          displayAlt = 100 * gps.altitude.meters();  // gps returns float in m, convert to int32_t in cm
           break;
         case alt_aboveLaunch:
           displayAlt = baro_getAltAboveLaunch();

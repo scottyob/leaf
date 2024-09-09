@@ -13,6 +13,7 @@
 
 #include "pages.h"
 #include "PageThermal.h"
+#include "PageNavigate.h"
 
 #include "Leaf_SPI.h"
 #include "gps.h"
@@ -40,8 +41,8 @@ char string_heading[] = " WNW ";
 // uint8_t contrast_setting = 80;
 
 // Leaf V3.2.2
-//U8G2_ST75256_WO256X128_F_4W_HW_SPI u8g2(U8G2_R3,  /* cs=*/ SPI_SS_LCD, /* dc=*/ LCD_RS, /* reset=*/ LCD_RESET);  // June Huang
-U8G2_ST75256_JLX19296_F_4W_HW_SPI u8g2(U8G2_R1, /* cs=*/ SPI_SS_LCD, /* dc=*/ LCD_RS, /* reset=*/ LCD_RESET); // Alice Green HW
+U8G2_ST75256_WO256X128_F_4W_HW_SPI u8g2(U8G2_R3,  /* cs=*/ SPI_SS_LCD, /* dc=*/ LCD_RS, /* reset=*/ LCD_RESET);  // June Huang
+//U8G2_ST75256_JLX19296_F_4W_HW_SPI u8g2(U8G2_R1, /* cs=*/ SPI_SS_LCD, /* dc=*/ LCD_RS, /* reset=*/ LCD_RESET); // Alice Green HW
 
 int8_t display_page = page_thermal;
 uint8_t display_page_prior = page_thermal; // track the page we used to be on, so we can "go back" if needed (like cancelling out of a menu heirarchy)
@@ -61,8 +62,8 @@ void display_init(void) {
 }
 
 void display_setContrast(uint8_t contrast) {
-  //u8g2.setContrast(contrast);   // JUne Huang
-  u8g2.setContrast(contrast/2+25);   // Alice Green
+  u8g2.setContrast(contrast);   // JUne Huang
+  //u8g2.setContrast(contrast/2+25);   // Alice Green
   //u8g2.setContrast(contrast/3+15);   // 192x64 original
 }
 
@@ -114,7 +115,7 @@ void display_update() {
       display_page_satellites();
       break;
     case page_nav:
-      display_page_nav();
+      navigatePage_draw();
       break;
     case page_menu:
       mainMenuPage.draw();
@@ -276,9 +277,43 @@ void display_page_satellites() {
       // altitude
         u8g2.setFont(leaf_6x12);
         u8g2.setCursor(0,60);
-        u8g2.print(gps.altitude.meters());
+        u8g2.print(gps.altitude.meters()*3.028084);
         u8g2.setFont(leaf_5h);
         u8g2.drawStr(0, 47, "alt");
+
+      // Batt Levels			
+			  display_battIcon(89, 13, true);
+
+        uint8_t battPercent = power_getBattLevel(0);
+        uint16_t battMV = power_getBattLevel(1);
+        uint16_t battADC = power_getBattLevel(2);
+        uint8_t x = 64;
+        uint8_t y = 25;
+        u8g2.setFont(leaf_6x12);
+        u8g2.setCursor(x, y);
+        u8g2.print(battPercent);
+        u8g2.print('%');
+
+        u8g2.setCursor(x, y+=15);
+        u8g2.print(battMV);
+        u8g2.setCursor(x, y+=15);
+        u8g2.print(battADC);
+
+
+        // altitude testing
+        u8g2.setCursor(0,73);
+        u8g2.print("Apr: ");
+        u8g2.print(baro_getAlt()*.0328084);
+        u8g2.setCursor(0,86);
+        u8g2.print("Ahg: ");
+        u8g2.print(FloatAltCMinHg*.0328084);
+        u8g2.setCursor(0,99);
+        u8g2.print("Atm: ");
+        u8g2.print(FloatAltCMinHgTemp*3.28084);
+
+        u8g2.setCursor(65,110);
+        u8g2.print(baroAltimeterSetting);
+
 
     gpsMenuPage.drawConstellation(0,100,63);
     

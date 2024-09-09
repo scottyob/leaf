@@ -12,6 +12,7 @@
 // cursor positions on the main menu
 enum cursor_main_menu {
   cursor_back,
+  cursor_altimeter,
   cursor_vario,
   cursor_display,
   cursor_units,
@@ -23,6 +24,7 @@ enum cursor_main_menu {
 // all submenu pages and confirmation dialogs
 enum display_menu_pages {
   page_menu_main,
+  page_menu_altimeter,
   page_menu_vario,
   page_menu_display,
   page_menu_units,  
@@ -52,6 +54,9 @@ void MainMenuPage::draw() {
   switch (menu_page) {
     case page_menu_main:
       draw_main_menu();
+      break;
+    case page_menu_altimeter:
+      altimeterMenuPage.draw();
       break;
     case page_menu_vario:
       varioMenuPage.draw();
@@ -89,7 +94,7 @@ void MainMenuPage::draw_main_menu() {
       uint8_t start_y = 29;
       uint8_t setting_name_x = 2;
       uint8_t setting_choice_x = 72;    
-      uint8_t menu_items_y[] = {190, 45, 60, 75, 90, 105, 120};
+      uint8_t menu_items_y[] = {190, 45, 60, 75, 90, 105, 120, 135};
 
       //first draw cursor selection box
       u8g2.drawRBox(setting_choice_x-10, menu_items_y[cursor_position]-14, 34, 16, 2);
@@ -120,6 +125,11 @@ void MainMenuPage::menu_item_action(int8_t button) {
       } else if (button == RIGHT) {   
         //display_turnPage(page_next);  // maybe stop at menu, don't allow scrolling around back to first page
       }
+      break;
+    case cursor_altimeter:
+      if (button == RIGHT || button == CENTER) {
+        menu_page = page_menu_altimeter;
+      }      
       break;
     case cursor_vario:
       if (button == RIGHT || button == CENTER) {
@@ -188,6 +198,9 @@ bool MainMenuPage::button_event(uint8_t button, uint8_t state, uint8_t count) {
     case page_menu_main:
       redraw = mainMenuButtonEvent(button, state, count);
       break;    
+    case page_menu_altimeter:
+      redraw = altimeterMenuPage.button_event(button, state, count);
+      break;
     case page_menu_vario:
       redraw = varioMenuPage.button_event(button, state, count);
       break;

@@ -42,8 +42,6 @@
   int32_t log_speed_max = 0;
   int32_t log_speed_min = 0;
 
-
-
 void log_init() {
 
 }
@@ -60,7 +58,8 @@ void log_update() {
 
     // start the Track if needed (we check every update, in case we didn't have a GPS fix.  This way we can start track log writing as soon as we DO get a fix)
     if (!logFlightTrackStarted) {
-      if (true) {//gps.location.isValid()) {                
+      if (gps.location.isValid()) {                
+        if (ALT_SYNC_GPS) settings_matchGPSAlt(); // sync pressure alt to GPS alt when log starts if the auto-sync setting is turned on
         logFlightTrackStarted = SDcard_createTrackFile(log_createFileName()); //flag that we've started a log if we actually have successfully started a log file on SDCard.  If this returns false, we can keep trying to save a log file until it's successful.
       }
     }

@@ -137,19 +137,22 @@ void SystemMenuPage::setting_change(int8_t dir, uint8_t state, uint8_t count) {
       if (state == RELEASED) settings_toggleBoolOnOff(&AUTO_OFF);
       break;
     case cursor_system_charge:
-      if (state == RELEASED) 
+      if (state == RELEASED) {}
       break;
     case cursor_system_ecomode:
       if (state == RELEASED) settings_toggleBoolOnOff(&ECO_MODE);
       break;
     case cursor_system_wifi:
-      if (state == RELEASED) 
+      if (state == RELEASED) {}
       break;
     case cursor_system_bluetooth:
-      if (state == RELEASED) 
+      if (state == RELEASED) {}
       break;
     case cursor_system_reset:
-      if (state == RELEASED) 
+      if (state == RELEASED) {}
+      if (state == HELD) {
+        settings_reset();
+      }
       break;
     case cursor_system_back:        
       if (state == RELEASED) {

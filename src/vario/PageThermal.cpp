@@ -25,8 +25,9 @@ enum thermal_page_items {
 	//cursor_thermalPage_userField2,
 	cursor_thermalPage_timer
 };
-int8_t cursor_position = cursor_thermalPage_none;
 uint8_t cursor_max = 2;
+
+int8_t cursor_position = cursor_thermalPage_none;
 uint8_t cursor_timeCount = 0;	// count up for every page_draw, and if no button is pressed, then reset cursor to "none" after the timeOut value is reached.
 uint8_t cursor_timeOut = 12;	// after 12 page draws (6 seconds) reset the cursor if a button hasn't been pushed.
 
@@ -63,14 +64,15 @@ void thermalPage_draw() {
 			
 		// Main Info ****************************************************
 			uint8_t topOfFrame = 30;
-			uint8_t varioBarWidth = 20;
 			uint8_t graphBoxHeight = 40;
+			uint8_t varioBarWidth = 20;
+			uint8_t varioBarHeight = 141;
 
 			// Graph Box
 			u8g2.drawFrame(varioBarWidth-1, topOfFrame, 96-varioBarWidth+1, graphBoxHeight);
 
 			// Vario Bar
-			display_varioBar(topOfFrame, 141, varioBarWidth, baro_getClimbRate());
+			display_varioBar(topOfFrame, varioBarHeight, varioBarWidth, baro_getClimbRate());
 
 			//air data
 			display_alt_type(22, 89, leaf_8x14, DISPLAY_FIELD_ALT1, (cursor_position == cursor_thermalPage_alt1));
@@ -79,8 +81,8 @@ void thermalPage_draw() {
 		
 			
 		// User Fields ****************************************************
-			uint8_t userFieldsTop = 137;
-			uint8_t userFieldsHeight = 16;
+			uint8_t userFieldsTop = 136;
+			uint8_t userFieldsHeight = 17;
 			uint8_t userFieldsMid = userFieldsTop + userFieldsHeight;
 			uint8_t userFieldsBottom = userFieldsMid + userFieldsHeight;
 			uint8_t userSecondColumn = varioBarWidth/2+48;
@@ -187,6 +189,7 @@ void thermalPage_button(uint8_t button, uint8_t state, uint8_t count) {
 					else if (state == HELD && count == 1 && DISPLAY_FIELD_ALT1 == alt_MSL)  {
 						if (settings_matchGPSAlt()) { // successful reset of AltOffset to match GPS altitude
           		speaker_playSound(fx_enter);  
+              cursor_position = cursor_thermalPage_none;
         		} else {                      // unsuccessful 
           	speaker_playSound(fx_cancel);
         		}
