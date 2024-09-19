@@ -8,17 +8,27 @@
 
 #include <U8g2lib.h>
 
+// FIRST CHOOSE YOUR DISPLAY TYPE!!!
+
+//#define DISPLAY_JUNE
+//extern U8G2_ST75256_WO256X128_F_4W_HW_SPI u8g2;   // Leaf V3.2.2  June Huang
+
+#define DISPLAY_ALICE
+extern U8G2_ST75256_JLX19296_F_4W_HW_SPI u8g2;  // Leaf 3.2.2    Alice Green HW
+
+//#define DISPLAY_ALICE_SMALL
+//extern U8G2_ST7539_192X64_F_4W_HW_SPI u8g2;     // Leaf V3.2.0
+
+
+
+
+
 #define LCD_BACKLIGHT    21  // can be used for backlight if desired (also broken out to header)
 #define LCD_RS           17 // 16 on old V3.2.0
 #define LCD_RESET        18 // 17 on old V3.2.0
 
 #define CONTRAST_MAX 230
 #define CONTRAST_MIN 180
-
-
-//extern U8G2_ST7539_192X64_F_4W_HW_SPI u8g2;     // Leaf V3.2.0
-extern U8G2_ST75256_WO256X128_F_4W_HW_SPI u8g2;   // Leaf V3.2.2  June Huang
-//extern U8G2_ST75256_JLX19296_F_4W_HW_SPI u8g2;              // Alice Green HW
 
 void GLCD_inst(byte data);
 void GLCD_data(byte data);

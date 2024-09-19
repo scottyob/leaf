@@ -70,6 +70,43 @@
 
   
 
+    void display_waypointTimeRemaining(uint8_t x, uint8_t y, const uint8_t *font) {
+      u8g2.setDrawColor(1);
+      u8g2.setCursor(x, y);
+      u8g2.setFont(font);      
+
+      if (gpxNav.pointTimeRemaining == 0) {
+        u8g2.print("--:--");
+      } else {
+        uint8_t sec = gpxNav.pointTimeRemaining % 60;
+        uint32_t min = gpxNav.pointTimeRemaining / 60;
+        uint8_t hrs = min / 60;
+        min = min % 60;               // get rid of any minutes over 60 now that we have the hours
+
+        
+
+        if (hrs > 9) {
+          u8g2.print("9+ hrs");
+        } else {
+          if (hrs > 0) {
+            u8g2.print(hrs);
+            u8g2.print(':');          
+            if (min < 10) {
+              u8g2.print('0');
+            }
+          }
+          u8g2.print(min);
+          u8g2.print(':');
+          if (sec < 10) {
+            u8g2.print('0');
+          }
+          u8g2.print(sec);    
+        }
+      }
+    }
+
+
+
     void display_flightTimer(uint8_t x, uint8_t y, bool shortstring, bool selected) {
       uint8_t h = 16;
       uint8_t w = 44;
@@ -382,7 +419,7 @@
       float climbInMS = 0;
       u8g2.setDrawColor(1);  
       u8g2.drawBox(x, y, w, h);
-      u8g2.drawTriangle(x-triSize, y+h/2, x-1, y+h/2-triSize, x-1, y+h/2+triSize);
+      u8g2.drawTriangle(x-triSize, y+(h)/2, x-1, y+(h)/2-triSize, x-1, y+(h)/2+triSize);
         
       u8g2.setCursor(x, y += 16);   //scoot cursor down for bottom justified font
       u8g2.setFont(leaf_8x14);

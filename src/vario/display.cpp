@@ -17,6 +17,7 @@
 
 #include "Leaf_SPI.h"
 #include "gps.h"
+#include "gpx.h"
 #include "baro.h"
 #include "power.h"
 #include "log.h"
@@ -36,13 +37,16 @@ char hours = 0;
 uint16_t heading = 0;
 char string_heading[] = " WNW ";
 
-// Leaf V 3.2.0
-//U8G2_ST7539_192X64_F_4W_HW_SPI u8g2(U8G2_R3, SPI_SS_LCD, LCD_RS, LCD_RESET);
-// uint8_t contrast_setting = 80;
-
 // Leaf V3.2.2
-U8G2_ST75256_WO256X128_F_4W_HW_SPI u8g2(U8G2_R3,  /* cs=*/ SPI_SS_LCD, /* dc=*/ LCD_RS, /* reset=*/ LCD_RESET);  // June Huang
-//U8G2_ST75256_JLX19296_F_4W_HW_SPI u8g2(U8G2_R1, /* cs=*/ SPI_SS_LCD, /* dc=*/ LCD_RS, /* reset=*/ LCD_RESET); // Alice Green HW
+#ifdef DISPLAY_JUNE
+  U8G2_ST75256_WO256X128_F_4W_HW_SPI u8g2(U8G2_R3,  /* cs=*/ SPI_SS_LCD, /* dc=*/ LCD_RS, /* reset=*/ LCD_RESET);  // June Huang
+#endif
+#ifdef DISPLAY_ALICE
+  U8G2_ST75256_JLX19296_F_4W_HW_SPI u8g2(U8G2_R1, /* cs=*/ SPI_SS_LCD, /* dc=*/ LCD_RS, /* reset=*/ LCD_RESET); // Alice Green HW
+#endif
+#ifdef DISPLAY_ALICE_SMALL
+  U8G2_ST7539_192X64_F_4W_HW_SPI u8g2(U8G2_R3, SPI_SS_LCD, LCD_RS, LCD_RESET);                                  // 192x64 original
+#endif
 
 int8_t display_page = page_thermal;
 uint8_t display_page_prior = page_thermal; // track the page we used to be on, so we can "go back" if needed (like cancelling out of a menu heirarchy)
@@ -62,9 +66,15 @@ void display_init(void) {
 }
 
 void display_setContrast(uint8_t contrast) {
-  u8g2.setContrast(contrast);   // JUne Huang
-  //u8g2.setContrast(contrast/2+25);   // Alice Green
-  //u8g2.setContrast(contrast/3+15);   // 192x64 original
+  #ifdef DISPLAY_JUNE
+    u8g2.setContrast(contrast);   // JUne Huang
+  #endif
+  #ifdef DISPLAY_ALICE
+    u8g2.setContrast(contrast/2+25);   // Alice Green
+  #endif
+  #ifdef DISPLAY_ALICE_SMALL
+    u8g2.setContrast(contrast/3+15);   // 192x64 original
+  #endif
 }
 
 void display_turnPage(uint8_t action) {
@@ -299,7 +309,21 @@ void display_page_satellites() {
         u8g2.setCursor(x, y+=15);
         u8g2.print(battADC);
 
+        // time remaining calcs testing
+        u8g2.setCursor(0,73);
+        u8g2.print("m/s:");
+        u8g2.print(gps.speed.mps());
+        u8g2.setCursor(0,86);
+        u8g2.print("d:");
+        u8g2.print(gpxNav.pointDistanceRemaining);
+        u8g2.setCursor(0,99);
+        u8g2.print("calc:");
+        u8g2.print(gpxNav.pointDistanceRemaining / gps.speed.mps());
 
+        u8g2.setCursor(65,110);
+        u8g2.print(baroAltimeterSetting);
+
+        /*
         // altitude testing
         u8g2.setCursor(0,73);
         u8g2.print("Apr: ");
@@ -313,7 +337,7 @@ void display_page_satellites() {
 
         u8g2.setCursor(65,110);
         u8g2.print(baroAltimeterSetting);
-
+        */
 
     gpsMenuPage.drawConstellation(0,100,63);
     

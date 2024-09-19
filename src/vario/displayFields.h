@@ -9,6 +9,7 @@
 		
 void display_clockTime(uint8_t x, uint8_t y, bool show_ampm);
 void display_flightTimer(uint8_t x, uint8_t y, bool shortstring, bool selected);
+void display_waypointTimeRemaining(uint8_t x, uint8_t y, const uint8_t *font);
 uint8_t display_speed(uint8_t cursor_x, uint8_t cursor_y);
 uint8_t display_speed(uint8_t x, uint8_t y, const uint8_t *font);
 uint8_t display_speed(uint8_t x, uint8_t y, const uint8_t *font, bool units);

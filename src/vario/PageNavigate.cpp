@@ -35,6 +35,46 @@ uint8_t navigatePage_cursorTimeOut = 12;	// after 12 page draws (6 seconds) rese
 
 
 
+uint8_t destination_selection_index = 1; 
+bool destination_selection_routes_vs_waypoints = true; // start showing routes not waypoints
+
+void navigatePage_destinationSelect(int8_t dir) {
+	switch (dir) {
+		case -1: 
+			destination_selection_index--;
+			if (destination_selection_index == 0) {
+				if (destination_selection_routes_vs_waypoints) {
+					destination_selection_routes_vs_waypoints = false; // switch back to waypoints
+					destination_selection_index = gpxData.totalWaypoints;
+				} else {
+					destination_selection_routes_vs_waypoints = true; // switch back to routes
+					destination_selection_index = gpxData.totalRoutes;
+				}
+			}
+			break;
+		case 1:
+			destination_selection_index++;
+			if (destination_selection_routes_vs_waypoints) {
+				if (destination_selection_index > gpxData.totalRoutes) {
+					destination_selection_routes_vs_waypoints = false;
+					destination_selection_index = 1;
+				}
+			} else {
+					if (destination_selection_index > gpxData.totalWaypoints) {
+					destination_selection_routes_vs_waypoints = true;
+					destination_selection_index = 1;
+				}
+			}
+			break;
+		case 0:
+			if (destination_selection_routes_vs_waypoints) gpx_activateRoute(destination_selection_index);
+			else gpx_activatePoint(destination_selection_index);
+			navigatePage_cursorPosition = cursor_navigatePage_none;
+			break;
+		}
+}
+
+
 void navigatePage_draw() {
 
 	// if cursor is selecting something, count toward the timeOut value before we reset cursor
@@ -130,37 +170,47 @@ void navigatePage_draw() {
 				u8g2.drawTriangle(tail_left_x, tail_left_y, waypoint_tip_x, waypoint_tip_y, tail_right_x, tail_right_y);
 			}
 
-
-		// Main Info ****************************************************
-			uint8_t topOfFrame = 30;
+		///////////////////////////////////////////////////
+		// Vario Info *************************************
+			uint8_t topOfFrame = 27;
 			uint8_t graphBoxHeight = 40;
 			uint8_t varioBarWidth = 20;
 			uint8_t varioBarHeight = 101;
-			uint8_t varioBoxHeight = 17;
+			uint8_t varioBoxHeight = 18;
 
 			//blank out the bottom bit of the nav circle (to make room for climb rate and altitude and other fields etc)
 			u8g2.setDrawColor(0);
-			u8g2.drawBox(varioBarWidth, topOfFrame + varioBarHeight/2 + 9, 76, 2);
+			u8g2.drawBox(varioBarWidth, topOfFrame + varioBarHeight/2 + varioBoxHeight/2, 76, 5);
 			u8g2.setDrawColor(1);
 
 			// Vario Bar
 			display_varioBar(topOfFrame, varioBarHeight, varioBarWidth, baro_getClimbRate());
 
-			//air data
-			display_climbRatePointerBox(varioBarWidth, topOfFrame + varioBarHeight/2 - 8, 96-varioBarWidth, varioBoxHeight, 6, baro_getClimbRate());     // x, y, w, h, triangle size, climbrate
+			//climb
+			display_climbRatePointerBox(varioBarWidth, topOfFrame + varioBarHeight/2 - varioBoxHeight/2, 96-varioBarWidth, varioBoxHeight, 6, baro_getClimbRate());     // x, y, w, h, triangle size, climbrate
 
 			// alt
 			display_alt_type(22, 106, leaf_8x14, DISPLAY_FIELD_ALT1, (navigatePage_cursorPosition == cursor_navigatePage_alt1));
 			//display_altAboveLaunch(24, 129, baro_getAltAboveLaunch());
 		
 			
-			// Waypoint Info
+			///////////////////////////////////////////////////
+			// Waypoint Info **********************************
 			//Name
 				u8g2.setCursor(varioBarWidth + 2, topOfFrame+varioBarHeight-4);
 				u8g2.setFont(u8g2_font_12x6LED_tf);
-				
-				if (gpxNav.navigating) u8g2.print(gpxNav.activePoint.name.c_str());
-				else u8g2.print("Select Dest");
+
+				// if the cursor is here, write the waypoint/route name of where the selection index is, rather than the active waypoint)
+				if (navigatePage_cursorPosition == cursor_navigatePage_waypoint) {
+					if (destination_selection_routes_vs_waypoints)
+						u8g2.print(gpxData.routes[destination_selection_index].name);
+					else
+						u8g2.print(gpxData.waypoints[destination_selection_index].name);
+				} else {
+					if (gpxNav.navigating) u8g2.print(gpxNav.activePoint.name.c_str());
+					else u8g2.print("Select Dest");
+					u8g2.setFont(leaf_6x12);
+				}
 
 				// selection box
 				if (navigatePage_cursorPosition == cursor_navigatePage_waypoint) {
@@ -182,26 +232,50 @@ void navigatePage_draw() {
 				u8g2.drawBox(0, topOfFrame+varioBarHeight, percent_progress*96, 2);
 
 		// User Fields ****************************************************
-			uint8_t userFieldsTop = topOfFrame+varioBarHeight+3;
-			uint8_t userFieldsHeight = 19;
-			uint8_t userFieldsMid = userFieldsTop + userFieldsHeight;
-			uint8_t userFieldsBottom = userFieldsMid + userFieldsHeight;
-			uint8_t userSecondColumn = 48;
 
-			//u8g2.drawHLine(varioBarWidth-1, userFieldsTop, 96-varioBarWidth+1);
-			u8g2.drawHLine(0, userFieldsMid, 96);
-			u8g2.drawHLine(0, userFieldsBottom, 96);
-			u8g2.drawVLine(userSecondColumn, userFieldsTop, userFieldsHeight*2);
+			// Layout
+				uint8_t userFieldsTop = topOfFrame+varioBarHeight+3;
+				uint8_t userFieldsHeight = 21;
+				uint8_t userFieldsMid = userFieldsTop + userFieldsHeight;
+				uint8_t userFieldsBottom = userFieldsMid + userFieldsHeight;
+				uint8_t userSecondColumn = 48;
 
+				//u8g2.drawHLine(varioBarWidth-1, userFieldsTop, 96-varioBarWidth+1);
+				//u8g2.drawHLine(0, userFieldsMid, 96);
+				//u8g2.drawHLine(0, userFieldsBottom, 96);
+				//u8g2.drawVLine(userSecondColumn, userFieldsTop, userFieldsHeight*2);
 
+			//  1 | 2
+			// ---|---
+			//  3 | 4
 
-			display_temp(5, userFieldsMid-1, (int16_t)tempRH_getTemp());
-			//display_humidity(userSecondColumn+3, userFieldsMid-1, (uint8_t)tempRH_getHumidity());
+			// User Field 1
+				display_waypointTimeRemaining(5, userFieldsMid-1, leaf_6x12);
+				u8g2.setFont(leaf_5h);
+				u8g2.setCursor(0, userFieldsMid-14);
+				u8g2.print("TIME>&");
+				u8g2.setFont(leaf_6x12);
 
-			display_distance(userSecondColumn+3, userFieldsMid-1, gpxNav.pointDistanceRemaining);
+			// User Field 2
+				display_distance(userSecondColumn+4, userFieldsMid-1, gpxNav.pointDistanceRemaining);
+			  u8g2.setFont(leaf_5h);
+				u8g2.setCursor(userSecondColumn+2, userFieldsMid-14);
+				u8g2.print("DIST>&");
+				u8g2.setFont(leaf_6x12);
 
-			display_accel(5, userFieldsBottom-1, IMU_getAccel());
-			display_glide(userSecondColumn+3, userFieldsBottom-1, gps_getGlideRatio());
+			// User Field 3
+				display_glide(5, userFieldsBottom-1, gpxNav.glideToActive);
+				u8g2.setFont(leaf_5h);
+				u8g2.setCursor(0, userFieldsBottom-14);
+				u8g2.print("GLIDE`");
+				u8g2.setFont(leaf_6x12);
+
+			// User Field 4	
+				display_glide(userSecondColumn+4, userFieldsBottom-1, gps_getGlideRatio());
+				u8g2.setFont(leaf_5h);
+				u8g2.setCursor(userSecondColumn+2, userFieldsBottom-14);
+				u8g2.print("`>&");
+				u8g2.setFont(leaf_6x12);
 
 
     // Footer Info ****************************************************
@@ -239,6 +313,18 @@ void nav_cursor_move(uint8_t button) {
 		navigatePage_cursorPosition++;
   	if (navigatePage_cursorPosition > navigatePage_cursorMax) navigatePage_cursorPosition = 0;
 	}
+
+	if (navigatePage_cursorPosition == cursor_navigatePage_waypoint) {
+		if (gpxNav.navigating) {
+			if(gpxNav.activeRouteIndex) {
+				destination_selection_index = gpxNav.activeRouteIndex;
+				destination_selection_routes_vs_waypoints = true;
+			} else if (gpxNav.activePointIndex) {
+				destination_selection_index = gpxNav.activePointIndex;
+				destination_selection_routes_vs_waypoints = false;
+			}
+		}
+	}
 }
 
 
@@ -246,7 +332,7 @@ void navigatePage_button(uint8_t button, uint8_t state, uint8_t count) {
 
 	// reset cursor time out count if a button is pushed
 	navigatePage_cursorTimeCount = 0;
-
+	
 	switch (navigatePage_cursorPosition) {
 		case cursor_navigatePage_none:
 			switch(button) {
@@ -273,7 +359,7 @@ void navigatePage_button(uint8_t button, uint8_t state, uint8_t count) {
 		case cursor_navigatePage_alt1:
 			switch(button) {
 				case UP:
-				case DOWN:
+				case DOWN:					
 					if (state == RELEASED) nav_cursor_move(button);     					
 					break;
 				case LEFT:
@@ -308,13 +394,13 @@ void navigatePage_button(uint8_t button, uint8_t state, uint8_t count) {
 					if (state == RELEASED) nav_cursor_move(button);     					
 					break;
 				case LEFT:
-					if (state == RELEASED) gpx_activatePoint(gpxNav.activePointIndex - 1);
+					if (state == RELEASED) navigatePage_destinationSelect(-1);
 					break;
 				case RIGHT:
-				  if (state == RELEASED) gpx_activatePoint(gpxNav.activePointIndex + 1);
+				  if (state == RELEASED) navigatePage_destinationSelect(1);
 					break;
 				case CENTER:
-					if (state == RELEASED) gpx_activateRoute(3);
+					if (state == RELEASED) navigatePage_destinationSelect(0);
 					if (state == HELD) { 
 						gpx_cancelNav();
 						navigatePage_cursorPosition = cursor_navigatePage_none;
