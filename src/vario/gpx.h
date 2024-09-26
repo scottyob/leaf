@@ -71,6 +71,9 @@ bool gpx_activateRoute(uint16_t routeIndex);
 bool gpx_sequenceWaypoint(void);
 void gpx_cancelNav(void);
 
+
+bool gpx_readFile(String fileName);
+
 void gpx_loadRoutes(void);
 void gpx_loadWaypoints(void);
 

@@ -209,7 +209,183 @@ void updateGPXnav() {
 
 
 
+
+
+
+
+
+
 // Ingest data from .gpx file on SD Card
+// fileName will look something like:  /GPX_files/MarshallCrestline.gpx
+// Function will return true if any non-zero number of waypoints and/or routes (with non zero route points) were loaded, false otherwise
+// Uncertain what to do with missing fields... for example, if a waypoint doesn't have an elevation, should we populate it with 0' MSL?  Or not load the waypoint?  If it doesn't have a name, should we name it Waypoint_N?
+// Probably, Waypoints need names (otherwise how would you select them or find them?), but if elevations is missing, we can put -1000 (so we can know it's a missing value)
+// Probably, Routes need names (so you can select/find them), but the individual route points DON'T need names (could be auto-named whatever the route name is, followed by a suffix, like: RouteName_1, RouteName_2)
+
+/*  Example GPX file:
+
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" creator="CALTOPO" version="1.1">
+
+   <metadata>
+      <name><![CDATA[SoCal GPX]]></name>
+   </metadata>
+
+   <wpt lat="34.19318" lon="-117.32334">
+      <ele>521</ele>
+      <name>Marshall_LZ</name>
+   </wpt>
+
+   <wpt lat="34.21016" lon="-117.30274">
+      <ele>1223</ele>
+      <name>Marshall_Launch</name>
+   </wpt>
+
+   <rte>
+      <name>The Circuit</name>
+      <rtept lat="34.21016" lon="-117.30274">
+         <ele>1223</ele>
+         <name>Marshall_Launch</name>
+      </rtept>	
+      <rtept lat="34.23531" lon="-117.32608">
+         <ele>1572</ele>
+         <name>Billboard</name>
+      </rtept>	
+      <rtept lat="34.23762" lon="-117.35115">
+         <ele>1553</ele>
+         <name>Pine_Mt</name>
+      </rtept>	
+      <rtept lat="34.21016" lon="-117.30274">
+         <ele>1223</ele>
+         <name>Marshall_Launch</name>
+      </rtept>	
+   </rte>
+
+
+*/
+
+bool gpx_readFile(String fileName) {
+
+	bool success = false;
+
+	// for reading waypoints
+	int8_t read_waypoint_index = 0;
+	bool waypoint_lat_success = false;
+	bool waypoint_lon_success = false;
+	bool waypoint_ele_success = false;
+	bool waypoint_name_success = false;
+
+	// for reading routes
+	int8_t read_route_index = 0;
+	bool route_name_success = false;
+	bool route_routepoint_success = false;
+
+	// for reading the points within a route (route points)
+	int8_t read_routepoint_index = 0;
+	bool routepoint_lat_succcess = false;
+	bool routepoint_lon_succcess = false;
+	bool routepoint_ele_succcess = false;
+	bool routepoint_name_succcess = false;
+
+
+	/*
+
+	// open file from SD card
+	if (!open(fileName)) return success;		// if file doesn't open propely, kick out with 'false' return
+
+	
+
+
+	// LOOP THROUGH FILE looking for "<wpt" or "<rte>"
+
+	if ("<wpt" && read_waypoint_index < maxWaypoints) {		// only save a new waypoint if we still have room 
+		read_waypoint_index++;
+		waypoint_lat_success = false;
+		waypoint_lon_success = false;
+		waypoint_ele_success = false;
+		waypoint_name_success = false;
+
+		//populate Lat, Lon
+		gpxData.waypoints[read_waypoint_index].lat = <lat>;
+		if (lat saved properly) waypoint_lat_success = true;
+		gpxData.waypoints[read_waypoint_index].lon = <lon>;
+		if (lon saved properly) waypoint_lon_success = true;
+
+		look for "<ele>" or "<name>" tages
+
+		if ("<ele>") {
+			gpxData.waypoints[read_waypoint_index].ele = <ele>;
+			if (sucessfully saved elevation) waypoint_ele_success = true;
+		} else if ("<name>") {
+			gpxData.waypoints[read_waypoint_index].name = <name>;
+			if (successfully saved name) waypoint_name_success = true;
+		}
+
+		if (all the values were populated properly) {
+			gpxData.totalWaypoints = read_waypoint_index;			// increment total number of saved waypoints
+			success = true; 																	// we had at least one successful waypoint save, so the function can return true
+		} else {
+			read_waypoint_index--;		// undo this attempt at saving a waypoint and overwrite it with the next waypoint
+		}
+	}
+
+	if ("<rte>" && read_route_index < maxRoutes) {
+		read_route_index++;
+		route_name_success = false;
+	  route_routepoint_success = false;
+
+		look for "<rtept" or "<name>" tags
+		
+		if ("<name>") {
+			gpxData.routes[read_route_index].name = <name>;
+			if (name saved properly) route_name_succcess = true;
+		} else if ("<rtept") {
+			read_routepoint_index++;
+			routepoint_lat_succcess = false;
+			routepoint_lon_succcess = false;
+			routepoint_ele_succcess = false;
+			routepoint_name_succcess = false;
+			
+			//populate Lat, Lon
+			gpxData.routes[read_route_index].routepoints[read_routepoint_index].lat = <lat>;
+			if (lat saved properly) routepoint_lat_success = true;
+			gpxData.routes[read_route_index].routepoints[read_routepoint_index].lon = <lon>;
+			if (lon saved properly) routepoint_lon_success = true;
+
+			look for "<ele>" or "<name>" tags
+
+			if ("<ele>") {
+				gpxData.routes[read_route_index].routepoints[read_routepoint_index].ele = <ele>;
+				if (sucessfully saved elevation) routepoint_ele_success = true;
+			} else if ("<name>") {
+				gpxData.routes[read_route_index].routepoints[read_routepoint_index].name = <name>;
+				if (successfully saved name) waypoint_name_success = true;
+			}
+
+			if (all the routepoint values were populated properly) {
+				gpxData.routes[read_route_index].totalPoints = read_routepoint_index;			// increment total number of saved routepoints in this route				
+			} else {
+				read_routepoint_index--;		// undo this attempt at saving a routepoint and overwrite it with the next routepoint
+			}
+
+
+		}
+
+		if (all the route values were populated properly && there's at least one routepoint) {
+			gpxData.totalRoutes = read_route_index;						// increment total number of saved routes
+			success = true; 																	// we had at least one successful route save, so the function can return true
+		} else {
+			read_route_index--;																// undo this attempt at saving a route and overwrite it with the next route
+		}
+
+		
+	}
+
+	*/
+
+}
+
+
 
 void gpx_loadRoutes() {
 
