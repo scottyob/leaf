@@ -7,6 +7,7 @@
 #include "gpx.h"
 #include "gps.h"
 #include "speaker.h"
+#include <FS.h>
 
 Waypoint emptyPoint = {"empty_point", 0, 0, 0};
 Waypoint waypoints[maxWaypoints];
@@ -264,125 +265,591 @@ void updateGPXnav() {
 
 */
 
-bool gpx_readFile(String fileName) {
+#define BUFFER_LEN (256)
 
-	bool success = false;
-
-	// for reading waypoints
-	int8_t read_waypoint_index = 0;
-	bool waypoint_lat_success = false;
-	bool waypoint_lon_success = false;
-	bool waypoint_ele_success = false;
-	bool waypoint_name_success = false;
-
-	// for reading routes
-	int8_t read_route_index = 0;
-	bool route_name_success = false;
-	bool route_routepoint_success = false;
-
-	// for reading the points within a route (route points)
-	int8_t read_routepoint_index = 0;
-	bool routepoint_lat_succcess = false;
-	bool routepoint_lon_succcess = false;
-	bool routepoint_ele_succcess = false;
-	bool routepoint_name_succcess = false;
-
-
-	/*
-
-	// open file from SD card
-	if (!open(fileName)) return success;		// if file doesn't open propely, kick out with 'false' return
-
-	
-
-
-	// LOOP THROUGH FILE looking for "<wpt" or "<rte>"
-
-	if ("<wpt" && read_waypoint_index < maxWaypoints) {		// only save a new waypoint if we still have room 
-		read_waypoint_index++;
-		waypoint_lat_success = false;
-		waypoint_lon_success = false;
-		waypoint_ele_success = false;
-		waypoint_name_success = false;
-
-		//populate Lat, Lon
-		gpxData.waypoints[read_waypoint_index].lat = <lat>;
-		if (lat saved properly) waypoint_lat_success = true;
-		gpxData.waypoints[read_waypoint_index].lon = <lon>;
-		if (lon saved properly) waypoint_lon_success = true;
-
-		look for "<ele>" or "<name>" tages
-
-		if ("<ele>") {
-			gpxData.waypoints[read_waypoint_index].ele = <ele>;
-			if (sucessfully saved elevation) waypoint_ele_success = true;
-		} else if ("<name>") {
-			gpxData.waypoints[read_waypoint_index].name = <name>;
-			if (successfully saved name) waypoint_name_success = true;
+class FileReader {
+  public:
+    FileReader(fs::FS &fs, String fileName) {
+		// open file from SD card
+		_file = fs.open(fileName, FILE_READ);
+		if (!_file) {
+			_error = "Could not open file";
+			_complete = true;
+			return;
 		}
-
-		if (all the values were populated properly) {
-			gpxData.totalWaypoints = read_waypoint_index;			// increment total number of saved waypoints
-			success = true; 																	// we had at least one successful waypoint save, so the function can return true
-		} else {
-			read_waypoint_index--;		// undo this attempt at saving a waypoint and overwrite it with the next waypoint
-		}
+		_buffer_count = 0;
+		_buffer_index = 0;
 	}
 
-	if ("<rte>" && read_route_index < maxRoutes) {
-		read_route_index++;
-		route_name_success = false;
-	  route_routepoint_success = false;
+	char nextChar() {
+		if (_buffer_index >= _buffer_count) {
+			// We need to read another block from the file
+			_buffer_count = _file.read((uint8_t*)_buffer, BUFFER_LEN);
+			_buffer_index = 0;
+		}
+		if (_buffer_count == 0) {
+			return 0;  // This should not happen, but avoid overrunning the buffer if it does
+		}
+		return _buffer[_buffer_index++];
+	}
 
-		look for "<rtept" or "<name>" tags
-		
-		if ("<name>") {
-			gpxData.routes[read_route_index].name = <name>;
-			if (name saved properly) route_name_succcess = true;
-		} else if ("<rtept") {
-			read_routepoint_index++;
-			routepoint_lat_succcess = false;
-			routepoint_lon_succcess = false;
-			routepoint_ele_succcess = false;
-			routepoint_name_succcess = false;
-			
-			//populate Lat, Lon
-			gpxData.routes[read_route_index].routepoints[read_routepoint_index].lat = <lat>;
-			if (lat saved properly) routepoint_lat_success = true;
-			gpxData.routes[read_route_index].routepoints[read_routepoint_index].lon = <lon>;
-			if (lon saved properly) routepoint_lon_success = true;
+	bool contentRemaining() {
+		if (_buffer_index < _buffer_count) {
+			return true;
+		}
+		return _file.available();
+	}
 
-			look for "<ele>" or "<name>" tags
+	~FileReader() {
+		_file.close();
+	}
 
-			if ("<ele>") {
-				gpxData.routes[read_route_index].routepoints[read_routepoint_index].ele = <ele>;
-				if (sucessfully saved elevation) routepoint_ele_success = true;
-			} else if ("<name>") {
-				gpxData.routes[read_route_index].routepoints[read_routepoint_index].name = <name>;
-				if (successfully saved name) waypoint_name_success = true;
-			}
+  private:
+	bool _complete;
+	String _error;
+	File _file;
+	char _buffer[BUFFER_LEN];
+	uint16_t _buffer_count;
+	uint16_t _buffer_index;
+};
 
-			if (all the routepoint values were populated properly) {
-				gpxData.routes[read_route_index].totalPoints = read_routepoint_index;			// increment total number of saved routepoints in this route				
+// The maximum length of a value in a GPX (tag name, latitude, longitude, elevation, etc)
+#define MAX_VALUE_LENGTH (32)
+
+inline bool isWhitespace(char c) {
+	return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+}
+
+bool equalsIgnoreCase(char* value, const char* constant) {
+	uint16_t i = 0;
+	while (i < MAX_VALUE_LENGTH) {
+		if (value[i] == 0 && constant[i] == 0) {
+			return true;
+		}
+		if (value[i] != constant[i]) {
+			bool lcase_value = 'a' <= value[i] && value[i] <= 'z';
+			bool ucase_value = 'A' <= value[i] && value[i] <= 'Z';
+			bool lcase_const = 'a' <= constant[i] && constant[i] <= 'A';
+			bool ucase_const = 'A' <= constant[i] && constant[i] <= 'Z';
+			if (lcase_value && ucase_const) {
+				if (value[i] != constant[i] + ('a' - 'A')) {
+					return false;
+				}
+			} else if (ucase_value && lcase_const ) {
+				if (value[i] + ('a' - 'A') != constant[i]) {
+					return false;
+				}
 			} else {
-				read_routepoint_index--;		// undo this attempt at saving a routepoint and overwrite it with the next routepoint
+				return false;
 			}
-
-
 		}
+		i++;
+	}
+	return true;
+}
 
-		if (all the route values were populated properly && there's at least one routepoint) {
-			gpxData.totalRoutes = read_route_index;						// increment total number of saved routes
-			success = true; 																	// we had at least one successful route save, so the function can return true
-		} else {
-			read_route_index--;																// undo this attempt at saving a route and overwrite it with the next route
-		}
+enum class ReadTagNameResult {
+	TagClosed,
+	TagOpen,
+	EndOfFile,
+	NameTooLong,
+};
 
-		
+enum class ReadWaypointOutcome {
+	Success,
+	EndOfFile,
+	InvalidAttributes,
+	MissingLat,
+	MissingLon,
+	TagNameTooLong,
+	ElevationTooLong,
+	InvalidElevation,
+	MissingClosingEleTag,
+	NameTooLong,
+	InvalidName,
+	MissingClosingNameTag,
+};
+
+enum class ReadAttributeOutcome {
+	Success,
+	EndOfFile,
+	MissingValue,
+	KeyTooLong,
+	ValueTooLong,
+	MissingOpeningQuote,
+};
+
+enum class ReadLiteralOutcome {
+	Success,
+	EndOfFile,
+	ValueTooLong,
+};
+
+enum class ReadRouteOutcome {
+	Success,
+	EndOfFile,
+	TooManyRoutePoints,
+	TagNameTooLong,
+	InvalidWaypoint,
+	NameTooLong,
+	InvalidName,
+	MissingClosingNameTag,
+};
+
+/// @brief Parses select GPX content from a provided FileReader
+/// @details File may not contain any 0-value byes; these will be considered the end of the file.
+/// @details Only literals may appear between <ele> and <name> tags; no additional subtags are allowed.
+/// @details No self-closing tags are allowed inside <wpt> or <rtept> tags.
+class GPXParser {
+  public:
+	GPXParser(FileReader* file_reader) {
+		_file_reader = file_reader;
+		_line = 1;
+		_col = 0;
+		_error = "";
 	}
 
-	*/
+	GPXdata parse() {
+		GPXdata result;
+		result.totalRoutes = 0;
+		result.totalWaypoints = 0;
 
+		char value_buffer[MAX_VALUE_LENGTH + 1];
+
+		while (true) {
+			scrollToTagBoundary('<');
+			ReadTagNameResult name_result = readTagName(value_buffer);
+			if (name_result == ReadTagNameResult::EndOfFile) {
+				_error = "Encountered end of file while reading tag name";
+				return result;
+			} else if (name_result == ReadTagNameResult::NameTooLong) {
+				_error = "Tag name is too long";
+				return result;
+			}
+			if (equalsIgnoreCase(value_buffer, "wpt")) {
+				if (name_result == ReadTagNameResult::TagClosed) {
+					_error = "Missing lat and lon attributes for wpt tag";
+					return result;
+				}
+				if (result.totalWaypoints >= maxWaypoints) {
+					_error = "Maximum number of waypoints exceeded";
+					return result;
+				}
+				Waypoint waypoint;
+				ReadWaypointOutcome waypoint_outcome = readWaypoint(&waypoint, "wpt");
+				if (waypoint_outcome == ReadWaypointOutcome::Success) {
+					result.waypoints[result.totalWaypoints] = waypoint;
+					result.totalWaypoints++;
+				} else {
+					// TODO: Provide more granular error messages based on `waypoint_outcome`
+					_error = "Error parsing wpt";
+					return result;
+				}
+			} else if (equalsIgnoreCase(value_buffer, "rte")) {
+				if (name_result == ReadTagNameResult::TagOpen) {
+					if (!scrollToTagBoundary('>')) {
+						_error = "Encountered end of file when reading rte tag";
+						return result;
+					}
+				}
+				if (result.totalRoutes >= maxRoutes) {
+					_error = "Maximum number of routes exceeded";
+					return result;
+				}
+				Route route;
+				ReadRouteOutcome route_outcome = readRoute(&route);
+				if (route_outcome == ReadRouteOutcome::Success) {
+					result.routes[result.totalRoutes] = route;
+					result.totalRoutes++;
+				} else {
+					// TODO: Provide more granular error messages based on `route_outcome`
+					_error = "Error parsing route";
+					return result;
+				}
+			}
+		}
+	}
+
+	bool getSuccess() {
+		return _error == "";
+	}
+
+  private:
+	/// @brief Get next character from FileReader
+	/// @return Next character, or 0 if there is no next character
+	char getNextChar() {
+		if (!_file_reader->contentRemaining()) {
+			return 0;
+		}
+		char c = _file_reader->nextChar();
+		if (c == '\n') {
+			_line++;
+			_col = 0;
+		} else if (c == '\r') {
+			// Do not increment line nor column for carriage returns
+		} else {
+			_col++;
+		}
+		return c;
+	}
+
+	/// @brief Read characters until the specified boundary of a tag is found
+	/// @return True if the specified boundary was found, false if boundary was not found
+	bool scrollToTagBoundary(char boundary) {
+		char c;
+		do {
+			c = getNextChar();
+			if (c == boundary) {
+				return true;
+			}
+		} while (c != 0);
+		return false;
+	}
+
+	/// @brief Read the name of a tag into the provided value buffer, ensuring null termination
+	ReadTagNameResult readTagName(char* value) {
+		ReadTagNameResult result;
+		char c;
+		uint16_t i = 0;
+		bool name_started = false;
+		while (true) {
+			c = getNextChar();
+			if (c == '>') {
+				result = ReadTagNameResult::TagClosed;
+				break;
+			} else if (isWhitespace(c)) {
+				if (name_started) {
+					result = ReadTagNameResult::TagOpen;
+					break;
+				}
+			} else if (c == 0) {
+				result = ReadTagNameResult::EndOfFile;
+			} else {
+				value[i++] = c;
+				if (i >= MAX_VALUE_LENGTH) {
+					result = ReadTagNameResult::NameTooLong;
+				}
+			}
+		}
+		value[i] = 0; // Null-terminate the value
+		return result;
+	}
+
+	/// @brief Read characters until encountering a non-whitespace character
+	/// @return First non-whitespace character encountered
+	char skipWhitespace() {
+		char c;
+		do {
+			c = getNextChar();
+		} while (isWhitespace(c));
+		return c;
+	}
+
+	/// @brief Read the data from a wpt or rtept tag into the provided waypoint
+	/// @details Must start inside the wpt/rtept tag just after the tag name
+	ReadWaypointOutcome readWaypoint(Waypoint* waypoint, const char* tag_name) {
+		char key[MAX_VALUE_LENGTH + 1];
+		char value[MAX_VALUE_LENGTH + 1];
+
+		// Read attributes of opening tag (until tag is closed)
+		bool found_lat = false;
+		bool found_lon = false;
+		while (true) {
+			char c = skipWhitespace();
+			if (c == 0) {
+				return ReadWaypointOutcome::EndOfFile;
+			} else if (c == '>') {
+				break;
+			}
+			key[0] = c;
+			ReadAttributeOutcome attribute_outcome = readAttribute(key + 1, value);
+			if (attribute_outcome == ReadAttributeOutcome::EndOfFile) {
+				return ReadWaypointOutcome::EndOfFile;
+			} else if (attribute_outcome == ReadAttributeOutcome::KeyTooLong ||
+					   attribute_outcome == ReadAttributeOutcome::ValueTooLong ||
+					   attribute_outcome == ReadAttributeOutcome::MissingValue ||
+					   attribute_outcome == ReadAttributeOutcome::MissingOpeningQuote) {
+				return ReadWaypointOutcome::InvalidAttributes;
+			}
+			if (equalsIgnoreCase(key, "lat")) {
+				waypoint->lat = atof(value);
+				found_lat = true;
+			} else if (equalsIgnoreCase(key, "lon")) {
+				waypoint->lon = atof(value);
+				found_lon = true;
+			}
+		}
+		if (!found_lat) {
+			return ReadWaypointOutcome::MissingLat;
+		}
+		if (!found_lon) {
+			return ReadWaypointOutcome::MissingLon;
+		}
+
+		// Look for content or the closing tag
+		while (true) {
+			// Read next tag
+			ReadTagNameResult name_outcome = readFullTagName(key);
+			if (name_outcome == ReadTagNameResult::EndOfFile) {
+				return ReadWaypointOutcome::EndOfFile;
+			} else if (name_outcome == ReadTagNameResult::NameTooLong) {
+				return ReadWaypointOutcome::TagNameTooLong;
+			}
+
+			if (key[0] == '/' && equalsIgnoreCase(key + 1, tag_name)) {
+				// This was the closing tag for the waypoint
+				if (!scrollToTagBoundary('>')) {
+					return ReadWaypointOutcome::EndOfFile;
+				}
+				break;
+			} else if (equalsIgnoreCase(key, "ele")) {
+				// This was an opening elevation tag
+				ReadLiteralOutcome literal_outcome = readLiteral(value);
+				if (literal_outcome == ReadLiteralOutcome::EndOfFile) {
+					return ReadWaypointOutcome::EndOfFile;
+				} else if (literal_outcome == ReadLiteralOutcome::ValueTooLong) {
+					return ReadWaypointOutcome::ElevationTooLong;
+				} else if (literal_outcome != ReadLiteralOutcome::Success) {
+					return ReadWaypointOutcome::InvalidElevation;
+				}
+				waypoint->ele = atof(value);
+				ReadTagNameResult closing_outcome = readTagName(key);
+				if (closing_outcome == ReadTagNameResult::EndOfFile) {
+					return ReadWaypointOutcome::EndOfFile;
+				} else if (closing_outcome == ReadTagNameResult::NameTooLong) {
+					return ReadWaypointOutcome::TagNameTooLong;
+				} else if (closing_outcome != ReadTagNameResult::TagOpen) {
+					if (!scrollToTagBoundary('>')) {
+						return ReadWaypointOutcome::EndOfFile;
+					}
+				}
+				if (!equalsIgnoreCase(key, "/ele")) {
+					return ReadWaypointOutcome::MissingClosingEleTag;
+				}
+			} else if  (equalsIgnoreCase(key, "name")) {
+				// This was an opening name tag
+				ReadLiteralOutcome literal_outcome = readLiteral(value);
+				if (literal_outcome == ReadLiteralOutcome::EndOfFile) {
+					return ReadWaypointOutcome::EndOfFile;
+				} else if (literal_outcome == ReadLiteralOutcome::ValueTooLong) {
+					return ReadWaypointOutcome::NameTooLong;
+				} else if (literal_outcome != ReadLiteralOutcome::Success) {
+					return ReadWaypointOutcome::InvalidName;
+				}
+				waypoint->name = String(value);
+				ReadTagNameResult closing_outcome = readTagName(key);
+				if (closing_outcome == ReadTagNameResult::EndOfFile) {
+					return ReadWaypointOutcome::EndOfFile;
+				} else if (closing_outcome == ReadTagNameResult::NameTooLong) {
+					return ReadWaypointOutcome::TagNameTooLong;
+				} else if (closing_outcome != ReadTagNameResult::TagOpen) {
+					if (!scrollToTagBoundary('>')) {
+						return ReadWaypointOutcome::EndOfFile;
+					}
+				}
+				if (!equalsIgnoreCase(key, "/name")) {
+					return ReadWaypointOutcome::MissingClosingNameTag;
+				}
+			} else {
+				// This was an irrelevant tag; look for its closing tag
+				while (true) {
+					ReadTagNameResult name_outcome = readFullTagName(value);
+					if (name_outcome == ReadTagNameResult::EndOfFile) {
+						return ReadWaypointOutcome::EndOfFile;
+					} else if (name_outcome == ReadTagNameResult::NameTooLong) {
+						return ReadWaypointOutcome::TagNameTooLong;
+					}
+					if (value[0] == '/' && strncmp(key, value + 1, MAX_VALUE_LENGTH - 1)) {
+						// This was the closing tag for the irrelevant tag within the waypoint; proceed with parsing
+						break;
+					}
+				}
+			}
+		}
+
+		return ReadWaypointOutcome::Success;
+	}
+
+	/// @brief  Read the key and value of an attribute
+	/// @details Routine may start at whitespace before the attribute
+	ReadAttributeOutcome readAttribute(char* key, char* value) {
+		// Read key
+		uint16_t i = 0;
+		char c = skipWhitespace();
+		while (true) {
+			if (c == 0) {
+				return ReadAttributeOutcome::EndOfFile;
+			} else if (c == '=') {
+				break;
+			} else if (c == '>') {
+				return ReadAttributeOutcome::MissingValue;
+			} else if (isWhitespace(c)) {
+				c = skipWhitespace();
+				if (c == '=') {
+					break;
+				} else {
+					return ReadAttributeOutcome::MissingValue;
+				}
+			} else {
+				key[i++] = c;
+				if (i >= MAX_VALUE_LENGTH) {
+					return ReadAttributeOutcome::KeyTooLong;
+				}
+				c = getNextChar();
+			}
+		}
+		key[i] = 0;
+		
+		// Read value
+		i = 0;
+		c = skipWhitespace();
+		if (c != '"') {
+			return ReadAttributeOutcome::MissingOpeningQuote;
+		}
+		while (true) {
+			c = getNextChar();
+			if (c == 0) {
+				return ReadAttributeOutcome::EndOfFile;
+			} else if (c == '"') {
+				value[i] = 0;
+				return ReadAttributeOutcome::Success;
+			} else {
+				value[i++] = c;
+				if (i >= MAX_VALUE_LENGTH) {
+					return ReadAttributeOutcome::ValueTooLong;
+				}
+			}
+		}
+	}
+
+	/// @brief Read a literal value located between two tags
+	ReadLiteralOutcome readLiteral(char* value) {
+		uint16_t i = 0;
+		while (true) {
+			char c = getNextChar();
+			if (c == '<') {
+				break;
+			} else if (c == 0) {
+				return ReadLiteralOutcome::EndOfFile;
+			}
+			value[i++] = c;
+			if (i >= MAX_VALUE_LENGTH) {
+				return ReadLiteralOutcome::ValueTooLong;
+			}
+		}
+		value[i] = 0;
+		return ReadLiteralOutcome::Success;
+	}
+
+	/// @brief Starting outside a tag, read up to and through an entire tag and set `key` to the name of the tag
+	ReadTagNameResult readFullTagName(char* key) {
+		if (!scrollToTagBoundary('<')) {
+			return ReadTagNameResult::EndOfFile;
+		}
+		ReadTagNameResult name_outcome = readTagName(key);
+		if (name_outcome == ReadTagNameResult::TagOpen) {
+			if (!scrollToTagBoundary('>')) {
+				return ReadTagNameResult::EndOfFile;
+			}
+		}
+		return ReadTagNameResult::TagClosed;
+	}
+
+	/// @brief Read the data from a rte tag into the provided `route`
+	/// @details Must start outside the end of the opening rte tag
+	ReadRouteOutcome readRoute(Route* route) {
+		route->totalPoints = 0;
+
+		char key[MAX_VALUE_LENGTH + 1];
+		char value[MAX_VALUE_LENGTH + 1];
+
+		// Look for content or the closing tag
+		while (true) {
+			// Read next tag
+			ReadTagNameResult name_outcome = readFullTagName(key);
+			if (name_outcome == ReadTagNameResult::EndOfFile) {
+				return ReadRouteOutcome::EndOfFile;
+			} else if (name_outcome == ReadTagNameResult::NameTooLong) {
+				return ReadRouteOutcome::TagNameTooLong;
+			}
+
+			if (equalsIgnoreCase(key, "/rte")) {
+				// This was the closing tag for the route
+				break;
+			} else if (equalsIgnoreCase(key, "rtept")) {
+				// This was an opening route point tag
+				if (route->totalPoints >= maxRoutePoints) {
+					return ReadRouteOutcome::TooManyRoutePoints;
+				}
+				Waypoint waypoint;
+				ReadWaypointOutcome waypoint_outcome = readWaypoint(&waypoint, "rtept");
+				if (waypoint_outcome != ReadWaypointOutcome::Success) {
+					// TODO: Provide additional granularity into how the waypoint was invalid
+					return ReadRouteOutcome::InvalidWaypoint;
+				}
+				route->routepoints[route->totalPoints] = waypoint;
+				route->totalPoints++;
+			} else if  (equalsIgnoreCase(key, "name")) {
+				// This was an opening name tag
+				ReadLiteralOutcome literal_outcome = readLiteral(value);
+				if (literal_outcome == ReadLiteralOutcome::EndOfFile) {
+					return ReadRouteOutcome::EndOfFile;
+				} else if (literal_outcome == ReadLiteralOutcome::ValueTooLong) {
+					return ReadRouteOutcome::NameTooLong;
+				} else if (literal_outcome != ReadLiteralOutcome::Success) {
+					return ReadRouteOutcome::InvalidName;
+				}
+				route->name = String(value);
+				ReadTagNameResult closing_outcome = readTagName(key);
+				if (closing_outcome == ReadTagNameResult::EndOfFile) {
+					return ReadRouteOutcome::EndOfFile;
+				} else if (closing_outcome == ReadTagNameResult::NameTooLong) {
+					return ReadRouteOutcome::TagNameTooLong;
+				} else if (closing_outcome != ReadTagNameResult::TagOpen) {
+					if (!scrollToTagBoundary('>')) {
+						return ReadRouteOutcome::EndOfFile;
+					}
+				}
+				if (!equalsIgnoreCase(key, "/name")) {
+					return ReadRouteOutcome::MissingClosingNameTag;
+				}
+			} else {
+				// This was an irrelevant tag; look for its closing tag
+				while (true) {
+					ReadTagNameResult name_outcome = readFullTagName(value);
+					if (name_outcome == ReadTagNameResult::EndOfFile) {
+						return ReadRouteOutcome::EndOfFile;
+					} else if (name_outcome == ReadTagNameResult::NameTooLong) {
+						return ReadRouteOutcome::TagNameTooLong;
+					}
+					if (value[0] == '/' && strncmp(key, value + 1, MAX_VALUE_LENGTH - 1)) {
+						// This was the closing tag for the irrelevant tag within the route; proceed with parsing
+						break;
+					}
+				}
+			}
+		}
+
+		return ReadRouteOutcome::Success;
+	}
+
+	FileReader* _file_reader;
+	uint16_t _line;
+	uint16_t _col;
+	String _error;
+};
+
+bool gpx_readFile(fs::FS &fs, String fileName) {
+	FileReader file_reader(fs, fileName);
+	GPXParser parser(&file_reader);
+	GPXdata result = parser.parse();
+	if (parser.getSuccess()) {
+		gpxData = result;
+		return true;
+	} else {
+		// TODO: Display error to user (create appropriate method in GPXParser looking at _error, _line, and _col)
+		return false;
+	}
 }
 
 

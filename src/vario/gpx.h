@@ -2,6 +2,7 @@
 #define gpx_h
 
 #include <Arduino.h>
+#include <FS.h>
 
 
 #define maxWaypoints	 255
@@ -72,7 +73,7 @@ bool gpx_sequenceWaypoint(void);
 void gpx_cancelNav(void);
 
 
-bool gpx_readFile(String fileName);
+bool gpx_readFile(fs::FS &fs, String fileName);
 
 void gpx_loadRoutes(void);
 void gpx_loadWaypoints(void);
