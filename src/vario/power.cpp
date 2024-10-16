@@ -68,6 +68,7 @@ void power_init_peripherals() {
       speaker_playSound(fx_enter);
     }    
     // then initialize the rest of the devices
+    SDcard_init();            Serial.println("Finished SDcard");
     gps_init();               Serial.println("Finished GPS");  
     wire_init();              Serial.println("Finished I2C Wire");  
     spi_init();               Serial.println("Finished SPI");
@@ -78,7 +79,7 @@ void power_init_peripherals() {
     baro_init();              Serial.println("Finished Baro");
     imu_init();               Serial.println("Finished IMU"); 
     tempRH_init();       
-    SDcard_init();            Serial.println("Finished SDcard");
+  
 
     // then put devices to sleep as needed if we're in POWER_OFF_USB state (plugged into USB but vario not actively turned on)
     if (powerOnState == POWER_OFF_USB) {   

@@ -8,6 +8,7 @@
 #include "gps.h"
 #include "speaker.h"
 #include <FS.h>
+#include <SD_MMC.h>
 
 Waypoint emptyPoint = {"empty_point", 0, 0, 0};
 Waypoint waypoints[maxWaypoints];
@@ -18,10 +19,16 @@ GPXdata gpxData = {};
 
 //TODO: at least here for testing so we can be navigating right from boot up
 void gpx_initNav() {
-	gpx_loadWaypoints();
-	gpx_loadRoutes();
+	
+	Serial.print("Loading GPX file...");
+	bool result = gpx_readFile(SD_MMC, "/SoCal_GPX.gpx");
+	Serial.print("...");
+	Serial.println(result);
+	
+	//gpx_loadWaypoints();
+	//gpx_loadRoutes();
 	//gpx_activatePoint(19);
-	gpx_activateRoute(3);
+	//gpx_activateRoute(3);
 }
 
 
