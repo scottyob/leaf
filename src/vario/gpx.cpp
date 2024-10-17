@@ -20,7 +20,8 @@ GPXdata gpxData = {};
 //TODO: at least here for testing so we can be navigating right from boot up
 void gpx_initNav() {
 	
-	Serial.print("Loading GPX file...");
+	Serial.println("Loading GPX file...");
+	delay(100);
 	bool result = gpx_readFile(SD_MMC, "/SoCal_GPX.gpx");
 	Serial.print("...");
 	Serial.println(result);
@@ -282,7 +283,6 @@ class FileReader {
 		if (!_file) {
 			_error = "Could not open file";
 			_complete = true;
-			return;
 		}
 		_buffer_count = 0;
 		_buffer_index = 0;
@@ -305,6 +305,10 @@ class FileReader {
 			return true;
 		}
 		return _file.available();
+	}
+
+	inline String error() {
+		return _error;
 	}
 
 	~FileReader() {
@@ -412,73 +416,112 @@ class GPXParser {
 	GPXParser(FileReader* file_reader) {
 		_file_reader = file_reader;
 		_line = 1;
-		_col = 0;
+		_col = 1;
 		_error = "";
 	}
 
-	GPXdata parse() {
-		GPXdata result;
-		result.totalRoutes = 0;
-		result.totalWaypoints = 0;
+	bool parse(GPXdata* result) {
+		result->totalRoutes = 0;
+		result->totalWaypoints = 0;
 
 		char value_buffer[MAX_VALUE_LENGTH + 1];
 
-		while (true) {
-			scrollToTagBoundary('<');
+		while (scrollToTagBoundary('<')) {
 			ReadTagNameResult name_result = readTagName(value_buffer);
+			// Serial.print("parse: name_result = '");
+			// Serial.print(value_buffer);
+			// Serial.print("' (");
+			// Serial.print((int)name_result);
+			// Serial.println(")");
+
 			if (name_result == ReadTagNameResult::EndOfFile) {
 				_error = "Encountered end of file while reading tag name";
-				return result;
+				return false;
 			} else if (name_result == ReadTagNameResult::NameTooLong) {
 				_error = "Tag name is too long";
-				return result;
+				return false;
 			}
 			if (equalsIgnoreCase(value_buffer, "wpt")) {
 				if (name_result == ReadTagNameResult::TagClosed) {
 					_error = "Missing lat and lon attributes for wpt tag";
-					return result;
+					return false;
 				}
-				if (result.totalWaypoints >= maxWaypoints) {
+				if (result->totalWaypoints >= maxWaypoints) {
 					_error = "Maximum number of waypoints exceeded";
-					return result;
+					return false;
 				}
 				Waypoint waypoint;
 				ReadWaypointOutcome waypoint_outcome = readWaypoint(&waypoint, "wpt");
 				if (waypoint_outcome == ReadWaypointOutcome::Success) {
-					result.waypoints[result.totalWaypoints] = waypoint;
-					result.totalWaypoints++;
+					result->waypoints[result->totalWaypoints] = waypoint;
+					result->totalWaypoints++;
 				} else {
-					// TODO: Provide more granular error messages based on `waypoint_outcome`
-					_error = "Error parsing wpt";
-					return result;
+					if (waypoint_outcome == ReadWaypointOutcome::EndOfFile) {
+						_error = "Encountered end of file";
+					} else if (waypoint_outcome == ReadWaypointOutcome::InvalidAttributes) {
+						_error = "Invalid attributes";
+					} else if (waypoint_outcome == ReadWaypointOutcome::MissingLat) {
+						_error = "Missing lat attribute";
+					} else if (waypoint_outcome == ReadWaypointOutcome::MissingLon) {
+						_error = "Missing lon attribute";
+					} else if (waypoint_outcome == ReadWaypointOutcome::TagNameTooLong) {
+						_error = "Child tag name too long";
+					} else if (waypoint_outcome == ReadWaypointOutcome::ElevationTooLong) {
+						_error = "Elevation value too long";
+					} else if (waypoint_outcome == ReadWaypointOutcome::InvalidElevation) {
+						_error = "Invalid elevation value";
+					} else if (waypoint_outcome == ReadWaypointOutcome::MissingClosingEleTag) {
+						_error = "Missing closing ele tag";
+					} else if (waypoint_outcome == ReadWaypointOutcome::NameTooLong) {
+						_error = "name value too long";
+					} else if (waypoint_outcome == ReadWaypointOutcome::InvalidName) {
+						_error = "name value invalid";
+					} else if (waypoint_outcome == ReadWaypointOutcome::MissingClosingNameTag) {
+						_error = "Missing closing ele tag";
+					} else {
+						_error = "Unknown error";
+					}
+					_error += " in wpt tag";
+					return false;
 				}
 			} else if (equalsIgnoreCase(value_buffer, "rte")) {
+				Serial.println("  ^ rte tag");
 				if (name_result == ReadTagNameResult::TagOpen) {
 					if (!scrollToTagBoundary('>')) {
 						_error = "Encountered end of file when reading rte tag";
-						return result;
+						return false;
 					}
 				}
-				if (result.totalRoutes >= maxRoutes) {
+				if (result->totalRoutes >= maxRoutes) {
 					_error = "Maximum number of routes exceeded";
-					return result;
+					return false;
 				}
 				Route route;
 				ReadRouteOutcome route_outcome = readRoute(&route);
 				if (route_outcome == ReadRouteOutcome::Success) {
-					result.routes[result.totalRoutes] = route;
-					result.totalRoutes++;
+					result->routes[result->totalRoutes] = route;
+					result->totalRoutes++;
 				} else {
 					// TODO: Provide more granular error messages based on `route_outcome`
 					_error = "Error parsing route";
-					return result;
+					return false;
 				}
 			}
 		}
+
+		return true;
 	}
 
-	bool getSuccess() {
-		return _error == "";
+	inline String error() {
+		return _error;
+	}
+
+	inline uint16_t line() {
+		return _line;
+	}
+
+	inline uint16_t col() {
+		return _col;
 	}
 
   private:
@@ -491,7 +534,7 @@ class GPXParser {
 		char c = _file_reader->nextChar();
 		if (c == '\n') {
 			_line++;
-			_col = 0;
+			_col = 1;
 		} else if (c == '\r') {
 			// Do not increment line nor column for carriage returns
 		} else {
@@ -533,6 +576,7 @@ class GPXParser {
 				result = ReadTagNameResult::EndOfFile;
 			} else {
 				value[i++] = c;
+				name_started = true;
 				if (i >= MAX_VALUE_LENGTH) {
 					result = ReadTagNameResult::NameTooLong;
 				}
@@ -558,6 +602,11 @@ class GPXParser {
 		char key[MAX_VALUE_LENGTH + 1];
 		char value[MAX_VALUE_LENGTH + 1];
 
+		Serial.print("readWaypoint started at line ");
+		Serial.print(_line);
+		Serial.print(" col ");
+		Serial.println(_col);
+
 		// Read attributes of opening tag (until tag is closed)
 		bool found_lat = false;
 		bool found_lon = false;
@@ -570,6 +619,14 @@ class GPXParser {
 			}
 			key[0] = c;
 			ReadAttributeOutcome attribute_outcome = readAttribute(key + 1, value);
+			Serial.print("readWaypoint: found attribute '");
+			Serial.print(key);
+			Serial.print("' -> '");
+			Serial.print(value);
+			Serial.print("' (");
+			Serial.print((int)attribute_outcome);
+			Serial.println(")");
+
 			if (attribute_outcome == ReadAttributeOutcome::EndOfFile) {
 				return ReadWaypointOutcome::EndOfFile;
 			} else if (attribute_outcome == ReadAttributeOutcome::KeyTooLong ||
@@ -596,7 +653,17 @@ class GPXParser {
 		// Look for content or the closing tag
 		while (true) {
 			// Read next tag
+			Serial.print("readWaypoint: reading at line ");
+			Serial.print(_line);
+			Serial.print(" col ");
+			Serial.println(_col);
 			ReadTagNameResult name_outcome = readFullTagName(key);
+			Serial.print("readWaypoint: child tag name = '");
+			Serial.print(key);
+			Serial.print("' (");
+			Serial.print((int)name_outcome);
+			Serial.println(")");
+
 			if (name_outcome == ReadTagNameResult::EndOfFile) {
 				return ReadWaypointOutcome::EndOfFile;
 			} else if (name_outcome == ReadTagNameResult::NameTooLong) {
@@ -605,13 +672,20 @@ class GPXParser {
 
 			if (key[0] == '/' && equalsIgnoreCase(key + 1, tag_name)) {
 				// This was the closing tag for the waypoint
-				if (!scrollToTagBoundary('>')) {
-					return ReadWaypointOutcome::EndOfFile;
-				}
+				Serial.println("readWaypoint: found closing tag");
 				break;
 			} else if (equalsIgnoreCase(key, "ele")) {
 				// This was an opening elevation tag
+				Serial.println("readWaypoint: found ele tag");
+				Serial.print("readWaypoint: reading ele literal at line ");
+				Serial.print(_line);
+				Serial.print(" col ");
+				Serial.println(_col);
 				ReadLiteralOutcome literal_outcome = readLiteral(value);
+				Serial.print("readWaypoint: completed reading ele literal at line ");
+				Serial.print(_line);
+				Serial.print(" col ");
+				Serial.println(_col);
 				if (literal_outcome == ReadLiteralOutcome::EndOfFile) {
 					return ReadWaypointOutcome::EndOfFile;
 				} else if (literal_outcome == ReadLiteralOutcome::ValueTooLong) {
@@ -620,12 +694,20 @@ class GPXParser {
 					return ReadWaypointOutcome::InvalidElevation;
 				}
 				waypoint->ele = atof(value);
+				Serial.print("readWaypoint: reading ele closing tag at line ");
+				Serial.print(_line);
+				Serial.print(" col ");
+				Serial.println(_col);
 				ReadTagNameResult closing_outcome = readTagName(key);
+				Serial.print("readWaypoint: completed reading ele closing tag at line ");
+				Serial.print(_line);
+				Serial.print(" col ");
+				Serial.println(_col);
 				if (closing_outcome == ReadTagNameResult::EndOfFile) {
 					return ReadWaypointOutcome::EndOfFile;
 				} else if (closing_outcome == ReadTagNameResult::NameTooLong) {
 					return ReadWaypointOutcome::TagNameTooLong;
-				} else if (closing_outcome != ReadTagNameResult::TagOpen) {
+				} else if (closing_outcome == ReadTagNameResult::TagOpen) {
 					if (!scrollToTagBoundary('>')) {
 						return ReadWaypointOutcome::EndOfFile;
 					}
@@ -633,9 +715,20 @@ class GPXParser {
 				if (!equalsIgnoreCase(key, "/ele")) {
 					return ReadWaypointOutcome::MissingClosingEleTag;
 				}
+				Serial.print("readWaypoint: ele successfully read as ");
+				Serial.println(waypoint->ele);
 			} else if  (equalsIgnoreCase(key, "name")) {
 				// This was an opening name tag
+				Serial.println("readWaypoint: found name tag");
+				Serial.print("readWaypoint: reading name literal at line ");
+				Serial.print(_line);
+				Serial.print(" col ");
+				Serial.println(_col);
 				ReadLiteralOutcome literal_outcome = readLiteral(value);
+				Serial.print("readWaypoint: completed reading name literal at line ");
+				Serial.print(_line);
+				Serial.print(" col ");
+				Serial.println(_col);
 				if (literal_outcome == ReadLiteralOutcome::EndOfFile) {
 					return ReadWaypointOutcome::EndOfFile;
 				} else if (literal_outcome == ReadLiteralOutcome::ValueTooLong) {
@@ -644,12 +737,20 @@ class GPXParser {
 					return ReadWaypointOutcome::InvalidName;
 				}
 				waypoint->name = String(value);
+				Serial.print("readWaypoint: reading ele closing tag at line ");
+				Serial.print(_line);
+				Serial.print(" col ");
+				Serial.println(_col);
 				ReadTagNameResult closing_outcome = readTagName(key);
+				Serial.print("readWaypoint: completed reading ele closing tag at line ");
+				Serial.print(_line);
+				Serial.print(" col ");
+				Serial.println(_col);
 				if (closing_outcome == ReadTagNameResult::EndOfFile) {
 					return ReadWaypointOutcome::EndOfFile;
 				} else if (closing_outcome == ReadTagNameResult::NameTooLong) {
 					return ReadWaypointOutcome::TagNameTooLong;
-				} else if (closing_outcome != ReadTagNameResult::TagOpen) {
+				} else if (closing_outcome == ReadTagNameResult::TagOpen) {
 					if (!scrollToTagBoundary('>')) {
 						return ReadWaypointOutcome::EndOfFile;
 					}
@@ -659,6 +760,7 @@ class GPXParser {
 				}
 			} else {
 				// This was an irrelevant tag; look for its closing tag
+				Serial.println("readWaypoint: found irrelevant tag");
 				while (true) {
 					ReadTagNameResult name_outcome = readFullTagName(value);
 					if (name_outcome == ReadTagNameResult::EndOfFile) {
@@ -730,6 +832,7 @@ class GPXParser {
 	}
 
 	/// @brief Read a literal value located between two tags
+	/// @details Leaves cursor at first character of next tag (past opening < character)
 	ReadLiteralOutcome readLiteral(char* value) {
 		uint16_t i = 0;
 		while (true) {
@@ -770,21 +873,43 @@ class GPXParser {
 		char key[MAX_VALUE_LENGTH + 1];
 		char value[MAX_VALUE_LENGTH + 1];
 
+		Serial.println("=== readRoute ===");
 		// Look for content or the closing tag
 		while (true) {
+			// Find next tag
+			if (!scrollToTagBoundary('<')) {
+				return ReadRouteOutcome::EndOfFile;
+			}
+
 			// Read next tag
-			ReadTagNameResult name_outcome = readFullTagName(key);
+			Serial.print("readRoute: reading at line ");
+			Serial.print(_line);
+			Serial.print(" col ");
+			Serial.println(_col);
+			ReadTagNameResult name_outcome = readTagName(key);
+			Serial.print("readRoute: child tag name = '");
+			Serial.print(key);
+			Serial.print("' (");
+			Serial.print((int)name_outcome);
+			Serial.println(")");
 			if (name_outcome == ReadTagNameResult::EndOfFile) {
 				return ReadRouteOutcome::EndOfFile;
 			} else if (name_outcome == ReadTagNameResult::NameTooLong) {
 				return ReadRouteOutcome::TagNameTooLong;
 			}
 
+			// For every tag except rtept, scroll to end of tag
+			if (!equalsIgnoreCase(key, "rtept") &&
+				name_outcome == ReadTagNameResult::TagOpen &&
+				!scrollToTagBoundary('>')) {
+				return ReadRouteOutcome::EndOfFile;
+			}
+
 			if (equalsIgnoreCase(key, "/rte")) {
 				// This was the closing tag for the route
 				break;
 			} else if (equalsIgnoreCase(key, "rtept")) {
-				// This was an opening route point tag
+				// This is an opening route point tag
 				if (route->totalPoints >= maxRoutePoints) {
 					return ReadRouteOutcome::TooManyRoutePoints;
 				}
@@ -794,11 +919,23 @@ class GPXParser {
 					// TODO: Provide additional granularity into how the waypoint was invalid
 					return ReadRouteOutcome::InvalidWaypoint;
 				}
+				Serial.print("readRoute: after reading rtept, at line ");
+				Serial.print(_line);
+				Serial.print(" col ");
+				Serial.println(_col);
 				route->routepoints[route->totalPoints] = waypoint;
 				route->totalPoints++;
 			} else if  (equalsIgnoreCase(key, "name")) {
-				// This was an opening name tag
+				// This is an opening name tag
+				Serial.print("readRoute: end of opening name tag at line ");
+				Serial.print(_line);
+				Serial.print(" col ");
+				Serial.println(_col);
 				ReadLiteralOutcome literal_outcome = readLiteral(value);
+				Serial.print("readRoute: end of name literal at line ");
+				Serial.print(_line);
+				Serial.print(" col ");
+				Serial.println(_col);
 				if (literal_outcome == ReadLiteralOutcome::EndOfFile) {
 					return ReadRouteOutcome::EndOfFile;
 				} else if (literal_outcome == ReadLiteralOutcome::ValueTooLong) {
@@ -808,18 +945,29 @@ class GPXParser {
 				}
 				route->name = String(value);
 				ReadTagNameResult closing_outcome = readTagName(key);
+				Serial.print("readRoute: end of closing name tag name at line ");
+				Serial.print(_line);
+				Serial.print(" col ");
+				Serial.println(_col);
 				if (closing_outcome == ReadTagNameResult::EndOfFile) {
 					return ReadRouteOutcome::EndOfFile;
 				} else if (closing_outcome == ReadTagNameResult::NameTooLong) {
 					return ReadRouteOutcome::TagNameTooLong;
-				} else if (closing_outcome != ReadTagNameResult::TagOpen) {
+				} else if (closing_outcome == ReadTagNameResult::TagOpen) {
 					if (!scrollToTagBoundary('>')) {
 						return ReadRouteOutcome::EndOfFile;
 					}
 				}
+				Serial.print("readRoute: end of closing name tag at line ");
+				Serial.print(_line);
+				Serial.print(" col ");
+				Serial.println(_col);
 				if (!equalsIgnoreCase(key, "/name")) {
 					return ReadRouteOutcome::MissingClosingNameTag;
 				}
+				Serial.print("readRoute: Successfully read name '");
+				Serial.print(route->name);
+				Serial.println("'");
 			} else {
 				// This was an irrelevant tag; look for its closing tag
 				while (true) {
@@ -846,15 +994,64 @@ class GPXParser {
 	String _error;
 };
 
+GPXdata parse_result;
+
 bool gpx_readFile(fs::FS &fs, String fileName) {
 	FileReader file_reader(fs, fileName);
+	if (file_reader.error() != "") {
+		Serial.print("Found file_reader error: ");
+		Serial.println(file_reader.error());
+		return false;
+	}
 	GPXParser parser(&file_reader);
-	GPXdata result = parser.parse();
-	if (parser.getSuccess()) {
-		gpxData = result;
+	bool success = parser.parse(&parse_result);
+	if (success) {
+		Serial.println("gpx_readFile was successful:");
+		Serial.print("  ");
+		Serial.print(parse_result.totalWaypoints);
+		Serial.println(" waypoints");
+		for (uint8_t wp = 0; wp < parse_result.totalWaypoints; wp++) {
+			Serial.print("    ");
+			Serial.print(parse_result.waypoints[wp].name);
+			Serial.print(" @ ");
+			Serial.print(parse_result.waypoints[wp].lat);
+			Serial.print(", ");
+			Serial.print(parse_result.waypoints[wp].lon);
+			Serial.print(", ");
+			Serial.print(parse_result.waypoints[wp].ele);
+			Serial.println("m");
+		}
+		Serial.print("  ");
+		Serial.print(parse_result.totalRoutes);
+		Serial.println(" routes");
+		for (uint8_t r = 0; r < parse_result.totalRoutes; r++) {
+			Serial.print("    ");
+			Serial.print(parse_result.routes[r].name);
+			Serial.print(" (");
+			Serial.print(parse_result.routes[r].totalPoints);
+			Serial.println(" points)");
+			for (uint8_t wp = 0; wp < parse_result.routes[r].totalPoints; wp++) {
+				Serial.print("      ");
+				Serial.print(parse_result.waypoints[wp].name);
+				Serial.print(" @ ");
+				Serial.print(parse_result.waypoints[wp].lat);
+				Serial.print(", ");
+				Serial.print(parse_result.waypoints[wp].lon);
+				Serial.print(", ");
+				Serial.print(parse_result.waypoints[wp].ele);
+				Serial.println("m");
+			}
+		}
+		gpxData = parse_result;
 		return true;
 	} else {
 		// TODO: Display error to user (create appropriate method in GPXParser looking at _error, _line, and _col)
+		Serial.print("gpx_readFile error parsing GPX at line ");
+		Serial.print(parser.line());
+		Serial.print(" col ");
+		Serial.print(parser.col());
+		Serial.print(": ");
+		Serial.println(parser.error());
 		return false;
 	}
 }
