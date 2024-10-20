@@ -7,7 +7,8 @@ Infrastructure Stuff
   Wifi & Bluetooth
   OTA updates, or at least non-IDE updates
   More precise partition and memory plan (put fonts and stuff elsewhere?  Partition for OTA updates?  How many waypoints/routes can we store in NVM?  etc)
-  
+  USM Mass storage for sdcard access when plugged into computer
+
 GPS Logging
   Additional file formats for logs (gpx, IGC, KML-with-timestamps, etc)
 
@@ -32,7 +33,6 @@ Features and Performance
 
 
 
-  
 
 
 Bugs and obvservations

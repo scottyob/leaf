@@ -202,10 +202,14 @@ void navigatePage_draw() {
 
 				// if the cursor is here, write the waypoint/route name of where the selection index is, rather than the active waypoint)
 				if (navigatePage_cursorPosition == cursor_navigatePage_waypoint) {
-					if (destination_selection_routes_vs_waypoints)
+					if (destination_selection_routes_vs_waypoints) {						
+						u8g2.setFont(leaf_icons);
+						u8g2.print('R');
+						u8g2.setFont(u8g2_font_12x6LED_tf);
 						u8g2.print(gpxData.routes[destination_selection_index].name);
-					else
+					} else {
 						u8g2.print(gpxData.waypoints[destination_selection_index].name);
+					}
 				} else {
 					if (gpxNav.navigating) u8g2.print(gpxNav.activePoint.name.c_str());
 					else u8g2.print("Select Dest");
@@ -249,29 +253,29 @@ void navigatePage_draw() {
 			// ---|---
 			//  3 | 4
 
-			// User Field 1
+			// User Field 1 -- Time to waypoint
 				display_waypointTimeRemaining(5, userFieldsMid-1, leaf_6x12);
 				u8g2.setFont(leaf_5h);
 				u8g2.setCursor(0, userFieldsMid-14);
 				u8g2.print("TIME>&");
 				u8g2.setFont(leaf_6x12);
 
-			// User Field 2
+			// User Field 2  -- Dist to waypoint
 				display_distance(userSecondColumn+4, userFieldsMid-1, gpxNav.pointDistanceRemaining);
 			  u8g2.setFont(leaf_5h);
 				u8g2.setCursor(userSecondColumn+2, userFieldsMid-14);
 				u8g2.print("DIST>&");
 				u8g2.setFont(leaf_6x12);
 
-			// User Field 3
-				display_glide(5, userFieldsBottom-1, gpxNav.glideToActive);
+			// User Field 3 -- Glide Ratio
+				display_glide(5, userFieldsBottom-1, gps_getGlideRatio());
 				u8g2.setFont(leaf_5h);
 				u8g2.setCursor(0, userFieldsBottom-14);
 				u8g2.print("GLIDE`");
 				u8g2.setFont(leaf_6x12);
 
-			// User Field 4	
-				display_glide(userSecondColumn+4, userFieldsBottom-1, gps_getGlideRatio());
+			// User Field 4	-- Glide Ratio to Waypoint
+				display_glide(userSecondColumn+4, userFieldsBottom-1, gpxNav.glideToActive);
 				u8g2.setFont(leaf_5h);
 				u8g2.setCursor(userSecondColumn+2, userFieldsBottom-14);
 				u8g2.print("`>&");

@@ -4,6 +4,7 @@
 #include <Arduino.h>
 
 #define ADDR_AHT20 0x38
+#define TEMP_OFFSET -3		// used for subtracting out any self-heating errors in the temp/humidity sensor
 
 enum registers {
     sfe_aht20_reg_reset = 0xBA,

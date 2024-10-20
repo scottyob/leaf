@@ -263,7 +263,10 @@ float gps_getSpeed_mph() { return fakeSpeed; } //gps.speed.mph(); }
 float gps_getCourseDeg() { return fakeCourse;  } //gps.course.deg(); }
 const char *gps_getCourseCardinal() { return gps.cardinal(gps_getCourseDeg()); }
 
+
 float gps_getWaypointBearing() { return fakeWaypointBearing;  }
+
+
 float gps_getGlideRatio() { return glideRatio; }
 
 

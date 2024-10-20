@@ -92,6 +92,7 @@ void tempRH_update(uint8_t process_step) {
     if (!tempRH_isBusy()) {          // if busy, skip this and we'll try again next time
       tempRH_readData();
       ambientTemp = ((float)sensorData.temperature / 1048576) * 200 - 50;
+      ambientTemp += TEMP_OFFSET;
       ambientHumidity = ((float)sensorData.humidity / 1048576) * 100;
       currently_processing = false;
       if(DEBUG_TEMPRH) {

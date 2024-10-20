@@ -26,7 +26,7 @@ void gpx_initNav() {
 	
 	Serial.println("Loading GPX file...");
 	delay(100);
-	bool result = gpx_readFile(SD_MMC, "/SoCal_GPX.gpx");
+	bool result = gpx_readFile(SD_MMC, "/waypoints.gpx");
 	Serial.print("gpx_readFile result: ");
 	Serial.println(result ? "true" : "false");
 	
@@ -67,7 +67,7 @@ void updateGPXnav() {
 
 		// get glide to active (and goal point, if we're on a route)
 		gpxNav.glideToActive = gpxNav.pointDistanceRemaining / (gps.altitude.meters() - gpxNav.activePoint.ele);
-		if(gpxNav.activeRouteIndex) gpxNav.totalDistanceRemaining / (gps.altitude.meters() - gpxNav.goalPoint.ele);
+		if(gpxNav.activeRouteIndex) gpxNav.glideToGoal = gpxNav.totalDistanceRemaining / (gps.altitude.meters() - gpxNav.goalPoint.ele);
 
 		// if there's a next point, get course to that as well
 		if (gpxNav.nextPointIndex) {

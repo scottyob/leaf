@@ -16,16 +16,18 @@
   // User Settings for Vario
   #define FILTER_VALS_MAX           20                    // total array size max; for both altitude and climb 
   #define PRESSURE_FILTER_VALS_PREF 20                    // user setting for how many altitude samples to filter over, from 1 to 20
-  #define CLIMB_FILTER_VALS_PREF    20                    // how many climb rate values to average over, from 1 to 20
+  #define CLIMB_FILTER_VALS_PREF    20                    // how many climb rate values to average over, from 1 to 20 (20 = 1 second of data).  This is to reduce noise.
   int32_t pressureFilterVals[FILTER_VALS_MAX+1];          // use [0] as the index / bookmark
   int32_t climbFilterVals[FILTER_VALS_MAX+1];             // use [0] as the index / bookmark
-  
+
+  #define CLIMB_AVERAGE 4 // number of seconds for average climb rate (this is used for smoother data in places like glide ratio, where rapidly fluctuating glide numbers aren't as useful as a several-second average)
+
   // LinearRegression to average out noisy sensor readings
   LinearRegression<PRESSURE_FILTER_VALS_PREF> pressure_lr;
-  
+
   // probably gonna delete these
     #define VARIO_SENSITIVITY 3 // not sure what this is yet :)
-    #define CLIMB_AVERAGE 1
+
     #define PfilterSize		6			// pressure alt filter values (minimum 1, max 10)
     int32_t varioVals[25];
     int32_t climbVals[31];
@@ -404,73 +406,18 @@
         filterIndex--;
         if (filterIndex <= 0) filterIndex = FILTER_VALS_MAX; // wrap around the array
       }
-      baro.climbRateFiltered /= CLIMB_FILTER_VALS_PREF; // divide to get the average
+      baro.climbRateFiltered /= CLIMB_FILTER_VALS_PREF; // divide to get the filtered climb rate
     
+    // now calculate the longer-running average climb value
+    uint32_t total_samples = CLIMB_AVERAGE * FILTER_VALS_MAX;   // CLIMB_AVERAGE seconds * 20 samples per second = total samples to average over
 
+                            // current averaege    *   weighted by total samples (minus 1) + one more new sample     / total samples
+    baro.climbRateAverage = (baro.climbRateAverage * (CLIMB_AVERAGE * FILTER_VALS_MAX - 1) + baro.climbRateFiltered) / total_samples;
 
-
-    //fakeClimbRate = (fakeAlt - lastAlt) / 6;      // test value changes every 2 seconds, so climbrate needs to be halved
-    //lastAlt = fakeAlt;
-    
-    //baro_filterCLIMB();									        // filter vario rate and climb rate displays
-    
+    // finally, update the speaker sound based on the new climbrate   
     speaker_updateVarioNoteSample(baro.climbRateFiltered);
   }
 
-  /*
-  void baro_filterCLIMB(void)
-  {
-    uint32_t sum = 0;
-    unsigned char i = 0;
-
-    //add new value to vario values
-    varioVals[24]++;
-    if (varioVals[24] > 4*VARIO_SENSITIVITY ||
-      varioVals[24] >= 24) {
-      varioVals[24] = 0;
-    }
-    varioVals[varioVals[24]] = CLIMB_RATE;
-
-
-    for (i=0; i<4*VARIO_SENSITIVITY;i++) {
-      sum += varioVals[i];
-      //if (i>=24) break;						// just a safety check in case VARIO_SENS.. got set too high
-    }
-    VARIO_RATEfiltered = sum/(4*VARIO_SENSITIVITY);
-
-    if (CLIMB_AVERAGE == 0) {
-      CLIMB_RATEfiltered = VARIO_RATEfiltered;
-    } else {
-      // filter Climb Rate over 1 second...
-      climbSecVals[8]++;
-      if (climbSecVals[8] >= 8) {climbSecVals[8] = 0;}
-      climbSecVals[climbSecVals[8]] = CLIMB_RATE;
-
-      // ...and then every second, average over 0-30 seconds for the numerical display
-      if (climbSecVals[8] == 0) {
-        sum = 0;
-        for (i=0; i<8;i++) {
-          sum += climbSecVals[i];
-        }
-
-        climbVals[30]++;
-        if (climbVals[30] >= CLIMB_AVERAGE*10) {climbVals[30] = 0;}
-        climbVals[climbVals[30]] = sum/8;
-
-        sum = 0;
-        for (i=0; i<CLIMB_AVERAGE*10;i++) {
-          sum += climbVals[i];
-        }
-        CLIMB_RATEfiltered = sum/(CLIMB_AVERAGE*10);
-      }
-    }
-  /*
-    // vario average setting is stored in 1/2 seconds, but vario samples come in every 1/8th second,
-    // so multiply [1/2 sec] setting by 4, to get number of [1/8th rate] samples.
-    VARIO_RATEfiltered = (VARIO_RATEfiltered * (4*VARIO_SENSITIVITY - 1) + CLIMB_RATE) / (4*VARIO_SENSITIVITY);  // filter by weighting old values higher
-
-  }
-  */
 // Device reading & data processing  
 
 

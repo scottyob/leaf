@@ -468,11 +468,19 @@
     }
 
     void display_glide(uint8_t x, uint8_t y, float glide) {
-      if (glide < 10) x += 7;
-      u8g2.setCursor(x, y);
       u8g2.setDrawColor(1);
       u8g2.setFont(leaf_6x12);
-	    u8g2.print(glide, 1);      
+
+      // the 'usual' positive glide angle (going down)
+      if (glide > 0) {
+        if (glide < 10) x += 7;
+        if (glide >= 100) glide = 99.9; //clip at max display glide
+        u8g2.setCursor(x, y);        
+        u8g2.print(glide, 1);      
+      } else { // 0 or negative glide ratio (this means the angle is 'upward', since traditionally a positive glide angle is still 'going down')
+        u8g2.setCursor(x, y);
+        u8g2.print("--.-");     
+      }
     }
 
 
