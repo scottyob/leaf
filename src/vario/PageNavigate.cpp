@@ -184,14 +184,14 @@ void navigatePage_draw() {
 			u8g2.setDrawColor(1);
 
 			// Vario Bar
-			display_varioBar(topOfFrame, varioBarHeight, varioBarWidth, baro_getClimbRate());
+			display_varioBar(topOfFrame, varioBarHeight, varioBarWidth, baro.climbRateFiltered);
 
 			//climb
-			display_climbRatePointerBox(varioBarWidth, topOfFrame + varioBarHeight/2 - varioBoxHeight/2, 96-varioBarWidth, varioBoxHeight, 6, baro_getClimbRate());     // x, y, w, h, triangle size, climbrate
+			display_climbRatePointerBox(varioBarWidth, topOfFrame + varioBarHeight/2 - varioBoxHeight/2, 96-varioBarWidth, varioBoxHeight, 6, baro.climbRateFiltered);     // x, y, w, h, triangle size, climbrate
 
 			// alt
 			display_alt_type(22, 106, leaf_8x14, DISPLAY_FIELD_ALT1, (navigatePage_cursorPosition == cursor_navigatePage_alt1));
-			//display_altAboveLaunch(24, 129, baro_getAltAboveLaunch());
+			//display_altAboveLaunch(24, 129, baro.altAboveLaunch);
 		
 			
 			///////////////////////////////////////////////////
@@ -364,20 +364,20 @@ void navigatePage_button(uint8_t button, uint8_t state, uint8_t count) {
 					break;
 				case LEFT:
 					if (DISPLAY_FIELD_ALT1 == alt_MSL && (state == PRESSED || state == HELD || state == HELD_LONG)) {
-          	settings_adjustAltOffset(-1, count);
+          	baro_adjustAltSetting(-1, count);
           	speaker_playSound(fx_neutral);
         	}
 					break;
 				case RIGHT:
 					if (DISPLAY_FIELD_ALT1 == alt_MSL && (state == PRESSED || state == HELD || state == HELD_LONG)) {
-          	settings_adjustAltOffset(1, count);
+          	baro_adjustAltSetting(1, count);
           	speaker_playSound(fx_neutral);
         	}
 					break;
 				case CENTER:
 					if (state == RELEASED) settings_adjustDisplayFieldAlt1(1);
 					else if (state == HELD && count == 1 && DISPLAY_FIELD_ALT1 == alt_MSL)  {
-						if (settings_matchGPSAlt()) { // successful reset of AltOffset to match GPS altitude
+						if (settings_matchGPSAlt()) { // successful adjustment of altimeter setting to match GPS altitude
           		speaker_playSound(fx_enter);  
               navigatePage_cursorPosition = cursor_navigatePage_none;
         		} else {                      // unsuccessful 

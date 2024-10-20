@@ -6,8 +6,11 @@
 
 
 #define maxWaypoints	 255
-#define maxRoutes 			15
-#define maxRoutePoints 	15
+#define maxRoutes 			20
+#define maxRoutePoints 	12
+
+#define AVERAGE_SPEED_SAMPLES	5
+
 
 // Waypoint definition and memory allocation
 	#define waypointRadius 150		// meters radius to count as "reaching/crossing" a waypoint
@@ -40,9 +43,12 @@ extern GPXdata gpxData;
 		Waypoint nextPoint;			  // next waypoint in the current route
 		Waypoint goalPoint;			  // final waypoint in the current route
 
-		int16_t activePointIndex = 0; 	// waypoint currently navigating to (index value for point inside of waypoints[], or inside of route.routepoints[], if on an active route)
-		int16_t nextPointIndex = 0;		  // the next waypoint (can prepare you which direction you'll need to turn next as you approach the currently active waypoint)
-		int16_t activeRouteIndex = 0;   // route currently navigating along (index value for route inside of routes[])
+		int16_t activePointIndex = 0; 	// waypoint currently navigating to (index value for element inside of waypoints[], or inside of route.routepoints[], if on an active route)
+		int16_t nextPointIndex = 0;			// the next waypoint (can prepare you which direction you'll need to turn next as you approach the currently active waypoint).  We create this as a separate variable (instead of just adding 1 to the acive index) because sometimes there IS NO next point (i.e., you're on the last point) and we want to know this.
+		int16_t activeRouteIndex = 0;  	// route currently navigating along (index value for route inside of routes[])
+
+
+		float averageSpeed = 0;					// keep a running average speed, to smooth out glide ratio and time-remaning calculations.
 
 		float glideToActive = 0;				// glide ratio from current position to active waypoint
 		float glideToGoal = 0;					// glide ratio from current position to final (goal) waypoint, ALONG the route //TODO: should this be along route or straight to?

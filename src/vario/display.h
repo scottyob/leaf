@@ -79,10 +79,7 @@ void display_test_big(uint8_t page);
 
 
 void display_page_satellites(void);
-void display_page_nav(void);
-void display_page_thermal(void);
 void display_page_charging(void);
-void display_page_menu(void);
 
 
 

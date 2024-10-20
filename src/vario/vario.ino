@@ -74,7 +74,7 @@ void setup() {
 
   // Start USB Serial Debugging Port
     Serial.begin(115200);
-    delay(5000);
+    delay(500);
     Serial.println("Starting Setup");
 
   // turn on and handle all device initialization
@@ -418,33 +418,4 @@ void main_loop_test() {
       break;
   }
   */
-}
-
-void full_system_test() {
-  delay(500);
-  // update baro sensor
-  taskman_baro = baro_update(taskman_baro, true);
-  if (taskman_baro == 0) taskman_baro = 1;
-  
-  //for (int i=0; i<300000; i++) {
-    speaker_updateVarioNote(baro_getClimbRate());
-  //}
-  speaker_debugPrint();
-
-  // update display
-  display_page_thermal();
-
-  // allow setting volume by sending a 0, 1, 2, 3 character over Serial  
-  if (Serial.available() > 0) {
-    char letter = char(Serial.read());
-    while (Serial.available() > 0) {
-      Serial.read();
-    }
-    switch (letter) {
-      case '0': speaker_setVolume(0); break;      
-      case '1': speaker_setVolume(1); break;      
-      case '2': speaker_setVolume(2); break;      
-      case '3': speaker_setVolume(3); break;            
-    }    
-  }
 }

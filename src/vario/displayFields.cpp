@@ -236,12 +236,6 @@
       if (displayTurn > '=') u8g2.print(displayTurn);  
     }
 
-
-    int32_t baro_getAlt (void);
-    int32_t baro_getOffsetAlt(void);
-    int32_t baro_getAltAtLaunch (void);
-    int32_t baro_getAltAboveLaunch(void);
-
     void display_alt_type(uint8_t cursor_x, uint8_t cursor_y, const uint8_t * font, uint8_t altType, bool selected) {
       u8g2.setDrawColor(1);
       if (selected) {
@@ -253,7 +247,7 @@
 
       switch(altType) {
         case alt_MSL:
-          displayAlt = baro_getOffsetAlt();
+          displayAlt = baro.altAdjusted;
           break;
         case alt_AGL:
           break;
@@ -261,7 +255,7 @@
           displayAlt = 100 * gps.altitude.meters();  // gps returns float in m, convert to int32_t in cm
           break;
         case alt_aboveLaunch:
-          displayAlt = baro_getAltAboveLaunch();
+          displayAlt = baro.altAboveLaunch;
           break;
         case alt_aboveLZ:
           break;

@@ -60,7 +60,7 @@ bool GPXParser::parse(GPXdata* result) {
             }
             Waypoint waypoint;
             if (readWaypoint(&waypoint, "wpt")) {
-                result->waypoints[result->totalWaypoints] = waypoint;
+                result->waypoints[result->totalWaypoints+1] = waypoint;     //TODO: changed to add +1 to index, now waypoints start at 1, not 0.  Change back if desired later
                 result->totalWaypoints++;
             } else {
                 _error += " in wpt tag";
@@ -79,7 +79,7 @@ bool GPXParser::parse(GPXdata* result) {
             }
             Route route;
             if (readRoute(&route)) {
-                result->routes[result->totalRoutes] = route;
+                result->routes[result->totalRoutes+1] = route;          //TODO: changed to add +1 to index, now routes start at 1, not 0.  Change back if desired later
                 result->totalRoutes++;
             } else {
                 _error += " in rte tag";
@@ -405,7 +405,7 @@ bool GPXParser::readRoute(Route* route) {
                 _error = " while reading rtept";
                 return false;
             }
-            route->routepoints[route->totalPoints] = waypoint;
+            route->routepoints[route->totalPoints+1] = waypoint;         //TODO: changed to add +1 to index, now routepoints start at 1, not 0.  Change back if desired later
             route->totalPoints++;
         } else if  (equalsIgnoreCase(key, "name")) {
             // This is an opening name tag

@@ -18,36 +18,31 @@
 #define CMD_CONVERT_PRESSURE	0b01001000
 #define CMD_CONVERT_TEMP		0b01011000
 
-extern float baroAltimeterSetting;
-extern  int32_t FloatAltCMinHg;
-extern  int32_t FloatAltCMinHgTemp;
+// baro struct to hold most values 
+	struct BARO {
+		int32_t temp;								// temperature of air in the baro sensor (not to be confused with temperature reading from the temp+humidity sensor)
+		int32_t pressure;
+		int32_t pressureFiltered;
+		int32_t pressureRegression;
+		float altimeterSetting = 29.920;
+		int32_t alt;									// raw pressure altitude calculated off standard altimeter setting (29.92)
+		int32_t altAdjusted;    			//the resulting altitude after being corrected by the altimeter setting
+		int32_t altAtLaunch;
+		int32_t altAboveLaunch;
+		int32_t altInitial;
+		int32_t climbRate;					// instantaneous climbrate calculated with every pressure altitude measurement
+		int32_t climbRateFiltered;	// filtered climb value to reduce noise
+		int32_t climbRateAverage;		// long-term (several seconds) averaged climb rate for smoothing out glide ratio and other calculations
+		int32_t varioBar;						// TODO: not yet used, but we may have a differently-averaged/filtered value for the grpahical vario bar vs the text output for climbrate
+	};
+extern BARO baro;
 
-/* 
-// Temperature Calculations
-int32_t TEMP;								
-int32_t TEMPfiltered;				
 
-// Compensated Pressure Values
-int32_t PRESSURE;							
-int32_t PRESSUREfiltered;					
-
-// Altitude above sea level (Pressure Altitude) in cm
-int32_t P_ALT;								
-int32_t P_ALTfiltered;						
-int32_t P_ALTinitial;						//pressure altitude at power-on to use for autostart feature
-
-// Climb Rate
-int16_t CLIMB_RATE;							
-int16_t CLIMB_RATEfiltered;					
-int32_t VARIO_RATEfiltered;	
-*/
-
-void baro_adjustAltOffset(int8_t dir, uint8_t count);
 
 // I2C Communication Functions
   uint8_t baro_sendCommand(uint8_t command);
   uint16_t baro_readCalibration(uint8_t PROMaddress);
-  uint32_t baro_readADC();
+  uint32_t baro_readADC(void);
 
 // Device Management
   void baro_init(void);
@@ -56,20 +51,11 @@ void baro_adjustAltOffset(int8_t dir, uint8_t count);
 	char baro_update(bool startNewCycle, bool doTemp);
 
 // Device reading & data processing  
-	int32_t baro_calculateAlt(void);
-	void baro_filterALT(void);
+	void baro_calculatePressure(void);
+	void baro_filterPressure(void);
+	void baro_calculateAlt(void);
 	void baro_updateClimb(void);	
-	void baro_filterCLIMB(void);
-
-// Get values (mainly for display and log purposes)
-	int32_t baro_getTemp(void);
-	int32_t baro_getAlt (void);
-	int32_t baro_getOffsetAlt(void);
-	int32_t baro_getAltAtLaunch (void);
-	int32_t baro_getAltAboveLaunch(void);
-	int32_t baro_getAltInitial(void);
-	int32_t baro_getClimbRate (void);
-	int32_t baro_getVarioBar (void);
+	void baro_adjustAltSetting(int8_t dir, uint8_t count);
 
 // Converstion functions
 	int32_t baro_altToUnits(int32_t alt_input, bool units_feet);  
@@ -77,7 +63,5 @@ void baro_adjustAltOffset(int8_t dir, uint8_t count);
 
 // Test Functions
 	void baro_debugPrint(void);
-	void baro_test(void);
-	void baro_updateFakeNumbers(void);
 
 #endif

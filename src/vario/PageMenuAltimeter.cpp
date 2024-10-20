@@ -14,7 +14,6 @@
 enum altimeter_menu_items { 
   cursor_altimeter_back,
 	cursor_altimeter_trackGPSAlt,
-  cursor_altimeter_baroSetting,
 	cursor_altimeter_adjust
 };
 
@@ -29,12 +28,26 @@ void AltimeterMenuPage::draw() {
     u8g2.print("ALTIMETER");
     u8g2.drawHLine(0, 15, 64);
 
+    uint8_t y_pos = 45;
+
+    u8g2.setCursor(4, y_pos);
+    u8g2.print("Standard Alt:");    
+    display_alt(8, y_pos+=15, leaf_6x12, baro.alt);
+
+    u8g2.setCursor(4, y_pos+=15);
+    u8g2.print("Alt Setting:");    
+    u8g2.setCursor(8, y_pos+=15);
+    u8g2.print(baro.altimeterSetting, 3);
+
+    u8g2.setCursor(4, y_pos+=15);
+    u8g2.print("Adjusted Alt:");    
+    display_alt(8, y_pos+=15, leaf_6x12, baro.altAdjusted);
+
+
   // Menu Items
-    uint8_t start_y = 29;
-    uint8_t y_spacing = 16;
     uint8_t setting_name_x = 2;
     uint8_t setting_choice_x = 74;    
-    uint8_t menu_items_y[] = {190, 75, 90, 105};
+    uint8_t menu_items_y[] = {190, 145, 160};
 
     //first draw cursor selection box
     u8g2.drawRBox(setting_choice_x-2, menu_items_y[cursor_position]-14, 24, 16, 2);
@@ -52,9 +65,6 @@ void AltimeterMenuPage::draw() {
           if (ALT_SYNC_GPS) u8g2.print("YES");
 					else u8g2.print("NO");
           break;
-        case cursor_altimeter_baroSetting:       
-          u8g2.print(baroAltimeterSetting);
-          break;
         case cursor_altimeter_adjust:
           u8g2.print("-/+");
           break;
@@ -64,8 +74,6 @@ void AltimeterMenuPage::draw() {
       }
     u8g2.setDrawColor(1);    
     }
-    // show altitude so proper offset can be set, if desired
-    display_alt(5, menu_items_y[cursor_max]+15, leaf_6x12, baro_getOffsetAlt());
   } while ( u8g2.nextPage() ); 
 }
 
@@ -75,20 +83,16 @@ void AltimeterMenuPage::setting_change(int8_t dir, uint8_t state, uint8_t count)
 		case cursor_altimeter_trackGPSAlt:
       if (state == RELEASED) settings_toggleBoolNeutral(&ALT_SYNC_GPS);
       break;
-    case cursor_altimeter_baroSetting:
-      if (state == RELEASED) settings_adjustVolumeVario(dir);
-      break;
     case cursor_altimeter_adjust:
       if (dir == 0 && count == 1 && state == HELD) {  // if center button held for 1 'action time'
-        if (settings_matchGPSAlt()) { // successful reset of AltOffset to match GPS altitude
+        if (settings_matchGPSAlt()) { // successful adjustment of altimeter setting to match GPS altitude
           speaker_playSound(fx_enter);  
         } else {                      // unsuccessful 
           speaker_playSound(fx_cancel);
         }
       } else if (dir != 0) {
         if (state == PRESSED || state == HELD || state == HELD_LONG) {
-          baro_adjustAltOffset(dir, count);
-					//settings_adjustAltOffset(dir, count);
+          baro_adjustAltSetting(dir, count);
           speaker_playSound(fx_neutral);
         }
       }

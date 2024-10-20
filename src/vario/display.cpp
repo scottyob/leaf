@@ -238,23 +238,6 @@ void display_page_charging() {
   
 }
 
-/*********************************************************************************
-**    NAV PAGE        ************************************************************
-*********************************************************************************/
-void display_page_nav() {
-  baro_updateFakeNumbers();
-  gps_updateFakeNumbers();
-
-  u8g2.firstPage();
-  do { 
-    uint8_t x = display_speed(0,12);
-    display_headingTurn(x+3, 10);
-    display_alt(17, 26, leaf_8x14, baro_getAlt());
-
-  } while ( u8g2.nextPage() ); 
-  
-}
-
 
 
 
@@ -321,23 +304,8 @@ void display_page_satellites() {
         u8g2.print(gpxNav.pointDistanceRemaining / gps.speed.mps());
 
         u8g2.setCursor(65,110);
-        u8g2.print(baroAltimeterSetting);
+        u8g2.print(baro.altimeterSetting);
 
-        /*
-        // altitude testing
-        u8g2.setCursor(0,73);
-        u8g2.print("Apr: ");
-        u8g2.print(baro_getAlt()*.0328084);
-        u8g2.setCursor(0,86);
-        u8g2.print("Ahg: ");
-        u8g2.print(FloatAltCMinHg*.0328084);
-        u8g2.setCursor(0,99);
-        u8g2.print("Atm: ");
-        u8g2.print(FloatAltCMinHgTemp*3.28084);
-
-        u8g2.setCursor(65,110);
-        u8g2.print(baroAltimeterSetting);
-        */
 
     gpsMenuPage.drawConstellation(0,100,63);
     

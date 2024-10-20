@@ -36,8 +36,8 @@
     #define DEF_VOLUME_VARIO		      1	    // 0=off, 1=low, 2=med, 3=high
     #define DEF_VARIO_TONES           0     // 0 == linear pitch interpolation; 1 == major C-scale for climb, minor scale for descent
     #define DEF_LIFTY_AIR				    -40	    // In units of cm/s (a sink rate of 30cm/s means the air itself is going up).  '0' is off.  (lift air will apply from the lifty_air setting up to the climb_start value)
-    #define DEF_ALT_OFFSET				    0	    // cm altitude offset from pressure altitude
-    #define DEF_ALT_SYNC_GPS         0     // lock altimeter to GPS alt (to avoid local pressure setting issues)
+    #define DEF_ALT_SETTING				   29.92  // altimeter setting
+    #define DEF_ALT_SYNC_GPS          0     // lock altimeter to GPS alt (to avoid local pressure setting issues)
 
   // Default GPS & Track Log Settings
     #define DEF_DISTANCE_FLOWN			  0	    // 0 = xc distance, 1 = path distance
@@ -79,7 +79,7 @@
     extern int8_t VOLUME_VARIO;
     extern bool   VARIO_TONES;
     extern int8_t LIFTY_AIR;
-    extern int32_t ALT_OFFSET;
+    extern float  ALT_SETTING;
     extern bool   ALT_SYNC_GPS;
 
   // GPS & Track Log Settings

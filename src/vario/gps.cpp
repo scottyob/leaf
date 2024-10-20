@@ -205,25 +205,26 @@ float glideRatio;
 
 void gps_calculateGlideRatio() {
 
-  int32_t climb = baro_getClimbRate();
+  int32_t climb = baro.climbRateAverage;
   float speed = gps.speed.kmph();
 
   if (climb == 0 || speed == 0) {
     glideRatio = 0;
   } else {
-    //             km per hour    /   cm per sec * sec per hour / cm per km
-    glideRatio = gps.speed.kmph() / (baro_getClimbRate() * 3600 / 100000); 
+    //             km per hour       / cm per sec * sec per hour / cm per km
+    glideRatio = gpxNav.averageSpeed / (climb * 3600 / 100000); 
   }
 }
 
 void gps_update() {
 
   // update sats if we're tracking sat NMEA sentences
+  updateGPXnav();
   gps_updateSatList();
   gps_calculateGlideRatio();
-  updateGPXnav();
+
   /*
-  //TODO: fill this in
+
   Serial.print("Valid: ");
   Serial.print(gps.course.isValid());
   Serial.print(" Course: ");

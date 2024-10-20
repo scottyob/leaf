@@ -118,6 +118,9 @@ void power_shutdown() {
   if (flightTimer_isRunning()) {
     flightTimer_stop();
   }
+
+  // save any changed settings this session
+  settings_save();
   
   power_sleep_peripherals();
   delay(100);
@@ -163,7 +166,7 @@ bool power_autoOff() {
   // we will auto-stop only if BOTH the GPS speed AND the Altitude change trigger the stopping thresholds.
 
   // First check if altitude is stable
-  int32_t altDifference = baro_getAlt() - autoOffAltitude;    
+  int32_t altDifference = baro.alt - autoOffAltitude;    
   if (altDifference < 0) altDifference *= -1;
   if (altDifference < AUTO_OFF_MAX_ALT) {
 

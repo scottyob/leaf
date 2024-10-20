@@ -119,7 +119,7 @@ void log_update() {
     }
 
     // check if current altitude has changed enough from startup to trigger timer start
-    int32_t altDifference = baro_getAlt() - baro_getAltInitial();
+    int32_t altDifference = baro.alt - baro.altInitial;
     if (altDifference < 0) altDifference *= -1;
     if (altDifference > AUTO_START_MIN_ALT) {
       startTheTimer = true;
@@ -145,7 +145,7 @@ void log_update() {
     // we will auto-stop only if BOTH the GPS speed AND the Altitude change trigger the stopping thresholds.
 
     // First check if altitude is stable
-    int32_t altDifference = baro_getAlt() - autoStopAltitude;    
+    int32_t altDifference = baro.alt - autoStopAltitude;    
     if (altDifference < 0) altDifference *= -1;
     if (altDifference < AUTO_STOP_MAX_ALT) {
 
@@ -188,7 +188,7 @@ void log_update() {
 
     //starting values
     baro_resetLaunchAlt();
-    log_alt_start = baro_getAltAtLaunch();
+    log_alt_start = baro.altAtLaunch;
 
     //get first set of log values
     log_captureValues();
@@ -210,7 +210,7 @@ void log_update() {
     if (flightTimerRunning) {
 
       //ending values
-      log_alt_end = baro_getAlt();    
+      log_alt_end = baro.alt;    
       // TODO: save other min/max values in a csv or similar log file.  Also description of KML file maybe?
 
       // if a KML track log was started
@@ -338,9 +338,9 @@ void flightTimer_updateStrings() {
 }
 
 void log_captureValues() {
-  log_alt = baro_getAlt();
-  log_alt_above_launch = baro_getAltAboveLaunch();
-  log_climb = baro_getClimbRate();
+  log_alt = baro.alt;
+  log_alt_above_launch = baro.altAboveLaunch;
+  log_climb = baro.climbRateFiltered;
   log_speed = gps.speed.kmph();
   log_temp = tempRH_getTemp();
 }
@@ -360,7 +360,7 @@ void log_checkMinMaxValues() {
   } 
 
   //check climb values for log records
-  log_climb = baro_getClimbRate();
+  log_climb = baro.climbRateFiltered;
   if (log_climb > log_climb_max) {
     log_climb_max = log_climb;
   } else if (log_climb < log_climb_min) {

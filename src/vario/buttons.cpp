@@ -106,7 +106,7 @@ uint8_t buttons_update(void) {
         }
         break;
     }
-  } else { // NOT CHARGING PAGE
+  } else { // NOT CHARGING PAGE (i.e., our satellites test page)
     switch (which_button) {
       case CENTER:
         switch (button_state) {
@@ -140,26 +140,26 @@ uint8_t buttons_update(void) {
       case UP:
         switch (button_state) {
           case RELEASED:
-            baro_adjustAltOffset(1, 0);
+            baro_adjustAltSetting(1, 0);
             break;
           case HELD:
-            baro_adjustAltOffset(1, 1);
+            baro_adjustAltSetting(1, 1);
             break;
           case HELD_LONG:
-            baro_adjustAltOffset(1, 10);
+            baro_adjustAltSetting(1, 10);
             break;
         }
         break;
       case DOWN:
         switch (button_state) {
           case RELEASED:
-            baro_adjustAltOffset(-1, 0);            
+            baro_adjustAltSetting(-1, 0);            
             break;
           case HELD:
-            baro_adjustAltOffset(-1, 1) ;
+            baro_adjustAltSetting(-1, 1) ;
             break;
           case HELD_LONG:
-            baro_adjustAltOffset(-1, 10);
+            baro_adjustAltSetting(-1, 10);
             break;
         }
         break;

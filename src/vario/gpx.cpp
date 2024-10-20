@@ -9,15 +9,15 @@
 #include <FS.h>
 #include <SD_MMC.h>
 
+#include "baro.h"
 #include "files.h"
 #include "gps.h"
 #include "gpx_parser.h"
 #include "speaker.h"
 
-Waypoint emptyPoint = {"empty_point", 0, 0, 0};
 Waypoint waypoints[maxWaypoints];
 Route routes[maxRoutes];
-GPXnav gpxNav = {emptyPoint, emptyPoint, emptyPoint, 0,0,0,   0,0,0,0,0,   false, false};
+GPXnav gpxNav = {};
 GPXdata gpxData = {};
 
 
@@ -40,7 +40,7 @@ void gpx_initNav() {
 // update nav data every second
 void updateGPXnav() {	
 
-	// only update if we're tracking to an active point
+	// only update nav info if we're tracking to an active point
 	if (gpxNav.activePointIndex) {
 
 		// update distance and time remaining 
@@ -51,7 +51,7 @@ void updateGPXnav() {
 			gpxNav.pointTimeRemaining = ( gpxNav.pointDistanceRemaining - waypointRadius ) / gps.speed.mps();
 		}
 
-		// sequence point if needed (this will also update distance to the new point)
+		// sequence point if needed (this will also update distance to the new point.  TODO: also update time to next when sequencing; or just recursively re-call this update function maybe?)
 		if (gpxNav.pointDistanceRemaining < waypointRadius && !gpxNav.reachedGoal) gpx_sequenceWaypoint();
 
 		// get degress to active point
@@ -64,6 +64,10 @@ void updateGPXnav() {
 		gpxNav.turnToActive = gpxNav.courseToActive - gps.course.deg();
 		if (gpxNav.turnToActive > 180) gpxNav.turnToActive -= 360;
 		else if (gpxNav.turnToActive < -180) gpxNav.turnToActive += 360;
+
+		// get glide to active (and goal point, if we're on a route)
+		gpxNav.glideToActive = gpxNav.pointDistanceRemaining / (gps.altitude.meters() - gpxNav.activePoint.ele);
+		if(gpxNav.activeRouteIndex) gpxNav.totalDistanceRemaining / (gps.altitude.meters() - gpxNav.goalPoint.ele);
 
 		// if there's a next point, get course to that as well
 		if (gpxNav.nextPointIndex) {
@@ -78,6 +82,10 @@ void updateGPXnav() {
 			else if (gpxNav.turnToNext < -180) gpxNav.turnToNext += 360;
 		}
 	}
+
+	// update additional values that are required regardless of if we're navigating to a point
+		// average speed
+			gpxNav.averageSpeed = (gpxNav.averageSpeed * (AVERAGE_SPEED_SAMPLES - 1) + gps.speed.kmph()) / AVERAGE_SPEED_SAMPLES;
 }
 
 

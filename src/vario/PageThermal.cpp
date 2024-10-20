@@ -72,12 +72,12 @@ void thermalPage_draw() {
 			u8g2.drawFrame(varioBarWidth-1, topOfFrame, 96-varioBarWidth+1, graphBoxHeight);
 
 			// Vario Bar
-			display_varioBar(topOfFrame, varioBarHeight, varioBarWidth, baro_getClimbRate());
+			display_varioBar(topOfFrame, varioBarHeight, varioBarWidth, baro.climbRateFiltered);
 
 			//air data
 			display_alt_type(22, 89, leaf_8x14, DISPLAY_FIELD_ALT1, (cursor_position == cursor_thermalPage_alt1));
-			display_climbRatePointerBox(20, 92, 76, 17, 6, baro_getClimbRate());     // x, y, w, h, triangle size
-			display_altAboveLaunch(24, 129, baro_getAltAboveLaunch());
+			display_climbRatePointerBox(20, 92, 76, 17, 6, baro.climbRateFiltered);     // x, y, w, h, triangle size
+			display_altAboveLaunch(24, 129, baro.altAboveLaunch);
 		
 			
 		// User Fields ****************************************************
@@ -174,20 +174,20 @@ void thermalPage_button(uint8_t button, uint8_t state, uint8_t count) {
 					break;
 				case LEFT:
 					if (DISPLAY_FIELD_ALT1 == alt_MSL && (state == PRESSED || state == HELD || state == HELD_LONG)) {
-          	settings_adjustAltOffset(-1, count);
+          	baro_adjustAltSetting(-1, count);
           	speaker_playSound(fx_neutral);
         	}
 					break;
 				case RIGHT:
 					if (DISPLAY_FIELD_ALT1 == alt_MSL && (state == PRESSED || state == HELD || state == HELD_LONG)) {
-          	settings_adjustAltOffset(1, count);
+          	baro_adjustAltSetting(1, count);
           	speaker_playSound(fx_neutral);
         	}
 					break;
 				case CENTER:
 					if (state == RELEASED) settings_adjustDisplayFieldAlt1(1);
 					else if (state == HELD && count == 1 && DISPLAY_FIELD_ALT1 == alt_MSL)  {
-						if (settings_matchGPSAlt()) { // successful reset of AltOffset to match GPS altitude
+						if (settings_matchGPSAlt()) { // successful adjustment of altimeter setting to match GPS altitude
           		speaker_playSound(fx_enter);  
               cursor_position = cursor_thermalPage_none;
         		} else {                      // unsuccessful 

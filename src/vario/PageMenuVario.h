@@ -8,7 +8,7 @@ class VarioMenuPage : public SettingsMenuPage {
   public:
     VarioMenuPage() {
       cursor_position = 0;
-      cursor_max = 8;
+      cursor_max = 7;
     }
     void draw();
 
@@ -16,7 +16,7 @@ class VarioMenuPage : public SettingsMenuPage {
     void setting_change(int8_t dir, uint8_t state, uint8_t count);
 
   private:
-    static constexpr char * labels[9] = {
+    static constexpr char * labels[8] = {
       "Back",
       "BeepVolume",
       "Sens",
@@ -24,8 +24,7 @@ class VarioMenuPage : public SettingsMenuPage {
       "LiftyAir",
       "ClimbAvg",
       "ClimbStart",
-      "SinkAlarm",
-      "Alt Adj"      
+      "SinkAlarm",  
     };
 };
 

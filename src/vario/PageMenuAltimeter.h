@@ -8,7 +8,7 @@ class AltimeterMenuPage : public SettingsMenuPage {
   public:
     AltimeterMenuPage() {
       cursor_position = 0;
-      cursor_max = 3;
+      cursor_max = 2;
     }
     void draw();
 
@@ -16,11 +16,10 @@ class AltimeterMenuPage : public SettingsMenuPage {
     void setting_change(int8_t dir, uint8_t state, uint8_t count);
 
   private:
-    static constexpr char * labels[4] = {
+    static constexpr char * labels[3] = {
       "Back",
-			"GPS Sync"
-      "in Hg",
-      "Alt Adj"      
+			"GPS.Sync",
+      "Adjust Alt"      
     };
 };
 

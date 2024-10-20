@@ -22,7 +22,7 @@
     int8_t CLIMB_START;
     int8_t LIFTY_AIR;    
     int8_t SINK_ALARM;
-    int32_t ALT_OFFSET;    
+    float ALT_SETTING;    
     bool ALT_SYNC_GPS;
 
   // GPS & Track Log Settings
@@ -90,7 +90,7 @@ void settings_loadDefaults() {
     VOLUME_VARIO = DEF_VOLUME_VARIO;
     VARIO_TONES = DEF_VARIO_TONES;
     LIFTY_AIR = DEF_LIFTY_AIR;
-    ALT_OFFSET = DEF_ALT_OFFSET;
+    ALT_SETTING = DEF_ALT_SETTING;
     ALT_SYNC_GPS = DEF_ALT_SYNC_GPS;
 
   // GPS & Track Log Settings
@@ -134,7 +134,7 @@ void settings_retrieve() {
     VOLUME_VARIO =    leafPrefs.getChar("VOLUME_VARIO");
     VARIO_TONES =     leafPrefs.getBool("VARIO_TONES");
     LIFTY_AIR =       leafPrefs.getChar ("LIFTY_AIR");
-    ALT_OFFSET =      leafPrefs.getLong ("ALT_OFFSET");
+    ALT_SETTING =     leafPrefs.getFloat ("ALT_SETTING");
     ALT_SYNC_GPS =    leafPrefs.getBool ("ALT_SYNC_GPS");
 
   // GPS & Track Log Settings
@@ -184,7 +184,7 @@ void settings_save() {
     leafPrefs.putChar("VOLUME_VARIO", VOLUME_VARIO);
     leafPrefs.putBool("VARIO_TONES", VARIO_TONES);
     leafPrefs.putChar("LIFTY_AIR", LIFTY_AIR);
-    leafPrefs.putLong("ALT_OFFSET", ALT_OFFSET);
+    leafPrefs.putFloat("ALT_SETTING", ALT_SETTING);
     leafPrefs.putBool("ALT_SYNC_GPS", ALT_SYNC_GPS);
   // GPS & Track Log Settings
     leafPrefs.putBool("DISTANCE_FLOWN", DISTANCE_FLOWN);
@@ -259,30 +259,18 @@ void settings_adjustContrast(int8_t dir) {
 }
 
 // Alt Offsets
+
+  // solve for the altimeter setting required to make corrected-pressure-altitude match gps-altitude
   bool settings_matchGPSAlt() {
     bool success = false;
     if (gps.altitude.isValid()) {    
-      ALT_OFFSET = gps.altitude.meters()*100 - baro_getAlt(); // alt is in cm, convert gps m->cm
+      
+      baro.altimeterSetting = baro.pressureFiltered / (3386.389 * pow(1 - gps.altitude.meters()*100 / 4433100.0, 1 / 0.190264));
+      ALT_SETTING = baro.altimeterSetting;
       success = true;
     }
     return success;
   }
-
-  void settings_setAltOffset(int32_t value) {
-    ALT_OFFSET = value;
-  }
-
-  void settings_adjustAltOffset(int8_t dir, uint8_t count) {
-    int increase = 100;                 // 1m increments (100cm)
-    if (UNITS_alt == 1) increase = 30;  // 1 ft increments (30cm)
-    if (count >= 1) increase *= 5;
-    if (count >= 8) increase *= 4;
-
-
-    if (dir >= 1) ALT_OFFSET += increase;
-    else if (dir <= -1) ALT_OFFSET -= increase;	
-  }
-//
 
 
 void settings_adjustSinkAlarm(int8_t dir) {

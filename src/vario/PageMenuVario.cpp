@@ -40,7 +40,7 @@ void VarioMenuPage::draw() {
     uint8_t y_spacing = 16;
     uint8_t setting_name_x = 2;
     uint8_t setting_choice_x = 74;    
-    uint8_t menu_items_y[] = {190, 45, 60, 75, 90, 105, 120, 135, 150};
+    uint8_t menu_items_y[] = {190, 45, 60, 75, 90, 105, 120, 135};
 
     //first draw cursor selection box
     u8g2.drawRBox(setting_choice_x-2, menu_items_y[cursor_position]-14, 24, 16, 2);
@@ -84,8 +84,6 @@ void VarioMenuPage::draw() {
       }
     u8g2.setDrawColor(1);    
     }
-    // show altitude so proper offset can be set, if desired
-    display_alt(5, menu_items_y[cursor_max]+15, leaf_6x12, baro_getOffsetAlt());
   } while ( u8g2.nextPage() ); 
 }
 
@@ -115,14 +113,14 @@ void VarioMenuPage::setting_change(int8_t dir, uint8_t state, uint8_t count) {
       break;
     case cursor_vario_altadj:
       if (dir == 0 && count == 1 && state == HELD) {  // if center button held for 1 'action time'
-        if (settings_matchGPSAlt()) { // successful reset of AltOffset to match GPS altitude
+        if (settings_matchGPSAlt()) { // successful adjustment of altimeter setting to match GPS altitude
           speaker_playSound(fx_enter);  
         } else {                      // unsuccessful 
           speaker_playSound(fx_cancel);
         }
       } else if (dir != 0) {
         if (state == PRESSED || state == HELD || state == HELD_LONG) {
-          settings_adjustAltOffset(dir, count);
+          baro_adjustAltSetting(dir, count);
           speaker_playSound(fx_neutral);
         }
       }
