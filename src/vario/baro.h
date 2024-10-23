@@ -32,7 +32,7 @@
 		int32_t altInitial;
 		int32_t climbRate;					// instantaneous climbrate calculated with every pressure altitude measurement
 		int32_t climbRateFiltered;	// filtered climb value to reduce noise
-		int32_t climbRateAverage;		// long-term (several seconds) averaged climb rate for smoothing out glide ratio and other calculations
+		float  climbRateAverage;		// long-term (several seconds) averaged climb rate for smoothing out glide ratio and other calculations
 		int32_t varioBar;						// TODO: not yet used, but we may have a differently-averaged/filtered value for the grpahical vario bar vs the text output for climbrate
 	};
 extern BARO baro;

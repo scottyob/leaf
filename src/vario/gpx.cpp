@@ -43,44 +43,44 @@ void updateGPXnav() {
 	// only update nav info if we're tracking to an active point
 	if (gpxNav.activePointIndex) {
 
-		// update distance and time remaining 
-		gpxNav.pointDistanceRemaining = gps.distanceBetween(gps.location.lat(), gps.location.lng(), gpxNav.activePoint.lat, gpxNav.activePoint.lon);
+		// update distance remaining, then sequence to next point if distance is small enough
+		gpxNav.pointDistanceRemaining = gps.distanceBetween(gps.location.lat(), gps.location.lng(), gpxNav.activePoint.lat, gpxNav.activePoint.lon);		
+		if (gpxNav.pointDistanceRemaining < waypointRadius && !gpxNav.reachedGoal) gpx_sequenceWaypoint(); //  (this will also update distance to the new point)
+
+		// update time remaining
 		if (gps.speed.mps() < 0.5) { 
 			gpxNav.pointTimeRemaining = 0;
 		}	else {
 			gpxNav.pointTimeRemaining = ( gpxNav.pointDistanceRemaining - waypointRadius ) / gps.speed.mps();
 		}
 
-		// sequence point if needed (this will also update distance to the new point.  TODO: also update time to next when sequencing; or just recursively re-call this update function maybe?)
-		if (gpxNav.pointDistanceRemaining < waypointRadius && !gpxNav.reachedGoal) gpx_sequenceWaypoint();
-
+		
 		// get degress to active point
-		gpxNav.courseToActive = gps.courseTo(
-			gps.location.lat(), 
-			gps.location.lng(), 
-			gpxNav.activePoint.lat,
-			gpxNav.activePoint.lon
-		);
+		gpxNav.courseToActive = gps.courseTo(gps.location.lat(), gps.location.lng(), gpxNav.activePoint.lat, gpxNav.activePoint.lon);
 		gpxNav.turnToActive = gpxNav.courseToActive - gps.course.deg();
 		if (gpxNav.turnToActive > 180) gpxNav.turnToActive -= 360;
 		else if (gpxNav.turnToActive < -180) gpxNav.turnToActive += 360;
+		
+		// if there's a next point, get course to that as well
+		if (gpxNav.nextPointIndex) {
+			gpxNav.courseToNext = gps.courseTo(gps.location.lat(), gps.location.lng(), gpxNav.nextPoint.lat, gpxNav.nextPoint.lon);
+			gpxNav.turnToNext = gpxNav.courseToNext - gps.course.deg();
+			if (gpxNav.turnToNext > 180) gpxNav.turnToNext -= 360;
+			else if (gpxNav.turnToNext < -180) gpxNav.turnToNext += 360;
+		}
 
 		// get glide to active (and goal point, if we're on a route)
 		gpxNav.glideToActive = gpxNav.pointDistanceRemaining / (gps.altitude.meters() - gpxNav.activePoint.ele);
 		if(gpxNav.activeRouteIndex) gpxNav.glideToGoal = gpxNav.totalDistanceRemaining / (gps.altitude.meters() - gpxNav.goalPoint.ele);
 
-		// if there's a next point, get course to that as well
-		if (gpxNav.nextPointIndex) {
-			gpxNav.courseToNext = gps.courseTo(
-				gps.location.lat(), 
-				gps.location.lng(), 
-				gpxNav.nextPoint.lat,
-				gpxNav.nextPoint.lon
-			);
-			gpxNav.turnToNext = gpxNav.courseToNext - gps.course.deg();
-			if (gpxNav.turnToNext > 180) gpxNav.turnToNext -= 360;
-			else if (gpxNav.turnToNext < -180) gpxNav.turnToNext += 360;
-		}
+		// update relative altimeters (in cm)
+			// alt above active point
+			gpxNav.altAboveWaypoint = 100 * (gps.altitude.meters() - gpxNav.activePoint.ele);
+
+			// alt above goal (if we're on a route and have a goal; otherwise, set relative goal alt to same as next point)
+			if (gpxNav.activeRouteIndex) gpxNav.altAboveGoal = 100 * (gps.altitude.meters() - gpxNav.goalPoint.ele);
+			else gpxNav.altAboveGoal = gpxNav.altAboveWaypoint;
+
 	}
 
 	// update additional values that are required regardless of if we're navigating to a point

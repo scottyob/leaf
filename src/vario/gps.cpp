@@ -205,14 +205,15 @@ float glideRatio;
 
 void gps_calculateGlideRatio() {
 
-  int32_t climb = baro.climbRateAverage;
+
+  float climb = baro.climbRateAverage;
   float speed = gps.speed.kmph();
 
-  if (climb == 0 || speed == 0) {
+  if (baro.climbRateAverage == 0 || speed == 0) {
     glideRatio = 0;
   } else {
     //             km per hour       / cm per sec * sec per hour / cm per km
-    glideRatio = gpxNav.averageSpeed / (climb * 3600 / 100000); 
+    glideRatio = gpxNav.averageSpeed / ( -1 * climb * 3600 / 100000);   // add -1 to invert climbrate because 'negative' is down (in climb), but we want a standard glide ratio (ie 'gliding down') to be positive    
   }
 }
 

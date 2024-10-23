@@ -178,13 +178,18 @@ void log_update() {
 //////////////////////////////////////////////////////////////////////////////////
 // FLight Timer Management Functions
 
+  // check if running
   bool flightTimer_isRunning() {
     return flightTimerRunning;
   }
 
+  // start timer
   void flightTimer_start() {
     speaker_playSound(fx_enter);
     flightTimerRunning = 1;
+
+    //if Altimeter GPS-SYNC is on, reset altimeter setting so baro matches GPS when log is started
+    if (ALT_SYNC_GPS) settings_matchGPSAlt();
 
     //starting values
     baro_resetLaunchAlt();
@@ -201,7 +206,7 @@ void log_update() {
     
   }
 
-
+  // stop timer
   void flightTimer_stop() {  
     // play stopping sound
     if (!flightTimerResetting) speaker_playSound(fx_cancel);    // only play sound if not in the process of resetting (the resetting sound will play from the reset function)

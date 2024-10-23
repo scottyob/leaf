@@ -242,7 +242,7 @@ void display_page_charging() {
 
 
 /*********************************************************************************
-**    SATELLITES PAGE     ********************************************************
+**    SATELLITES TEST PAGE     ***************************************************
 *********************************************************************************/
 
 // draw satellite constellation starting in upper left x, y and box size (width = height)
@@ -292,6 +292,19 @@ void display_page_satellites() {
         u8g2.setCursor(x, y+=15);
         u8g2.print(battADC);
 
+        // glide ratio debugging
+        u8g2.setCursor(0,73);
+        u8g2.print("AvCl");
+        u8g2.print(baro.climbRateAverage);
+        u8g2.setCursor(0,86);
+        u8g2.print("Clmb:");
+        u8g2.print(baro.climbRateFiltered);
+        u8g2.setCursor(0,99);
+        u8g2.print("GR:");
+        u8g2.print(gps_getGlideRatio());
+
+
+        /*
         // time remaining calcs testing
         u8g2.setCursor(0,73);
         u8g2.print("m/s:");
@@ -302,6 +315,8 @@ void display_page_satellites() {
         u8g2.setCursor(0,99);
         u8g2.print("calc:");
         u8g2.print(gpxNav.pointDistanceRemaining / gps.speed.mps());
+        */
+
 
         u8g2.setCursor(65,110);
         u8g2.print(baro.altimeterSetting);

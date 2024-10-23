@@ -57,8 +57,10 @@
 
   // Display Settings
     #define DEF_CONTRAST			        195
-    #define DEF_DISPLAY_FIELD_ALT1    0     // 0 (pressure alt MSL), 1 (GPS alt)
-    #define DEF_DISPLAY_FIELD_ALT2    0     // 0 (pressure alt MSL), 1 (GPS alt), 2 (alt above launch) 
+    #define DEF_NAVPG_ALT_TYP         0     // Primary Alt field on Nav page (Baro Alt, GPS Alt, Alt above waypoint, etc)
+    #define DEF_THMPG_ALT_TYP         0     // Primary Alt field on Thermal page
+    #define DEF_THMPG_ALT2_TYP        0     // Secondary Alt field on Thermal page
+
 
   // Default Unit Values
     #define DEF_UNITS_climb				    0	    // 0 (m per second), 	1 (feet per minute)
@@ -100,7 +102,9 @@
 
   // Display Settings
     extern uint8_t CONTRAST;
-    extern uint8_t DISPLAY_FIELD_ALT1; 
+    extern uint8_t NAVPG_ALT_TYP; 
+    extern uint8_t THMPG_ALT_TYP;
+    extern uint8_t THMPG_ALT2_TYP;
 
   // Unit Values
     extern bool UNITS_climb;
@@ -133,7 +137,9 @@ void settings_adjustLiftyAir(int8_t dir);
 void settings_adjustVolumeVario(int8_t dir);
 void settings_adjustVolumeSystem(int8_t dir);
 void settings_adjustTimeZone(int8_t dir);
-void settings_adjustDisplayFieldAlt1(int8_t dir);
+
+void settings_adjustDisplayField_navPage_alt(int8_t dir);
+void settings_adjustDisplayField_thermalPage_alt(int8_t dir);
 
 void settings_toggleBoolNeutral(bool * boolSetting);
 void settings_toggleBoolOnOff(bool * switchSetting);

@@ -43,7 +43,9 @@
 
   // Display Settings
     uint8_t CONTRAST;
-    uint8_t DISPLAY_FIELD_ALT1;
+    uint8_t NAVPG_ALT_TYP;
+    uint8_t THMPG_ALT_TYP;
+    uint8_t THMPG_ALT2_TYP;
 
   // Unit Values
     bool UNITS_climb;
@@ -111,7 +113,9 @@ void settings_loadDefaults() {
 
   // Display Settings
     CONTRAST = DEF_CONTRAST;
-    DISPLAY_FIELD_ALT1 = DEF_DISPLAY_FIELD_ALT1;
+    NAVPG_ALT_TYP = DEF_NAVPG_ALT_TYP;
+    THMPG_ALT_TYP = DEF_THMPG_ALT_TYP;
+    THMPG_ALT2_TYP = DEF_THMPG_ALT2_TYP;
 
   // Unit Values
     UNITS_climb = DEF_UNITS_climb;
@@ -154,7 +158,9 @@ void settings_retrieve() {
 
   // Display Settings
     CONTRAST =        leafPrefs.getUChar("CONTRAST");
-    DISPLAY_FIELD_ALT1 = leafPrefs.getUChar("FIELD_ALT1");
+    NAVPG_ALT_TYP =   leafPrefs.getUChar("NAVPG_ALT_TYP");
+    THMPG_ALT_TYP =   leafPrefs.getUChar("THMPG_ALT_TYP");
+    THMPG_ALT2_TYP =   leafPrefs.getUChar("THMPG_ALT2_TYP");
 
   // Unit Values
     UNITS_climb =     leafPrefs.getBool("UNITS_climb");
@@ -202,7 +208,9 @@ void settings_save() {
     leafPrefs.putBool("BLUETOOTH_ON", BLUETOOTH_ON);   
   // Display Settings
     leafPrefs.putUChar("CONTRAST", CONTRAST);
-    leafPrefs.putUChar("FIELD_ALT1", DISPLAY_FIELD_ALT1);
+    leafPrefs.putUChar("NAVPG_ALT_TYP", NAVPG_ALT_TYP);
+    leafPrefs.putUChar("THMPG_ALT_TYP", THMPG_ALT_TYP);
+    leafPrefs.putUChar("THMPG_ALT2_TYP", THMPG_ALT2_TYP);
   // Unit Values
     leafPrefs.putBool("UNITS_climb", UNITS_climb);
     leafPrefs.putBool("UNITS_alt", UNITS_alt);
@@ -454,13 +462,26 @@ void settings_adjustTimeZone(int8_t dir) {
   }
 }
 
-void settings_adjustDisplayFieldAlt1(int8_t dir) {
+// Change which altitude is shown on the Nav page (Baro Alt, GPS Alt, or Above-Waypoint Alt)
+void settings_adjustDisplayField_navPage_alt(int8_t dir) {
   if (dir >0) {
-    DISPLAY_FIELD_ALT1++;
-    if (DISPLAY_FIELD_ALT1 >= 2) DISPLAY_FIELD_ALT1 = 0;
+    NAVPG_ALT_TYP++;
+    if (NAVPG_ALT_TYP >= 3) NAVPG_ALT_TYP = 0;
   } else {
-    if (DISPLAY_FIELD_ALT1 == 0) DISPLAY_FIELD_ALT1 = 1;
-    else DISPLAY_FIELD_ALT1--;
+    if (NAVPG_ALT_TYP == 0) NAVPG_ALT_TYP = 1;
+    else NAVPG_ALT_TYP--;
+  }
+  speaker_playSound(fx_neutral);
+}
+
+// Change which altitude is shown on the Thermal page (Baro Alt or GPS Alt)
+void settings_adjustDisplayField_thermalPage_alt(int8_t dir) {
+  if (dir >0) {
+    THMPG_ALT_TYP++;
+    if (THMPG_ALT_TYP >= 2) THMPG_ALT_TYP = 0;
+  } else {
+    if (THMPG_ALT_TYP == 0) THMPG_ALT_TYP = 1;
+    else THMPG_ALT_TYP--;
   }
   speaker_playSound(fx_neutral);
 }

@@ -190,7 +190,7 @@ void navigatePage_draw() {
 			display_climbRatePointerBox(varioBarWidth, topOfFrame + varioBarHeight/2 - varioBoxHeight/2, 96-varioBarWidth, varioBoxHeight, 6, baro.climbRateFiltered);     // x, y, w, h, triangle size, climbrate
 
 			// alt
-			display_alt_type(22, 106, leaf_8x14, DISPLAY_FIELD_ALT1, (navigatePage_cursorPosition == cursor_navigatePage_alt1));
+			display_alt_type(22, 106, leaf_8x14, NAVPG_ALT_TYP, (navigatePage_cursorPosition == cursor_navigatePage_alt1));
 			//display_altAboveLaunch(24, 129, baro.altAboveLaunch);
 		
 			
@@ -367,20 +367,20 @@ void navigatePage_button(uint8_t button, uint8_t state, uint8_t count) {
 					if (state == RELEASED) nav_cursor_move(button);     					
 					break;
 				case LEFT:
-					if (DISPLAY_FIELD_ALT1 == alt_MSL && (state == PRESSED || state == HELD || state == HELD_LONG)) {
+					if (NAVPG_ALT_TYP == altType_MSL && (state == PRESSED || state == HELD || state == HELD_LONG)) {
           	baro_adjustAltSetting(-1, count);
           	speaker_playSound(fx_neutral);
         	}
 					break;
 				case RIGHT:
-					if (DISPLAY_FIELD_ALT1 == alt_MSL && (state == PRESSED || state == HELD || state == HELD_LONG)) {
+					if (NAVPG_ALT_TYP == altType_MSL && (state == PRESSED || state == HELD || state == HELD_LONG)) {
           	baro_adjustAltSetting(1, count);
           	speaker_playSound(fx_neutral);
         	}
 					break;
 				case CENTER:
-					if (state == RELEASED) settings_adjustDisplayFieldAlt1(1);
-					else if (state == HELD && count == 1 && DISPLAY_FIELD_ALT1 == alt_MSL)  {
+					if (state == RELEASED) settings_adjustDisplayField_navPage_alt(1);
+					else if (state == HELD && count == 1 && NAVPG_ALT_TYP == altType_MSL)  {
 						if (settings_matchGPSAlt()) { // successful adjustment of altimeter setting to match GPS altitude
           		speaker_playSound(fx_enter);  
               navigatePage_cursorPosition = cursor_navigatePage_none;

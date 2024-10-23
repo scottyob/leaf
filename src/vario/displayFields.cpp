@@ -242,25 +242,28 @@
         u8g2.drawRFrame(cursor_x, cursor_y-16, 96-cursor_x, 18, 3);
       }
       
-
       int32_t displayAlt = 0;
 
       switch(altType) {
-        case alt_MSL:
+        case altType_MSL:
           displayAlt = baro.altAdjusted;
           break;
-        case alt_AGL:
+        case altType_AGL:
           break;
-        case alt_GPS:
+        case altType_GPS:
           displayAlt = 100 * gps.altitude.meters();  // gps returns float in m, convert to int32_t in cm
           break;
-        case alt_aboveLaunch:
+        case altType_aboveLaunch:
           displayAlt = baro.altAboveLaunch;
           break;
-        case alt_aboveLZ:
+        case altType_aboveWaypoint:
+          displayAlt = gpxNav.altAboveWaypoint;
           break;
-        case alt_aboveWaypoint:
+        case altType_aboveGoal:
           break;
+        case altType_aboveLZ:
+          break;
+
       }
 
       display_alt(cursor_x, cursor_y, font, displayAlt);
@@ -268,21 +271,22 @@
       u8g2.setFont(leaf_labels);
 
       switch(altType) {
-        case alt_MSL:
+        case altType_MSL:
           u8g2.print(" MSL");
           break;
-        case alt_AGL:
+        case altType_AGL:
           break;
-        case alt_GPS:
+        case altType_GPS:
           u8g2.print(" GPS");
           break;
-        case alt_aboveLaunch:
+        case altType_aboveLaunch:
           u8g2.print(" ALH");
           break;
-        case alt_aboveLZ:
+        case altType_aboveLZ:
           u8g2.print(" ALZ");
           break;
-        case alt_aboveWaypoint:
+        case altType_aboveWaypoint:
+          u8g2.print(" AWP");
           break;
       }
       u8g2.setDrawColor(1);

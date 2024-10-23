@@ -195,9 +195,9 @@
       baro_update(0, true);   // calculate altitudes
 
     // initialize all the other alt variables with current altitude to start      
-      lastAlt = baro.alt;		          // assume we're stationary to start (previous Alt = Current ALt, so climb rate is zero)      
-      baro.altInitial = baro.alt;	        // also save first value to use as starting point    
-      baro.altAtLaunch = baro.alt;         // save the starting value as launch altitude (this will be updated when timer starts)      
+      lastAlt = baro.alt;		              // used to calculate the alt change for climb rate.  Assume we're stationary to start (previous Alt = Current ALt, so climb rate is zero).  Note: Climb rate uses the un-adjusted (standard) altitude      
+      baro.altInitial = baro.altAdjusted;	        // also save first value to use as starting point (we assume the saved altimeter setting is correct for now, so use adjusted)    
+      baro.altAtLaunch = baro.altAdjusted;         // save the starting value as launch altitude (Launch will be updated when timer starts)      
        
     
     if(DEBUG_BARO) {
@@ -228,7 +228,7 @@
 
   // Reset launcAlt to current Alt (when starting a new log file, for example)
   void baro_resetLaunchAlt() {
-    baro.altAtLaunch = baro.alt;
+    baro.altAtLaunch = baro.altAdjusted;
   }
 
   uint32_t baroTimeStampPressure = 0;
@@ -380,6 +380,7 @@
       // calculate altitude in cm
       baro.alt = 4433100.0*(1.0-pow((float)baro.pressureFiltered/101325.0,(.190264))); // standard altimeter setting
       baro.altAdjusted = 4433100.0*(1.0-pow((float)baro.pressureFiltered/(baro.altimeterSetting*3386.389),(.190264))); // adjustable altimeter setting
+      baro.altAboveLaunch = baro.altAdjusted - baro.altAtLaunch;
   }
 
   // Update Climb
@@ -409,10 +410,10 @@
       baro.climbRateFiltered /= CLIMB_FILTER_VALS_PREF; // divide to get the filtered climb rate
     
     // now calculate the longer-running average climb value
-    uint32_t total_samples = CLIMB_AVERAGE * FILTER_VALS_MAX;   // CLIMB_AVERAGE seconds * 20 samples per second = total samples to average over
+    int32_t total_samples = CLIMB_AVERAGE * FILTER_VALS_MAX;   // CLIMB_AVERAGE seconds * 20 samples per second = total samples to average over
 
                             // current averaege    *   weighted by total samples (minus 1) + one more new sample     / total samples
-    baro.climbRateAverage = (baro.climbRateAverage * (CLIMB_AVERAGE * FILTER_VALS_MAX - 1) + baro.climbRateFiltered) / total_samples;
+    baro.climbRateAverage = (baro.climbRateAverage * (total_samples - 1) + baro.climbRateFiltered) / total_samples;
 
     // finally, update the speaker sound based on the new climbrate   
     speaker_updateVarioNoteSample(baro.climbRateFiltered);

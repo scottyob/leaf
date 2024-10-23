@@ -75,7 +75,7 @@ void thermalPage_draw() {
 			display_varioBar(topOfFrame, varioBarHeight, varioBarWidth, baro.climbRateFiltered);
 
 			//air data
-			display_alt_type(22, 89, leaf_8x14, DISPLAY_FIELD_ALT1, (cursor_position == cursor_thermalPage_alt1));
+			display_alt_type(22, 89, leaf_8x14, THMPG_ALT_TYP, (cursor_position == cursor_thermalPage_alt1));
 			display_climbRatePointerBox(20, 92, 76, 17, 6, baro.climbRateFiltered);     // x, y, w, h, triangle size
 			display_altAboveLaunch(24, 129, baro.altAboveLaunch);
 		
@@ -173,20 +173,20 @@ void thermalPage_button(uint8_t button, uint8_t state, uint8_t count) {
 					if (state == RELEASED) cursor_move(button);     					
 					break;
 				case LEFT:
-					if (DISPLAY_FIELD_ALT1 == alt_MSL && (state == PRESSED || state == HELD || state == HELD_LONG)) {
+					if (NAVPG_ALT_TYP == altType_MSL && (state == PRESSED || state == HELD || state == HELD_LONG)) {
           	baro_adjustAltSetting(-1, count);
           	speaker_playSound(fx_neutral);
         	}
 					break;
 				case RIGHT:
-					if (DISPLAY_FIELD_ALT1 == alt_MSL && (state == PRESSED || state == HELD || state == HELD_LONG)) {
+					if (NAVPG_ALT_TYP == altType_MSL && (state == PRESSED || state == HELD || state == HELD_LONG)) {
           	baro_adjustAltSetting(1, count);
           	speaker_playSound(fx_neutral);
         	}
 					break;
 				case CENTER:
-					if (state == RELEASED) settings_adjustDisplayFieldAlt1(1);
-					else if (state == HELD && count == 1 && DISPLAY_FIELD_ALT1 == alt_MSL)  {
+					if (state == RELEASED) settings_adjustDisplayField_thermalPage_alt(1);
+					else if (state == HELD && count == 1 && THMPG_ALT_TYP == altType_MSL)  {
 						if (settings_matchGPSAlt()) { // successful adjustment of altimeter setting to match GPS altitude
           		speaker_playSound(fx_enter);  
               cursor_position = cursor_thermalPage_none;
