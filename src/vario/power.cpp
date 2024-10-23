@@ -112,8 +112,11 @@ void power_switchToOnState() {
 
 void power_shutdown() {
   Serial.println("power_shutdown"); 
+
   // TODO: maybe show shutting down screen?
-  
+  display_clear();
+
+
   // saving logs and system data  
   if (flightTimer_isRunning()) {
     flightTimer_stop();

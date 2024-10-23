@@ -132,10 +132,12 @@ uint8_t buttons_update(void) {
         }
         break;
       case LEFT:
+        /* Don't allow turning page further to the left
         if (button_state == RELEASED) {
           display_turnPage(page_prev);
           speaker_playSound(fx_decrease);
         }
+        */
         break;
       case UP:
         switch (button_state) {
