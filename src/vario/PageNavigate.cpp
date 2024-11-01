@@ -30,7 +30,7 @@ uint8_t navigatePage_cursorMax = 3;
 
 int8_t navigatePage_cursorPosition = cursor_navigatePage_none;
 uint8_t navigatePage_cursorTimeCount = 0;	// count up for every page_draw, and if no button is pressed, then reset cursor to "none" after the timeOut value is reached.
-uint8_t navigatePage_cursorTimeOut = 12;	// after 12 page draws (6 seconds) reset the cursor if a button hasn't been pushed.
+uint8_t navigatePage_cursorTimeOut = 8;	// after 8 page draws (4 seconds) reset the cursor if a button hasn't been pushed.
 
 
 
@@ -115,14 +115,16 @@ void navigatePage_draw() {
 			display_headingTurn(40, 10);
 
 			//battery 
-			display_battIcon(89, 13, true);
+			//display_battIcon(89, 13, true);
+			display_battIcon(0, 192, true);
 
 			//speed
-			u8g2.setFont(leaf_6x12);
-			uint8_t x = display_speed(0,24);    // grab resulting x cursor value (if speed has 2 or 3 digits, things will shift over)
-			u8g2.setFont(leaf_5h);
-			u8g2.setCursor(x+2, 24);
-			u8g2.print("MPH");
+			u8g2.setFont(leaf_8x14);
+			display_speed(70,14);
+			u8g2.setFont(leaf_5h);			
+			u8g2.setCursor(82, 21);
+			if (UNITS_speed) u8g2.print("MPH");
+			else u8g2.print("KPH");
 		
 		///////////////////////////////////////////////////
 		// Nav Circle
@@ -206,28 +208,43 @@ void navigatePage_draw() {
 			display_varioBar(topOfFrame, varioBarHeight, varioBarWidth, baro.climbRateFiltered);
 
 			//climb
-			display_climbRatePointerBox(varioBarWidth, topOfFrame + varioBarHeight/2 - varioBoxHeight/2, 96-varioBarWidth, varioBoxHeight, 6, baro.climbRateFiltered);     // x, y, w, h, triangle size, climbrate
+	    display_climbRatePointerBox(varioBarWidth, topOfFrame + varioBarHeight/2 - varioBoxHeight/2, 96-varioBarWidth, varioBoxHeight, 6);     // x, y, w, h, triangle size
+			display_climbRate(varioBarWidth, topOfFrame + varioBarHeight/2 - varioBoxHeight/2 + 16, leaf_8x14, baro.climbRateFiltered);
 
 			// alt
-			display_alt_type(22, 106, leaf_8x14, NAVPG_ALT_TYP, (navigatePage_cursorPosition == cursor_navigatePage_alt1));
+			display_alt_type(22, 104, leaf_8x14, NAVPG_ALT_TYP);
+			// alt label
+			uint8_t label_y = u8g2.getCursorY();
+			u8g2.setCursor(77, label_y+2);
+			print_alt_label(NAVPG_ALT_TYP);
+			u8g2.setCursor(85, label_y-6);
+			if (UNITS_alt) u8g2.print("ft");
+			else u8g2.print("m");
+
+			// selection box
+			if (navigatePage_cursorPosition == cursor_navigatePage_alt1) {
+				display_selectionBox(21, 88, 96-21, 18, 5);
+			}
 			//display_altAboveLaunch(24, 129, baro.altAboveLaunch);
 		
+
 			
 			///////////////////////////////////////////////////
 			// Waypoint Info **********************************
 			//Name
-				u8g2.setCursor(varioBarWidth + 2, topOfFrame+varioBarHeight-4);
+				u8g2.setCursor(varioBarWidth + 2, topOfFrame+varioBarHeight-6);
 				u8g2.setFont(u8g2_font_12x6LED_tf);
 
-				// if the cursor is here, write the waypoint/route name of where the selection index is, rather than the active waypoint)
+				String defaultWaypointString = "<Select Dest>";
+				if (gpxData.totalRoutes <= 0 && gpxData.totalWaypoints <= 0) {
+					defaultWaypointString = "No Waypoints!";
+				}
 
+				// if the cursor is here, write the waypoint/route name of where the selection index is, rather than the active waypoint).  
 				if (navigatePage_cursorPosition == cursor_navigatePage_waypoint) {
+					u8g2.setCursor(u8g2.getCursorX() + 6, u8g2.getCursorY());					//Also scoot the string over a few pixels to make room for selection box
 					if (destination_selection_index == 0) {
-						if (gpxData.totalRoutes > 0 || gpxData.totalWaypoints > 0) {
-							u8g2.print("<Select Dest>");
-						} else {
-							u8g2.print("No Waypoints!");
-						}
+						u8g2.print(defaultWaypointString);
 					} else {
 						if (destination_selection_routes_vs_waypoints) {						
 							u8g2.setFont(leaf_icons);
@@ -240,16 +257,13 @@ void navigatePage_draw() {
 					}
 				} else {
 					if (gpxNav.navigating) u8g2.print(gpxNav.activePoint.name.c_str());
-					else u8g2.print("Select Dest");
+					else u8g2.print(defaultWaypointString);
 					u8g2.setFont(leaf_6x12);
 				}
 
 				// selection box
 				if (navigatePage_cursorPosition == cursor_navigatePage_waypoint) {
-					u8g2.setDrawColor(0);
-					u8g2.drawRFrame(varioBarWidth + 2, topOfFrame+varioBarHeight - 17, 96 - varioBarWidth - 3, 14, 2);
-					u8g2.setDrawColor(1);
-					u8g2.drawRFrame(varioBarWidth+1, topOfFrame+varioBarHeight - 18, 96 - varioBarWidth - 1, 16, 3);
+					display_selectionBox(varioBarWidth+1, topOfFrame+varioBarHeight - 21, 96 - varioBarWidth - 1, 19, 5);
 				}
 
 			// Progress Bar
@@ -319,7 +333,7 @@ void navigatePage_draw() {
 				// SD Card Present
 				char SDicon = 60;
 				if(!SDcard_present()) SDicon = 61;
-				u8g2.setCursor(12, 191);
+				u8g2.setCursor(12, 192);
 				u8g2.setFont(leaf_icons);
 				u8g2.print((char)SDicon);
 			

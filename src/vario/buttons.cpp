@@ -15,6 +15,7 @@
 #include "settings.h"
 #include "pages.h"
 #include "PageThermal.h"
+#include "PageThermalSimple.h"
 #include "PageNavigate.h"
 #include "baro.h"
 
@@ -70,6 +71,10 @@ uint8_t buttons_update(void) {
     thermalPage_button(which_button, buttons_get_state(), buttons_get_hold_count());
     display_update();
 
+  } else if (currentPage == page_thermalSimple) {
+    thermalSimplePage_button(which_button, buttons_get_state(), buttons_get_hold_count());
+    display_update();
+
   } else if (currentPage == page_nav) {
     navigatePage_button(which_button, buttons_get_state(), buttons_get_hold_count());
     display_update();
@@ -79,7 +84,7 @@ uint8_t buttons_update(void) {
       case CENTER:
         if (button_state == HELD && button_hold_counter == 1) {          
           display_clear();          
-          display_setPage(page_thermal);
+          display_setPage(page_thermalSimple);
           speaker_playSound(fx_enter);
           power_switchToOnState();
         }

@@ -44,6 +44,7 @@ enum display_page_actions {
 
 enum display_main_pages {  
   page_sats,
+  page_thermalSimple,
   page_thermal,
   page_nav,
   page_menu,   

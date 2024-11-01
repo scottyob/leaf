@@ -13,6 +13,7 @@
 
 #include "pages.h"
 #include "PageThermal.h"
+#include "PageThermalSimple.h"
 #include "PageNavigate.h"
 
 #include "Leaf_SPI.h"
@@ -48,8 +49,8 @@ char string_heading[] = " WNW ";
   U8G2_ST7539_192X64_F_4W_HW_SPI u8g2(U8G2_R3, SPI_SS_LCD, LCD_RS, LCD_RESET);                                  // 192x64 original
 #endif
 
-int8_t display_page = page_thermal;
-uint8_t display_page_prior = page_thermal; // track the page we used to be on, so we can "go back" if needed (like cancelling out of a menu heirarchy)
+int8_t display_page = page_thermalSimple;
+uint8_t display_page_prior = page_thermalSimple; // track the page we used to be on, so we can "go back" if needed (like cancelling out of a menu heirarchy)
 
 void display_init(void) {
   pinMode(SPI_SS_LCD, OUTPUT);
@@ -82,7 +83,7 @@ void display_turnPage(uint8_t action) {
   
   switch (action) {
     case page_home: 
-      display_page = page_thermal;
+      display_page = page_thermalSimple;
       break;
       
     case page_next:
@@ -118,6 +119,9 @@ uint8_t display_getPage() {
 
 void display_update() {
   switch (display_page) {
+    case page_thermalSimple:
+      thermalSimplePage_draw();
+      break;
     case page_thermal:
       thermalPage_draw();
       break;

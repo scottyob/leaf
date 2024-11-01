@@ -17,79 +17,113 @@
 #include "settings.h"
 
 
-enum thermal_page_items { 
-  cursor_thermalPage_none,
-	cursor_thermalPage_alt1,
-	//cursor_thermalPage_alt2,
-	//cursor_thermalPage_userField1,
-	//cursor_thermalPage_userField2,
-	cursor_thermalPage_timer
+enum thermalSimple_page_items { 
+  cursor_thermalSimplePage_none,
+	cursor_thermalSimplePage_alt1,
+	//cursor_thermalSimplePage_alt2,
+	//cursor_thermalSimplePage_userField1,
+	//cursor_thermalSimplePage_userField2,
+	cursor_thermalSimplePage_timer
 };
-uint8_t cursor_max = 2;
+uint8_t thermalSimple_page_cursor_max = 2;
 
-int8_t cursor_position = cursor_thermalPage_none;
-uint8_t cursor_timeCount = 0;	// count up for every page_draw, and if no button is pressed, then reset cursor to "none" after the timeOut value is reached.
-uint8_t cursor_timeOut = 8;	// after 8 page draws (4 seconds) reset the cursor if a button hasn't been pushed.
+int8_t thermalSimple_page_cursor_position = cursor_thermalSimplePage_none;
+uint8_t thermalSimple_page_cursor_timeCount = 0;	// count up for every page_draw, and if no button is pressed, then reset cursor to "none" after the timeOut value is reached.
+uint8_t thermalSimple_page_cursor_timeOut = 8;	// after 8 page draws (4 seconds) reset the cursor if a button hasn't been pushed.
 
-void thermalPage_draw() {
+void thermalSimplePage_draw() {
 
 	// if cursor is selecting something, count toward the timeOut value before we reset cursor
-	if (cursor_position != cursor_thermalPage_none && cursor_timeCount++ >= cursor_timeOut) {
-		cursor_position = cursor_thermalPage_none;
-		cursor_timeCount = 0;		
+	if (thermalSimple_page_cursor_position != cursor_thermalSimplePage_none && thermalSimple_page_cursor_timeCount++ >= thermalSimple_page_cursor_timeOut) {
+		thermalSimple_page_cursor_position = cursor_thermalSimplePage_none;
+		thermalSimple_page_cursor_timeCount = 0;		
 	}
 
   u8g2.firstPage();
   do { 
 
-		// Header Info ****************************************************
+		// Status Icons and Info ****************************************************
 			// clock time
 			u8g2.setFont(leaf_6x10);
 			display_clockTime(0, 10, false);
+			
+			//battery 
+			display_battIcon(0, 192, true);
+
+			// SD Card Present
+			char SDicon = 60;
+			if(!SDcard_present()) SDicon = 61;
+			u8g2.setCursor(10, 192);
+			u8g2.setFont(leaf_icons);
+			u8g2.print((char)SDicon);
+			
+
+
+		// Heading, Speed and Wind *******************************************
 
 			//heading
 			u8g2.setFont(leaf_7x10);
-			display_heading(40, 10, true);
-
-			//battery 
-			display_battIcon(89, 13, true);
+			display_heading(37, 10, true);
 
 			//speed
-			u8g2.setFont(leaf_6x12);
-			display_speed(0,24);
-			u8g2.setFont(leaf_5h);
-			u8g2.setCursor(u8g2.getCursorX()+2, 24);
-			u8g2.print("MPH");
-			
-			
+			u8g2.setFont(leaf_8x14);
+			display_speed(70,14);
+			u8g2.setFont(leaf_5h);			
+			u8g2.setCursor(82, 21);
+			if (UNITS_speed) u8g2.print("MPH");
+			else u8g2.print("KPH");
+
+			//wind
+			u8g2.drawDisc(49, 25, 12);
+			u8g2.setDrawColor(0);
+			display_windSock(49, 25, 10, 0);//0.78);
+			u8g2.setDrawColor(1);
+
 		// Main Info ****************************************************
 			uint8_t topOfFrame = 30;
 			uint8_t graphBoxHeight = 40;
 			uint8_t varioBarWidth = 20;
 			uint8_t varioBarHeight = 141;
-
-			// Graph Box
-			u8g2.drawFrame(varioBarWidth-1, topOfFrame, 96-varioBarWidth+1, graphBoxHeight);
-
+			
 			// Vario Bar
 			display_varioBar(topOfFrame, varioBarHeight, varioBarWidth, baro.climbRateFiltered);
 
-			// alt
-			display_alt_type(22, 89, leaf_8x14, THMPG_ALT_TYP);
-			
-			// altselection box
-			if (cursor_position == cursor_thermalPage_alt1) {
-				display_selectionBox(21, 73, 96-21, 18, 6);
-			}
-
-			//climb rate
-			display_climbRatePointerBox(20, 92, 76, 17, 6);     // x, y, w, h, triangle size
-			display_climbRate(20, 108, leaf_8x14, baro.climbRateFiltered);
-			
-
-
-			display_altAboveLaunch(24, 129, baro.altAboveLaunch);
 		
+			//Altitude			
+        uint8_t alt_y = 41;
+				//Altitude header labels
+				u8g2.setFont(leaf_labels);
+				u8g2.setCursor(varioBarWidth+44, alt_y);		
+				print_alt_label(THMPG_ALT_TYP);
+				u8g2.setCursor(96-9, alt_y);		
+				if (UNITS_alt) u8g2.print("ft");
+				else u8g2.print("m");
+
+				// Alt value
+				display_alt_type(varioBarWidth+6, alt_y+21, leaf_21h, THMPG_ALT_TYP);
+				
+				// if selected, draw the box around it
+				if (thermalSimple_page_cursor_position == cursor_thermalSimplePage_alt1) {
+					display_selectionBox(varioBarWidth+1, alt_y-1, 96-(varioBarWidth+1), 24, 7);
+				}
+
+			//Alt 2 (user alt field; above launch, etc)
+			display_altAboveLaunch(varioBarWidth+4, 84, baro.altAboveLaunch);
+
+			//Climb 
+			display_climbRatePointerBox(20, 87, 76, 27, 13);     // x, y, w, h, triangle size
+			display_climbRate(20, 111, leaf_21h, baro.climbRateFiltered);
+			u8g2.setDrawColor(0);
+			if (UNITS_climb) u8g2.print("f");
+			else u8g2.print('m');
+			u8g2.setDrawColor(1);
+			
+
+
+/*      if (selected) {
+        u8g2.drawRFrame(cursor_x, cursor_y-16, 96-cursor_x, 18, 3);
+      }
+			*/
 			
 		// User Fields ****************************************************
 			uint8_t userFieldsTop = 136;
@@ -114,15 +148,10 @@ void thermalPage_draw() {
     // Footer Info ****************************************************
 		
 			//flight timer (display selection box if selected)
-			display_flightTimer(51, 191, 0, (cursor_position == cursor_thermalPage_timer));			
+			display_flightTimer(51, 191, 0, (thermalSimple_page_cursor_position == cursor_thermalSimplePage_timer));			
 
 			// Bottom Status Icons	
-				// SD Card Present
-				char SDicon = 60;
-				if(!SDcard_present()) SDicon = 61;
-				u8g2.setCursor(12, 191);
-				u8g2.setFont(leaf_icons);
-				u8g2.print((char)SDicon);
+				
 			
 
 
@@ -137,29 +166,29 @@ void thermalPage_draw() {
   
 }
 
-void cursor_move(uint8_t button) {
+void thermalSimple_page_cursor_move(uint8_t button) {
 	if (button == UP) {
-		cursor_position--;
-		if (cursor_position < 0) cursor_position = cursor_max;
+		thermalSimple_page_cursor_position--;
+		if (thermalSimple_page_cursor_position < 0) thermalSimple_page_cursor_position = thermalSimple_page_cursor_max;
 	}
 	if (button == DOWN) {
-		cursor_position++;
-  	if (cursor_position > cursor_max) cursor_position = 0;
+		thermalSimple_page_cursor_position++;
+  	if (thermalSimple_page_cursor_position > thermalSimple_page_cursor_max) thermalSimple_page_cursor_position = 0;
 	}
 }
 
 
-void thermalPage_button(uint8_t button, uint8_t state, uint8_t count) {
+void thermalSimplePage_button(uint8_t button, uint8_t state, uint8_t count) {
 
 	// reset cursor time out count if a button is pushed
-	cursor_timeCount = 0;
+	thermalSimple_page_cursor_timeCount = 0;
 
-	switch (cursor_position) {
-		case cursor_thermalPage_none:
+	switch (thermalSimple_page_cursor_position) {
+		case cursor_thermalSimplePage_none:
 			switch(button) {
 				case UP:
 				case DOWN:
-					if (state == RELEASED) cursor_move(button);     					
+					if (state == RELEASED) thermalSimple_page_cursor_move(button);     					
 					break;
 				case RIGHT:
 					if (state == RELEASED) {
@@ -177,11 +206,11 @@ void thermalPage_button(uint8_t button, uint8_t state, uint8_t count) {
 					break;
 			}
 			break;
-		case cursor_thermalPage_alt1:
+		case cursor_thermalSimplePage_alt1:
 			switch(button) {
 				case UP:
 				case DOWN:
-					if (state == RELEASED) cursor_move(button);     					
+					if (state == RELEASED) thermalSimple_page_cursor_move(button);     					
 					break;
 				case LEFT:
 					if (NAVPG_ALT_TYP == altType_MSL && (state == PRESSED || state == HELD || state == HELD_LONG)) {
@@ -200,7 +229,7 @@ void thermalPage_button(uint8_t button, uint8_t state, uint8_t count) {
 					else if (state == HELD && count == 1 && THMPG_ALT_TYP == altType_MSL)  {
 						if (settings_matchGPSAlt()) { // successful adjustment of altimeter setting to match GPS altitude
           		speaker_playSound(fx_enter);  
-              cursor_position = cursor_thermalPage_none;
+              thermalSimple_page_cursor_position = cursor_thermalSimplePage_none;
         		} else {                      // unsuccessful 
           	speaker_playSound(fx_cancel);
         		}
@@ -208,7 +237,7 @@ void thermalPage_button(uint8_t button, uint8_t state, uint8_t count) {
 					break;
 			}
 			break;
-		/* case cursor_thermalPage_alt2:
+		/* case cursor_thermalSimplePage_alt2:
 			switch(button) {
 				case UP:
 					break;
@@ -222,7 +251,7 @@ void thermalPage_button(uint8_t button, uint8_t state, uint8_t count) {
 					break;
 			}
 			break;
-		case cursor_thermalPage_userField1:
+		case cursor_thermalSimplePage_userField1:
 			switch(button) {
 				case UP:
 					break;
@@ -236,7 +265,7 @@ void thermalPage_button(uint8_t button, uint8_t state, uint8_t count) {
 					break;
 			}
 			break;
-		case cursor_thermalPage_userField2:
+		case cursor_thermalSimplePage_userField2:
 			switch(button) {
 				case UP:
 					break;
@@ -251,11 +280,11 @@ void thermalPage_button(uint8_t button, uint8_t state, uint8_t count) {
 			}
 			break;
 			*/
-		case cursor_thermalPage_timer:
+		case cursor_thermalSimplePage_timer:
 			switch(button) {
 				case UP:
 				case DOWN:
-					if (state == RELEASED) cursor_move(button);     					
+					if (state == RELEASED) thermalSimple_page_cursor_move(button);     					
 					break;
 				case LEFT:
 					break;
@@ -264,10 +293,10 @@ void thermalPage_button(uint8_t button, uint8_t state, uint8_t count) {
 				case CENTER:
 						if (state == RELEASED) {
 							flightTimer_toggle();
-							cursor_position = cursor_thermalPage_none;
+							thermalSimple_page_cursor_position = cursor_thermalSimplePage_none;
 						}	else if (state == HELD) {
 							flightTimer_reset();
-							cursor_position = cursor_thermalPage_none;
+							thermalSimple_page_cursor_position = cursor_thermalSimplePage_none;
 						}
 						
 					break;
