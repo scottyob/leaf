@@ -20,6 +20,8 @@
   char flightTimerStringLong[] = "00:00:00"; // HH:MM:SS -> 8 characters.
 
 // values for logbook entries
+  LOGBOOK logbook;
+  /*
   bool logFlightTrackStarted = false;
 
   int32_t log_alt = 0;
@@ -41,7 +43,8 @@
   int32_t log_speed = 0;
   int32_t log_speed_max = 0;
   int32_t log_speed_min = 0;
-
+  */
+ 
 void log_init() {
 
 }
@@ -57,17 +60,17 @@ void log_update() {
     flightTimerSec += 1;  
 
     // start the Track if needed (we check every update, in case we didn't have a GPS fix.  This way we can start track log writing as soon as we DO get a fix)
-    if (!logFlightTrackStarted) {
+    if (!logbook.flightTrackStarted) {
       if (gps.location.isValid()) {                
         if (ALT_SYNC_GPS) settings_matchGPSAlt(); // sync pressure alt to GPS alt when log starts if the auto-sync setting is turned on
-        logFlightTrackStarted = SDcard_createTrackFile(log_createFileName()); //flag that we've started a log if we actually have successfully started a log file on SDCard.  If this returns false, we can keep trying to save a log file until it's successful.
+        logbook.flightTrackStarted = SDcard_createTrackFile(log_createFileName()); //flag that we've started a log if we actually have successfully started a log file on SDCard.  If this returns false, we can keep trying to save a log file until it's successful.
       }
     }
 
     uint32_t logSave_time = micros();
 
     // save datapoints to the track
-    if (logFlightTrackStarted) {
+    if (logbook.flightTrackStarted) {
       SDcard_writeLogData(log_getKMLCoordinates());
     }
 
@@ -193,16 +196,16 @@ void log_update() {
 
     //starting values
     baro_resetLaunchAlt();
-    log_alt_start = baro.altAtLaunch;
+    logbook.alt_start = baro.altAtLaunch;
 
     //get first set of log values
     log_captureValues();
 
     // initial min/max values
-    log_alt_max = log_alt_min = log_alt_start;
-    log_climb_max = log_climb_min = log_climb;
-    log_speed_max = log_speed_min = log_speed;
-    log_temp_max = log_temp_min = log_temp;
+    logbook.alt_max = logbook.alt_min = logbook.alt_start;
+    logbook.climb_max = logbook.climb_min = logbook.climb;
+    logbook.speed_max = logbook.speed_min = logbook.speed;
+    logbook.temperature_max = logbook.temperature_min = logbook.temperature;
     
   }
 
@@ -215,12 +218,12 @@ void log_update() {
     if (flightTimerRunning) {
 
       //ending values
-      log_alt_end = baro.alt;    
+      logbook.alt_end = baro.alt;    
       // TODO: save other min/max values in a csv or similar log file.  Also description of KML file maybe?
 
       // if a KML track log was started
-      if (logFlightTrackStarted) {
-        logFlightTrackStarted = false;
+      if (logbook.flightTrackStarted) {
+        logbook.flightTrackStarted = false;
         Serial.println("closing Log");
         SDcard_writeLogFooter(log_createTrackFileName(), log_createTrackDescription());
         //TODO: other KML file additions; maybe adding description and min/max and other stuff
@@ -343,11 +346,11 @@ void flightTimer_updateStrings() {
 }
 
 void log_captureValues() {
-  log_alt = baro.alt;
-  log_alt_above_launch = baro.altAboveLaunch;
-  log_climb = baro.climbRateFiltered;
-  log_speed = gps.speed.kmph();
-  log_temp = tempRH_getTemp();
+  logbook.alt = baro.alt;
+  logbook.alt_above_launch = baro.altAboveLaunch;
+  logbook.climb = baro.climbRateFiltered;
+  logbook.speed = gps.speed.kmph();
+  logbook.temperature = tempRH_getTemp();
 }
 
 
@@ -357,27 +360,27 @@ void log_checkMinMaxValues() {
   uint32_t time = micros();
 
   //check altitude values for log records
-  if (log_alt > log_alt_max) {
-    log_alt_max = log_alt;
-    if (log_alt_above_launch > log_alt_above_launch_max) log_alt_above_launch_max = log_alt_above_launch; // we only need to check for max above-launch values if we're also setting a new altitude max.
-  } else if (log_alt < log_alt_min) {
-    log_alt_min = log_alt;
+  if (logbook.alt > logbook.alt_max) {
+    logbook.alt_max = logbook.alt;
+    if (logbook.alt_above_launch > logbook.alt_above_launch_max) logbook.alt_above_launch_max = logbook.alt_above_launch; // we only need to check for max above-launch values if we're also setting a new altitude max.
+  } else if (logbook.alt < logbook.alt_min) {
+    logbook.alt_min = logbook.alt;
   } 
 
   //check climb values for log records
-  log_climb = baro.climbRateFiltered;
-  if (log_climb > log_climb_max) {
-    log_climb_max = log_climb;
-  } else if (log_climb < log_climb_min) {
-    log_climb_min = log_climb;
+  logbook.climb = baro.climbRateFiltered;
+  if (logbook.climb > logbook.climb_max) {
+    logbook.climb_max = logbook.climb;
+  } else if (logbook.climb < logbook.climb_min) {
+    logbook.climb_min = logbook.climb;
   } 
 
   // check temperature values for log records
-  log_temp = tempRH_getTemp();
-  if (log_temp > log_temp_max) {
-    log_temp_max = log_temp;
-  } else if (log_temp < log_temp_min) {
-    log_temp_min = log_temp;
+  logbook.temperature = tempRH_getTemp();
+  if (logbook.temperature > logbook.temperature_max) {
+    logbook.temperature_max = logbook.temperature;
+  } else if (logbook.temperature < logbook.temperature_min) {
+    logbook.temperature_min = logbook.temperature;
   } 
 
   time = micros() - time;
@@ -453,26 +456,26 @@ String log_createTrackDescription() {
   else temp_units = "(C)";
 
   // convert values to proper units before printing/saving
-  log_alt_start = baro_altToUnits(log_alt_start, UNITS_alt);
-  log_alt_max = baro_altToUnits(log_alt_max, UNITS_alt);
-  log_alt_min = baro_altToUnits(log_alt_min, UNITS_alt);
-  log_alt_end = baro_altToUnits(log_alt_end, UNITS_alt);
-  log_alt_above_launch_max = baro_altToUnits(log_alt_above_launch_max, UNITS_alt);
+  logbook.alt_start = baro_altToUnits(logbook.alt_start, UNITS_alt);
+  logbook.alt_max = baro_altToUnits(logbook.alt_max, UNITS_alt);
+  logbook.alt_min = baro_altToUnits(logbook.alt_min, UNITS_alt);
+  logbook.alt_end = baro_altToUnits(logbook.alt_end, UNITS_alt);
+  logbook.alt_above_launch_max = baro_altToUnits(logbook.alt_above_launch_max, UNITS_alt);
   
   String stringClimbMax;
   String stringClimbMin;
   if (UNITS_climb) {
-    stringClimbMax = String(baro_climbToUnits(log_climb_max, UNITS_climb), 0);
-    stringClimbMin = String(baro_climbToUnits(log_climb_min, UNITS_climb), 0);
+    stringClimbMax = String(baro_climbToUnits(logbook.climb_max, UNITS_climb), 0);
+    stringClimbMin = String(baro_climbToUnits(logbook.climb_min, UNITS_climb), 0);
   } else {
-    stringClimbMax = String(baro_climbToUnits(log_climb_max, UNITS_climb), 1);
-    stringClimbMin = String(baro_climbToUnits(log_climb_min, UNITS_climb), 1); 
+    stringClimbMax = String(baro_climbToUnits(logbook.climb_max, UNITS_climb), 1);
+    stringClimbMin = String(baro_climbToUnits(logbook.climb_min, UNITS_climb), 1); 
   }
 
 
-  String trackdescription = "Altitude " + alt_units + " Start: " +  log_alt_start + " Max: " + log_alt_max + " Above Launch: " + log_alt_above_launch_max + " Min: " + log_alt_min + " End: " + log_alt_end + "\n" +
+  String trackdescription = "Altitude " + alt_units + " Start: " +  logbook.alt_start + " Max: " + logbook.alt_max + " Above Launch: " + logbook.alt_above_launch_max + " Min: " + logbook.alt_min + " End: " + logbook.alt_end + "\n" +
                             "Climb " + climb_units + " Max: " + stringClimbMax + " Min: " + stringClimbMin + "\n" +
-                            "Temp " + temp_units + " Max: " + log_temp_max + " Min: " + log_temp_min + "\n" +
+                            "Temp " + temp_units + " Max: " + logbook.temperature_max + " Min: " + logbook.temperature_min + "\n" +
                             "Max Speed: 41 mph\n" +
                             "Distance (mi) Direct: 2.3 Path: 35.1\n";
 

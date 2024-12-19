@@ -673,23 +673,22 @@ void display_batt_charging_fullscreen() {
 
 // Wind Sock Triangle
 void display_windSock(int16_t x, int16_t y, int16_t radius, float wind_angle) {
-  int16_t wind_triangle_radius = 10;
-  wind_angle += .01;
-  if (wind_angle > 2 * PI) wind_angle = 0;
+  //int16_t wind_triangle_radius = 10;
+  //if (wind_angle > 2 * PI) wind_angle = 0;
  
   int16_t wind_triangle_tip_len = radius-1;  // pixels from center for point
   int16_t wind_triangle_tail_len = radius-1;  // pixels from center for the tails
-  float wind_triangle_tail_angle = 0.65;  // pixels tail width (half-width)
+  float wind_triangle_tail_angle = 0.65;  // radians tail spread (half-angle)
 
   //u8g2.setDrawColor(0);
   //u8g2.drawDisc(x, y, radius);
   //u8g2.setDrawColor(1);
   //u8g2.drawCircle(x, y, radius);        
- //u8g2.drawTriangle(32, 96, 36, 106, 28, 106);
+  //u8g2.drawTriangle(32, 96, 36, 106, 28, 106);
 
   uint16_t tip_xprime = x + sin(wind_angle + PI)*wind_triangle_tip_len;
   uint16_t tip_yprime = y - cos(wind_angle + PI)*wind_triangle_tip_len;
-  uint16_t tail_1_xprime = y + sin(wind_angle + wind_triangle_tail_angle)*wind_triangle_tail_len;
+  uint16_t tail_1_xprime = x + sin(wind_angle + wind_triangle_tail_angle)*wind_triangle_tail_len;
   uint16_t tail_1_yprime = y - cos(wind_angle + wind_triangle_tail_angle)*wind_triangle_tail_len;
   uint16_t tail_2_xprime = x + sin(wind_angle - wind_triangle_tail_angle)*wind_triangle_tail_len;
   uint16_t tail_2_yprime = y - cos(wind_angle - wind_triangle_tail_angle)*wind_triangle_tail_len;
@@ -700,6 +699,8 @@ void display_windSock(int16_t x, int16_t y, int16_t radius, float wind_angle) {
   u8g2.drawTriangle(tip_xprime, tip_yprime, tail_2_xprime, tail_2_yprime, tail_mid_xprime, tail_mid_yprime);
   u8g2.drawLine(tip_xprime, tip_yprime, tail_1_xprime, tail_1_yprime);
   u8g2.drawLine(tail_mid_xprime, tail_mid_yprime, tail_2_xprime, tail_2_yprime);
+  u8g2.drawLine(tip_xprime, tip_yprime, tail_2_xprime, tail_2_yprime);
+  u8g2.drawLine(tail_mid_xprime, tail_mid_yprime, tail_1_xprime, tail_1_yprime);
 }
 
 

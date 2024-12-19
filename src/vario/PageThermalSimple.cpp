@@ -31,6 +31,8 @@ int8_t thermalSimple_page_cursor_position = cursor_thermalSimplePage_none;
 uint8_t thermalSimple_page_cursor_timeCount = 0;	// count up for every page_draw, and if no button is pressed, then reset cursor to "none" after the timeOut value is reached.
 uint8_t thermalSimple_page_cursor_timeOut = 8;	// after 8 page draws (4 seconds) reset the cursor if a button hasn't been pushed.
 
+float test_wind_angle = 0;
+
 void thermalSimplePage_draw() {
 
 	// if cursor is selecting something, count toward the timeOut value before we reset cursor
@@ -76,8 +78,12 @@ void thermalSimplePage_draw() {
 			//wind
 			u8g2.drawDisc(49, 25, 12);
 			u8g2.setDrawColor(0);
-			display_windSock(49, 25, 10, 0);//0.78);
+			display_windSock(49, 25, 10, test_wind_angle);//0.78);
 			u8g2.setDrawColor(1);
+
+			test_wind_angle += .1;
+			if (test_wind_angle > 2*PI) 
+				test_wind_angle -= (2*PI);
 
 		// Main Info ****************************************************
 			uint8_t topOfFrame = 30;

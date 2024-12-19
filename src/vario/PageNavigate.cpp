@@ -93,9 +93,9 @@ void navigatePage_destinationSelect(int8_t dir) {
 		}
 }
 
+float test_wind_angle_nav = 0;
 
 void navigatePage_draw() {
-
 	// if cursor is selecting something, count toward the timeOut value before we reset cursor
 	if (navigatePage_cursorPosition != cursor_navigatePage_none && navigatePage_cursorTimeCount++ >= navigatePage_cursorTimeOut) {
 		navigatePage_cursorPosition = cursor_navigatePage_none;
@@ -190,6 +190,16 @@ void navigatePage_draw() {
 				u8g2.drawLine(tail_right_x, tail_right_y, tail_left_x, tail_left_y);
 				u8g2.drawTriangle(tail_left_x, tail_left_y, waypoint_tip_x, waypoint_tip_y, tail_right_x, tail_right_y);
 			}
+
+		// Wind sock
+			u8g2.drawDisc(nav_x, nav_y, wind_r+2);
+			u8g2.setDrawColor(0);
+			display_windSock(nav_x, nav_y, wind_r, test_wind_angle_nav);//0.78);
+			u8g2.setDrawColor(1);
+
+			test_wind_angle_nav += .1;
+			if (test_wind_angle_nav > 2*PI) 
+				test_wind_angle_nav -= (2*PI);
 
 		///////////////////////////////////////////////////
 		// Vario Info *************************************

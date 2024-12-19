@@ -12,8 +12,7 @@
   #define AUTO_STOP_MAX_ACCEL   10    // Max accelerometer signal 
   #define AUTO_STOP_MAX_ALT    500   // cm altitude change for timer auto-stop
   #define AUTO_STOP_MIN_SEC     10    // seconds of low speed / low accel for timer to auto-stop
-  
-  
+
 
 // Main Log functions 
   void log_init(void);    // set up log at vario start
@@ -23,18 +22,15 @@
   bool flightTimer_autoStart(void);
   bool flightTimer_autoStop(void);
 
-
 // Flight Timer functions
   void flightTimer_start(void);
   void flightTimer_stop(void);
   void flightTimer_toggle(void);
   void flightTimer_reset(void);
   bool flightTimer_isRunning(void);
-
   void flightTimer_updateStrings(void);
   char * flightTimer_getString(bool shortString);
   uint32_t flightTimer_getTime(void);
-//
 
 // Log Files
   String log_createFileName(void);
@@ -46,6 +42,33 @@
   void log_checkMinMaxValues(void);
   bool flightTimer_autoStop(void);
   bool flightTimer_autoStart(void);
+
+// baro struct to hold most values 
+	struct LOGBOOK {
+    bool flightTrackStarted = false;
+
+    int32_t alt = 0;
+    int32_t alt_start = 0;
+    int32_t alt_end = 0;
+    int32_t alt_max = 0;
+    int32_t alt_min = 0;
+    int32_t alt_above_launch = 0;
+    int32_t alt_above_launch_max = 0;
+
+    int32_t climb = 0;
+    int32_t climb_max = 0;
+    int32_t climb_min = 0;
+
+    float temperature = 0;
+    float temperature_max = 0;
+    float temperature_min = 0;
+
+    int32_t speed = 0;
+    int32_t speed_max = 0;
+    int32_t speed_min = 0;
+	};
+extern LOGBOOK logbook;
+
 
 
 
