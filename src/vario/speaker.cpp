@@ -434,6 +434,7 @@ ISR: do_this_when_time_expires() {
 
 // Speaker Driver for method 1 (fixed sample length)
 void IRAM_ATTR onSpeakerTimerSample() {
+  return;
   //spi_checkFlag(2);
   //Serial.print("ENTER ISR: ");
   
@@ -492,6 +493,7 @@ void IRAM_ATTR onSpeakerTimerSample() {
 
 // Speaker Driver for method 2 (adjustable length)
 void IRAM_ATTR onSpeakerTimerAdustable() {
+  return;
   //Serial.print("ENTER ISR: ");
   timerWrite(speaker_timer, 0);  // reset timer as we enter interrupt
 
