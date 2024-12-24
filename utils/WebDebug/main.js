@@ -5,74 +5,125 @@
 Chart.register(ChartStreaming);
 console.log("ChartStreaming", ChartStreaming);
 
-let baro_pressure = undefined; // Barometer pressure
-let baro_climbrate_filtered = null; // Filtered climb rate
+// Telemetry Config
+const graph_telemetry = {
+  Barometer: [
+    {
+      label: "Pressure",
+      borderColor: "red",
+      backgroundColor: "red",
+      yAxisID: "y2",
+      key: "bp",
+    },
+    {
+      label: "Climb Rate Filtered",
+      borderColor: "green",
+      backgroundColor: "green",
+      key: "bcf",
+    },
+  ],
+};
 
-const config = {
-  type: "line",
-  data: {
-    datasets: [
-      {
-        label: "Barometer Pressure",
-        backgroundColor: "rgba(54, 162, 235, 0.5)",
-        borderColor: "rgb(54, 162, 235)",
-        cubicInterpolationMode: "monotone",
-        // fill: true,
+// Create a mapping of keys to data
+for (const graph of Object.values(graph_telemetry)) {
+  for (const dataset of graph) {
+    dataset.borderWidth = 1;
+    dataset.pointRadius = 1;
+    dataset.lastData = undefined;
+  }
+}
+
+// Create a mapping on keys to their dataset objects
+const graphData = {};
+for (const graph of Object.values(graph_telemetry)) {
+  for (const dataset of graph) {
+    // Check if dataset.key is in the graph data.  If it's not
+    // add a new list for it, otherwise append to the existing list
+    if (!graphData[dataset.key]) {
+      graphData[dataset.key] = [];
+    }
+    graphData[dataset.key].push(dataset);
+  }
+}
+
+// Create chart.js charts for each graph
+for (const [name, datasets] of Object.entries(graph_telemetry)) {
+  // Create a mapping of datasets to their yAxisID
+  const yAxisID = {};
+  for (const dataset of datasets) {
+    const yId = dataset.yAxisID ?? "y";
+    yAxisID[yId] = dataset;
+  }
+
+  const config = {
+    type: "line",
+    data: {
+      datasets: datasets.map((data) => ({
+        ...data,
         data: [],
-      },
-      {
-        label: "Barometer Climb Filtered",
-        data: [],
-      },
-    ],
-  },
-  options: {
-    scales: {
-      x: {
-        type: "realtime",
-        realtime: {
-          refresh: 30,
-          onRefresh: (chart) => {
-            chart.data.datasets[0].data.push({
-              x: Date.now(),
-              y: baro_pressure,
-            });
-            chart.data.datasets[1].data.push({
-              x: Date.now(),
-              y: baro_climbrate_filtered,
-            });
-            baro_pressure = undefined;
-            baro_climbrate_filtered = undefined;
+      })),
+    },
+    options: {
+      scales: {
+        x: {
+          type: "realtime",
+          realtime: {
+            refresh: 60,
+            duration: 60000,
+            onRefresh: (chart) => {
+              // Loop through each dataset, Add the data to the graph
+              for (let i = 0; i < datasets.length; i++) {
+                const dataset = datasets[i];
+                const lastData = dataset.lastData;
+                if (lastData !== undefined) {
+                  chart.data.datasets[i].data.push({
+                    x: Date.now(),
+                    y: lastData,
+                  });
+                  dataset.lastData = undefined;
+                }
+              }
+            },
           },
+        },
+        y: {
+          type: "linear",
+          display: true,
+          position: "left",
+        },
+        y2: {
+          type: "linear",
+          display: true,
+          position: "right",
         },
       },
     },
-  },
-};
+  };
 
-// Get the baro div
-const baroDiv = document.getElementById("baro");
+  // Create the chart
+  const div = document.getElementById(name);
+  const canvas = document.createElement("canvas");
+  canvas.id = `${name}Canvas`;
+  div.appendChild(canvas);
+  const chart = new Chart(canvas, config);
+}
 
-// Create a new canvas element
-const canvas = document.createElement("canvas");
-
-// Set an id for the canvas if needed
-canvas.id = "baroCanvas";
-
-// Append the canvas to the baro div
-baroDiv.appendChild(canvas);
-
-// Create the chart using the new canvas element
-const myChart = new Chart(canvas, config);
+let socket; // Websocket to get data on
+let lastData = {}; // Last data received from the WebSocket
 
 // Function to create a WebSocket connection
 function createWebSocket() {
+  // Close the existing WebSocket connection if it exists
+  if (socket) {
+    socket.close();
+  }
+
   // Get the address from the input element
   const addressInput = document.getElementById("address");
   const address = addressInput.value;
 
   // Create a new WebSocket connection
-  const socket = new WebSocket(`ws://${address}/`);
+  socket = new WebSocket(`ws://${address}/`);
 
   // Event listener for when the connection is opened
   socket.addEventListener("open", (event) => {
@@ -82,24 +133,23 @@ function createWebSocket() {
   // Event listener for when a message is received
   socket.addEventListener("message", (event) => {
     const data = event.data;
-    // console.log("Received text data:", event.data);
+    // Split the key from the data using the ':' character
+    const [key, value] = data.split(":");
+    // console.log("Received data:", key, value);
 
-    // If the data starts with "bf", it is a barometer reading
-    // For filtered climb rate
-    if (data.startsWith("bcf:")) {
-      baro_climbrate_filtered = parseInt(data.slice(4));
-      //   const baro = parseInt(data.slice(4));
-      //   myChart.data.datasets[0].data.push({ x: Date.now(), y: baro });
-    }
-    if (data.startsWith("bp:")) {
-      baro_pressure = parseInt(data.slice(3));
+    if (!key || !value) {
+      console.error("Invalid data received:", data);
+      return;
     }
 
-    // if (data.startsWith("bp:")) {
-    //   const baro = parseInt(data.slice(3));
-    //   myChart.data.datasets[1].data.push({ x: Date.now(), y: baro });
-    // }
-    // myChart.update('none');
+    // Update the last data received globally
+    const valueData = parseInt(value);
+    lastData[key] = valueData;
+
+    // Update the graph data, assume int for now
+    graphData[key].forEach((dataset) => {
+      dataset.lastData = valueData;
+    });
   });
 
   // Event listener for when the connection is closed
