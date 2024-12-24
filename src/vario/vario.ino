@@ -14,6 +14,7 @@
   #include "speaker.h"
   #include "log.h"
   #include "settings.h"
+  #include "WebDebug.h"
 
 #define DEBUG_MAIN_LOOP false
 
@@ -89,6 +90,11 @@ void setup() {
     charge_timer = timerBegin(CHARGE_TIMER_FREQ);            
     timerAttachInterrupt(charge_timer, &onChargeTimer); // timer, ISR call          NOTE: timerDetachInterrupt() does the opposite
     timerAlarm(charge_timer, CHARGE_TIMER_LENGTH, true, 0);      // auto reload timer ever time we've counted a sample length
+
+  #ifdef WEB_DEBUG
+    powerOnState = POWER_ON;  // turn on for web debug
+    webdebug_setup();
+  #endif
 
   // All done!
     Serial.println("Finished Setup");
@@ -324,14 +330,20 @@ void taskManager(void) {
     baro_update(baro_startNewCycle, doBaroTemp); taskman_baro = 0; baro_startNewCycle = false;
     
     }    // update baro, using the appropriate step number
-  if (taskman_buttons) { buttons_update(); taskman_buttons = 0; }
   if (taskman_imu)     { imu_update();     taskman_imu = 0; }
+  if (taskman_tempRH)  { tempRH_update(taskman_tempRH);  taskman_tempRH = 0; }
   if (taskman_gps)     { gps_update();     taskman_gps = 0; }
+
+  #ifndef WEB_DEBUG
+  // If we're in a web debug mode, we want to eliminate all non-esential tasks
   if (taskman_power)   { power_update();   taskman_power = 0; }
   if (taskman_log)     { log_update();     taskman_log = 0; }
   if (taskman_display) { display_update(); taskman_display = 0; }  
-  if (taskman_tempRH)  { tempRH_update(taskman_tempRH);  taskman_tempRH = 0; }
   if (taskman_SDCard)  { SDcard_update();  taskman_SDCard = 0; }
+  if (taskman_buttons) { buttons_update(); taskman_buttons = 0; }
+  #else
+  webdebug_update();
+  #endif
 
   if (taskman_didSomeTasks && DEBUG_MAIN_LOOP) {
     taskman_didSomeTasks = 0;
