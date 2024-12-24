@@ -92,7 +92,7 @@ void setup() {
     timerAlarm(charge_timer, CHARGE_TIMER_LENGTH, true, 0);      // auto reload timer ever time we've counted a sample length
 
   #ifdef WEB_DEBUG
-    powerOnState = POWER_ON;  // turn on for web debug
+    // powerOnState = POWER_ON;  // turn on for web debug
     webdebug_setup();
   #endif
 

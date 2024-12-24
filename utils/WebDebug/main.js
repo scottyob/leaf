@@ -2,6 +2,8 @@
 // import 'chartjs-adapter-luxon';
 // import ChartStreaming from 'chartjs-plugin-streaming';
 
+import { plugin as chartMouseHoverPlugin } from "./chartMouseHoverPlugin.js";
+
 Chart.register(ChartStreaming);
 console.log("ChartStreaming", ChartStreaming);
 
@@ -10,16 +12,25 @@ const graph_telemetry = {
   Barometer: [
     {
       label: "Pressure",
-      borderColor: "red",
-      backgroundColor: "red",
+      // color: "lightred",
       yAxisID: "y2",
       key: "bp",
     },
     {
       label: "Climb Rate Filtered",
-      borderColor: "green",
-      backgroundColor: "green",
+      // color: "lightgreen",
       key: "bcf",
+    },
+  ],
+  Altitude: [
+    {
+      label: "Barometer",
+      key: "ba",
+    },
+    {
+      label: "GPS (meters)",
+      key: "ga",
+      yAxisID: "y2",
     },
   ],
 };
@@ -29,6 +40,10 @@ for (const graph of Object.values(graph_telemetry)) {
   for (const dataset of graph) {
     dataset.borderWidth = 1;
     dataset.pointRadius = 1;
+    if (dataset.color !== undefined) {
+      dataset.borderColor = dataset.color;
+      dataset.backgroundColor = dataset.color;
+    }
     dataset.lastData = undefined;
   }
 }
@@ -46,6 +61,8 @@ for (const graph of Object.values(graph_telemetry)) {
   }
 }
 
+let linex = 0;
+
 // Create chart.js charts for each graph
 for (const [name, datasets] of Object.entries(graph_telemetry)) {
   // Create a mapping of datasets to their yAxisID
@@ -57,6 +74,35 @@ for (const [name, datasets] of Object.entries(graph_telemetry)) {
 
   const config = {
     type: "line",
+    plugins: [
+      {
+        colorschemes: {
+          scheme: "tableau.Tableau10",
+        },
+      },
+      {
+        afterEvent: (chart, args) => {
+          const { inChartArea } = args;
+          const { type, x, y } = args.event;
+          linex = x;
+        },
+        afterDraw: function (chart) {
+          const ctx = chart.ctx;
+          const xAxis = chart.scales.x;
+
+          // Draw vertical line at x-axis value 4
+          const xValue = linex; // xAxis.getPixelForValue(4);
+          ctx.save();
+          ctx.strokeStyle = "rgb(255, 99, 132)";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(xValue, 0);
+          ctx.lineTo(xValue, chart.height);
+          ctx.stroke();
+          ctx.restore();
+        },
+      },
+    ],
     data: {
       datasets: datasets.map((data) => ({
         ...data,
@@ -64,11 +110,16 @@ for (const [name, datasets] of Object.entries(graph_telemetry)) {
       })),
     },
     options: {
+      hover: {
+        mode: "index",
+        intersect: false,
+      },
+      maintainAspectRatio: false,
       scales: {
         x: {
           type: "realtime",
           realtime: {
-            refresh: 60,
+            refresh: 100,
             duration: 60000,
             onRefresh: (chart) => {
               // Loop through each dataset, Add the data to the graph
@@ -105,6 +156,7 @@ for (const [name, datasets] of Object.entries(graph_telemetry)) {
   const canvas = document.createElement("canvas");
   canvas.id = `${name}Canvas`;
   div.appendChild(canvas);
+  // canvas.parentNode.style.height = '100px';
   const chart = new Chart(canvas, config);
 }
 

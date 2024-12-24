@@ -13,6 +13,7 @@
   #include "log.h"
   #include "Leaf_I2C.h"
   #include "tempRH.h"
+  #include "WebDebug.h"
 
 uint8_t current_setting;          // keep track of which input current setting we're using
 uint8_t powerOnState = POWER_OFF; // keep track of which power state we're in (ON & Runnning; or (soft)OFF and charging via USB, or dead OFF)
@@ -38,9 +39,13 @@ void power_simple_init(void) {
 void power_bootUp() {
 
   power_init();                                     // configure power supply
+#ifdef WEB_DEBUG
+  powerOnState = POWER_ON;
+#else
   auto button = buttons_init();                  // initialize Button and check if holding the center button is what turned us on
   if (button == Button::DOWN) powerOnState = POWER_ON;    // if center button, then latch on and start operating!
   else powerOnState = POWER_OFF_USB;                // if not center button, then USB power turned us on, go into charge mode
+#endif
   settings_init();                                  // grab user settings (or populate defaults if no saved settings)
   power_init_peripherals();                         // init peripherals (even if we're not turning on and just going into charge mode, we still need to initialize devices so we can put some of them back to sleep)
 }

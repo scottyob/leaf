@@ -7,6 +7,7 @@
 #include "display.h"
 #include "fonts.h"
 #include "baro.h"
+#include "gps.h"
 
 // Websocket webserver
 WebSocketsServer webSocket = WebSocketsServer(80);
@@ -99,6 +100,8 @@ void webdebug_update() {
     // Stream all of our telemetry out to all connected clients
     webSocket.broadcastTXT((String)"bcf:" + baro.climbRateFiltered);
     webSocket.broadcastTXT((String)"bp:" + baro.pressure);
+    webSocket.broadcastTXT((String)"ba:" + baro.alt);
+    webSocket.broadcastTXT((String)"ga:" + gps.altitude.value());
 }
 
 #endif  // WEB_DEBUG
