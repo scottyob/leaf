@@ -2,8 +2,6 @@
 // import 'chartjs-adapter-luxon';
 // import ChartStreaming from 'chartjs-plugin-streaming';
 
-import { plugin as chartMouseHoverPlugin } from "./chartMouseHoverPlugin.js";
-
 Chart.register(ChartStreaming);
 console.log("ChartStreaming", ChartStreaming);
 
@@ -62,6 +60,7 @@ for (const graph of Object.values(graph_telemetry)) {
 }
 
 let linex = 0;
+let allCharts = [];
 
 // Create chart.js charts for each graph
 for (const [name, datasets] of Object.entries(graph_telemetry)) {
@@ -158,6 +157,7 @@ for (const [name, datasets] of Object.entries(graph_telemetry)) {
   div.appendChild(canvas);
   // canvas.parentNode.style.height = '100px';
   const chart = new Chart(canvas, config);
+  allCharts.push(chart);
 }
 
 let socket; // Websocket to get data on
@@ -170,12 +170,8 @@ function createWebSocket() {
     socket.close();
   }
 
-  // Get the address from the input element
-  const addressInput = document.getElementById("address");
-  const address = addressInput.value;
-
   // Create a new WebSocket connection
-  socket = new WebSocket(`ws://${address}/`);
+  socket = new WebSocket("ws://localhost:8765/");
 
   // Event listener for when the connection is opened
   socket.addEventListener("open", (event) => {
@@ -215,5 +211,20 @@ function createWebSocket() {
   });
 }
 
-// Example usage: Call createWebSocket when a button is clicked
-document.getElementById("connect").addEventListener("click", createWebSocket);
+// Function to update the realtime duration of all charts
+function updateGraphDuration(value) {
+  const duration = value * 1000; // Convert seconds to milliseconds
+  allCharts.forEach((chart) => {
+    chart.options.scales.x.realtime.duration = duration;
+    chart.update();
+  });
+}
+
+// Attach the onchange event to the time slider
+document.getElementById('time-slider').addEventListener('change', function() {
+  updateGraphDuration(this.value);
+});
+
+// Start a connection to the web server
+createWebSocket();
+

@@ -4,52 +4,16 @@
 #include <WebSocketsServer.h>
 
 #include "WiFi.h"
+#include "WiFiUdp.h"
+#include "baro.h"
 #include "display.h"
 #include "fonts.h"
-#include "baro.h"
 #include "gps.h"
 
 // Websocket webserver
-WebSocketsServer webSocket = WebSocketsServer(80);
-
-void webSocketEvent(uint8_t num, WStype_t type, uint8_t* payload,
-                    size_t length) {
-    switch (type) {
-        case WStype_DISCONNECTED:
-            Serial.printf("[%u] Disconnected!\n", num);
-            break;
-        case WStype_CONNECTED: {
-            IPAddress ip = webSocket.remoteIP(num);
-            Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num,
-                          ip[0], ip[1], ip[2], ip[3], payload);
-
-            // send message to client
-            webSocket.sendTXT(num, "Connected");
-        } break;
-        case WStype_TEXT:
-            Serial.printf("[%u] get Text: %s\n", num, payload);
-
-            // send message to client
-            // webSocket.sendTXT(num, "message here");
-
-            // send data to all connected clients
-            // webSocket.broadcastTXT("message here");
-            break;
-        case WStype_BIN:
-            Serial.printf("[%u] get binary length: %u\n", num, length);
-            // hexdump(payload, length);
-
-            // send message to client
-            // webSocket.sendBIN(num, payload, length);
-            break;
-        case WStype_ERROR:
-        case WStype_FRAGMENT_TEXT_START:
-        case WStype_FRAGMENT_BIN_START:
-        case WStype_FRAGMENT:
-        case WStype_FRAGMENT_FIN:
-            break;
-    }
-}
+// WebSocketsServer webSocket = WebSocketsServer(80);
+WiFiUDP udp;
+IPAddress broadcast_address(4294967295);
 
 void webdebug_setup() {
     // Setup the display
@@ -90,18 +54,24 @@ void webdebug_setup() {
         u8g2.print("Server Running");
     } while (u8g2.nextPage());
 
-    webSocket.begin();
-    webSocket.onEvent(webSocketEvent);
+    Serial.end();
+    Serial.begin(1500000);
+
 }
 
 void webdebug_update() {
-    webSocket.loop();
+    // Craft a UDP packet with our stats
+    String packetPayload = (String) "bcf:" + baro.climbRateFiltered + "\n" +
+                           "bp:" + baro.pressure + "\n" + "ba:" + baro.alt +
+                           "\n" + "ga:" + gps.altitude.value() + "\n";
+    
+    // If using UDP to stream
+    // udp.beginPacket(broadcast_address, 9999);
+    // udp.write((const uint8_t*)packetPayload.c_str(), packetPayload.length());
+    // udp.endPacket();
 
-    // Stream all of our telemetry out to all connected clients
-    webSocket.broadcastTXT((String)"bcf:" + baro.climbRateFiltered);
-    webSocket.broadcastTXT((String)"bp:" + baro.pressure);
-    webSocket.broadcastTXT((String)"ba:" + baro.alt);
-    webSocket.broadcastTXT((String)"ga:" + gps.altitude.value());
+    Serial.println(packetPayload);
+
 }
 
 #endif  // WEB_DEBUG

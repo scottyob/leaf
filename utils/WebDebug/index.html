@@ -4,12 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Leaf Debugger</title>
+    <link rel="stylesheet" href="style.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.3.2"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon@1.27.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.0.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-streaming@2.0.0"></script>
-    <link rel="stylesheet" href="style.css" />
-    <script src="chartMouseHoverPlugin.js" type="module"></script>
     <script src="https://cdn.jsdelivr.net/npm/hw-chartjs-plugin-colorschemes"></script>
     <script src="https://unpkg.com/hw-chartjs-plugin-colorschemes"></script>
     <script src="main.js" type="module"></script>
@@ -17,9 +16,19 @@
   <body>
     <h1>Leaf Debugger</h1>
     <div id="graphs-container">
-      <div id="connection">
-        <input type="text" id="address" placeholder="Leaf IP Address" />
-        <button id="connect">Connect</button>
+      <div id="settings">
+        <!-- Generate me HTML for a slider to go from 1 to 120, defaulting to 30 -->
+        <label for="time-slider">Time Interval (seconds):</label>
+        <input
+          type="range"
+          id="time-slider"
+          name="time-slider"
+          min="1"
+          max="120"
+          value="30"
+          oninput="this.nextElementSibling.value = this.value"
+        />
+        <output>30</output>
       </div>
       <div id="Barometer" class="graph"></div>
       <div id="Altitude" class="graph"></div>

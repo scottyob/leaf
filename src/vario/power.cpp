@@ -39,10 +39,10 @@ void power_simple_init(void) {
 void power_bootUp() {
 
   power_init();                                     // configure power supply
+  auto button = buttons_init();                  // initialize Button and check if holding the center button is what turned us on
 #ifdef WEB_DEBUG
   powerOnState = POWER_ON;
 #else
-  auto button = buttons_init();                  // initialize Button and check if holding the center button is what turned us on
   if (button == Button::DOWN) powerOnState = POWER_ON;    // if center button, then latch on and start operating!
   else powerOnState = POWER_OFF_USB;                // if not center button, then USB power turned us on, go into charge mode
 #endif
