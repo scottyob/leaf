@@ -39,7 +39,7 @@ void power_bootUp() {
 
   power_init();                                     // configure power supply
   auto button = buttons_init();                  // initialize Button and check if holding the center button is what turned us on
-  if (button == Button::DOWN) powerOnState = POWER_ON;    // if center button, then latch on and start operating!
+  if (button == Button::CENTER) powerOnState = POWER_ON;    // if center button, then latch on and start operating!
   else powerOnState = POWER_OFF_USB;                // if not center button, then USB power turned us on, go into charge mode
   settings_init();                                  // grab user settings (or populate defaults if no saved settings)
   power_init_peripherals();                         // init peripherals (even if we're not turning on and just going into charge mode, we still need to initialize devices so we can put some of them back to sleep)
