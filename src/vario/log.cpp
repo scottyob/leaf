@@ -107,9 +107,11 @@ void log_update() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Auto Start-Stop check functions.
+// Auto Start & Stop check functions.
 
   uint8_t autoStartCounter = 0;
+  uint8_t autoStopCounter = 0;
+  int32_t autoStopAltitude = 0;
 
   bool flightTimer_autoStart() {
     bool startTheTimer = false;  // default to not auto-start
@@ -135,18 +137,19 @@ void log_update() {
       Serial.println("****************************** autoStart TRUE via alt");
     }
 
-  Serial.print("S T A R T   Counter: ");
-  Serial.print(autoStartCounter);
-  Serial.print("   Alt Diff: ");
-  Serial.print(altDifference);
-  Serial.print("  StartTheTimer? : ");
-  Serial.println(startTheTimer);
+    Serial.print("S T A R T   Counter: ");
+    Serial.print(autoStartCounter);
+    Serial.print("   Alt Diff: ");
+    Serial.print(altDifference);
+    Serial.print("  StartTheTimer? : ");
+    Serial.println(startTheTimer);
+
+    if (startTheTimer) {
+      autoStartCounter = 0;      
+    }
 
     return startTheTimer;
   }
-
-  uint8_t autoStopCounter = 0;
-  int32_t autoStopAltitude = 0;
 
   bool flightTimer_autoStop() {
     bool stopTheTimer = false;  // default to not auto-stop
@@ -169,15 +172,19 @@ void log_update() {
       }
 
     } else {
-      autoStopAltitude += altDifference;  //reset the comparison altitude to present altitude, since it's still changing
+      autoStopAltitude = baro.alt;  //reset the comparison altitude to present altitude, since it's still changing
     }
 
-  Serial.print(" ** STOP ** Counter: ");
-  Serial.print(autoStopCounter);
-  Serial.print("   Alt Diff: ");
-  Serial.print(altDifference);
-  Serial.print("  stopTheTimer? : ");
-  Serial.println(stopTheTimer);
+    Serial.print(" ** STOP ** Counter: ");
+    Serial.print(autoStopCounter);
+    Serial.print("   Alt Diff: ");
+    Serial.print(altDifference);
+    Serial.print("  stopTheTimer? : ");
+    Serial.println(stopTheTimer);
+
+    if (stopTheTimer) {
+      baro.altInitial = baro.alt; // reset initial alt (to enable properly checking again for auto-start conditions)
+    }
 
     return stopTheTimer;
   }
@@ -194,25 +201,32 @@ void log_update() {
 
   // start timer
   void flightTimer_start() {
-    speaker_playSound(fx_enter);
-    flightTimerRunning = 1;
+    if (!flightTimerRunning) {
 
-    //if Altimeter GPS-SYNC is on, reset altimeter setting so baro matches GPS when log is started
-    if (ALT_SYNC_GPS) settings_matchGPSAlt();
+      // start timer
+      speaker_playSound(fx_enter);
+      flightTimerRunning = 1;
 
-    //starting values
-    baro_resetLaunchAlt();
-    logbook.alt_start = baro.altAtLaunch;
+      //if Altimeter GPS-SYNC is on, reset altimeter setting so baro matches GPS when log is started
+      if (ALT_SYNC_GPS) settings_matchGPSAlt();
 
-    //get first set of log values
-    log_captureValues();
+      //starting values
+      baro_resetLaunchAlt();
+      logbook.alt_start = baro.altAtLaunch;
 
-    // initial min/max values
-    logbook.alt_max = logbook.alt_min = logbook.alt_start;
-    logbook.climb_max = logbook.climb_min = logbook.climb;
-    logbook.speed_max = logbook.speed_min = logbook.speed;
-    logbook.temperature_max = logbook.temperature_min = logbook.temperature;
-    
+
+      //get first set of log values
+      log_captureValues();
+
+      // initial min/max values
+      logbook.alt_max = logbook.alt_min = logbook.alt_start;
+      logbook.climb_max = logbook.climb_min = logbook.climb;
+      logbook.speed_max = logbook.speed_min = logbook.speed;
+      logbook.temperature_max = logbook.temperature_min = logbook.temperature;
+
+      // Finally, save current new altitude as auto-stop altitude
+      autoStopAltitude = baro.alt;
+    }    
   }
 
   // stop timer

@@ -33,6 +33,7 @@ uint8_t thermalSimple_page_cursor_timeOut = 8;	// after 8 page draws (4 seconds)
 
 float test_wind_angle = 0;
 
+
 void thermalSimplePage_draw() {
 
 	// if cursor is selecting something, count toward the timeOut value before we reset cursor
@@ -86,17 +87,16 @@ void thermalSimplePage_draw() {
 				test_wind_angle -= (2*PI);
 
 		// Main Info ****************************************************
-			uint8_t topOfFrame = 30;
-			uint8_t graphBoxHeight = 40;
-			uint8_t varioBarWidth = 20;
-			uint8_t varioBarHeight = 141;
+			uint8_t topOfFrame = 22;
+			uint8_t varioBarWidth = 25;
+			uint8_t varioBarHeight = 151;
 			
 			// Vario Bar
 			display_varioBar(topOfFrame, varioBarHeight, varioBarWidth, baro.climbRateFiltered);
 
 		
 			//Altitude			
-        uint8_t alt_y = 41;
+        uint8_t alt_y = 50;
 				//Altitude header labels
 				u8g2.setFont(leaf_labels);
 				u8g2.setCursor(varioBarWidth+44, alt_y);		
@@ -106,49 +106,36 @@ void thermalSimplePage_draw() {
 				else u8g2.print("m");
 
 				// Alt value
-				display_alt_type(varioBarWidth+6, alt_y+21, leaf_21h, THMPG_ALT_TYP);
+				display_alt_type(varioBarWidth+2, alt_y+21, leaf_21h, THMPG_ALT_TYP);
 				
 				// if selected, draw the box around it
 				if (thermalSimple_page_cursor_position == cursor_thermalSimplePage_alt1) {
 					display_selectionBox(varioBarWidth+1, alt_y-1, 96-(varioBarWidth+1), 24, 7);
 				}
 
-			//Alt 2 (user alt field; above launch, etc)
-			display_altAboveLaunch(varioBarWidth+4, 84, baro.altAboveLaunch);
+
 
 			//Climb 
-			display_climbRatePointerBox(20, 87, 76, 27, 13);     // x, y, w, h, triangle size
-			display_climbRate(20, 111, leaf_21h, baro.climbRateFiltered);
+			display_climbRatePointerBox(varioBarWidth, 84, 76, 27, 13);     // x, y, w, h, triangle size
+			display_climbRate(20, 108, leaf_21h, baro.climbRateFiltered);
 			u8g2.setDrawColor(0);
 			if (UNITS_climb) u8g2.print("f");
 			else u8g2.print('m');
 			u8g2.setDrawColor(1);
 			
+			//Alt 2 (user alt field; above launch, etc)
+			display_altAboveLaunch(varioBarWidth+4, 136, baro.altAboveLaunch);
 
-
-/*      if (selected) {
+			/* if (selected) {
         u8g2.drawRFrame(cursor_x, cursor_y-16, 96-cursor_x, 18, 3);
       }
 			*/
 			
-		// User Fields ****************************************************
-			uint8_t userFieldsTop = 136;
-			uint8_t userFieldsHeight = 17;
-			uint8_t userFieldsMid = userFieldsTop + userFieldsHeight;
-			uint8_t userFieldsBottom = userFieldsMid + userFieldsHeight;
-			uint8_t userSecondColumn = varioBarWidth/2+48;
-
-			u8g2.drawHLine(varioBarWidth-1, userFieldsTop, 96-varioBarWidth+1);
-			u8g2.drawHLine(varioBarWidth-1, userFieldsMid, 96-varioBarWidth+1);
-			u8g2.drawHLine(varioBarWidth-1, userFieldsBottom, 96-varioBarWidth+1);
-			u8g2.drawVLine(userSecondColumn, userFieldsTop, userFieldsHeight*2);
-
-
-
-			display_temp(varioBarWidth+5, userFieldsMid-1, (int16_t)tempRH_getTemp());
-			display_humidity(userSecondColumn+3, userFieldsMid-1, (uint8_t)tempRH_getHumidity());
-			display_accel(varioBarWidth+5, userFieldsBottom-1, IMU_getAccel());
-			display_glide(userSecondColumn+3, userFieldsBottom-1, gps_getGlideRatio());
+		// User Field ****************************************************
+		u8g2.setCursor(varioBarWidth+2, 170);
+		u8g2.setFont(leaf_21h);
+		u8g2.setDrawColor(1);
+		u8g2.print("12,456");
 
 
     // Footer Info ****************************************************

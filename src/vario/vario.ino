@@ -305,25 +305,7 @@ void taskManager(void) {
   }
 
   // Do Baro first, because the ADC prep & read cycle is time dependent (must have >9ms between prep & read).  If other tasks delay the start of the baro prep step by >1ms, then next cycle when we read ADC, the Baro won't be ready.
-  if (taskman_baro)    { 
-    /*
-    baro_timeStamp = micros();
-    baro_timeStamp_diff = baro_timeStamp - baro_timeStamp_last;
-    baro_timeStamp_last = baro_timeStamp;
-    if (true) {//baro_timeStamp_diff < 9500) {
-
-      Serial.print("10ms: ");
-      Serial.print((uint8_t)counter_10ms_block);
-      Serial.print(" 100ms: ");
-      Serial.print((uint8_t)counter_100ms_block);
-      Serial.print(" BARO TIME! ");
-      Serial.println(baro_timeStamp_diff);
-    } 
-    */
-
-    baro_update(baro_startNewCycle, doBaroTemp); taskman_baro = 0; baro_startNewCycle = false;
-    
-    }    // update baro, using the appropriate step number
+  if (taskman_baro)    { baro_update(baro_startNewCycle, doBaroTemp); taskman_baro = 0; baro_startNewCycle = false; }
   if (taskman_buttons) { buttons_update(); taskman_buttons = 0; }
   if (taskman_imu)     { imu_update();     taskman_imu = 0; }
   if (taskman_gps)     { gps_update();     taskman_gps = 0; }

@@ -10,7 +10,7 @@
 
   #define AUTO_STOP_MAX_SPEED   3     // mph max -- must be below this speed for timer to auto-stop
   #define AUTO_STOP_MAX_ACCEL   10    // Max accelerometer signal 
-  #define AUTO_STOP_MAX_ALT    500   // cm altitude change for timer auto-stop
+  #define AUTO_STOP_MAX_ALT    200   // cm altitude change for timer auto-stop
   #define AUTO_STOP_MIN_SEC     10    // seconds of low speed / low accel for timer to auto-stop
 
 

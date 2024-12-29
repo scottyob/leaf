@@ -104,8 +104,8 @@ void appendFile(fs::FS &fs, const char * path, const char * message) {
     uint32_t append_time = micros();
 
     
-    Serial.print("startAppend:   ");
-    Serial.println(append_time);
+    //Serial.print("startAppend:   ");
+    //Serial.println(append_time);
 
 
     //Serial.printf("Appending to file: %s\n", path);
@@ -124,29 +124,6 @@ void appendFile(fs::FS &fs, const char * path, const char * message) {
         return;
     }
 
-    //time = micros();
-
-    /*
-    if(file.print(message)){
-
-        //time = micros()-time;        
-        //Serial.print("Message appended: ");
-        //Serial.println(time);
-    } else {
-        //Serial.println("Append failed");
-    }
-    */
-
-    Serial.print("endAppend @  : ");
-    Serial.println(micros());
-
-
-    append_time = micros()-append_time;        
-    Serial.print("append_time: ");
-    Serial.println(append_time);
-
-    Serial.print("endAppend!! @: ");
-    Serial.println(micros());
 
 }
 
@@ -154,10 +131,9 @@ void appendFile(fs::FS &fs, const char * path, const char * message) {
 
 
 void appendOpenFile(File &file, const char * message) {
-    Serial.printf("Appending to open file");
-
+    
     if(file.print(message)){
-        Serial.println("Message appended");
+        //Serial.println("Message appended");
     } else {
         Serial.println("Append failed");
     }

@@ -68,6 +68,8 @@
   int64_t OFF2;
   int64_t SENS2;
 
+  // flag to set first climb rate sample to 0 (this allows us to wait for a second baro altitude sample to calculate any altitude change)
+  bool firstClimbInitialization = true;
 
   void baro_adjustAltSetting(Button dir, uint8_t count) {
     float increase = .001;              //     
@@ -165,11 +167,13 @@
       C_TEMPSENS = baro_readCalibration(6);
       
     // after initialization, get first baro sensor reading to populate values
+      delay(10);					    // wait for baro sensor to be ready
       baro_update(1, true);   // send convert-pressure command
       delay(10);					    // wait for baro sensor to process
       baro_update(0, true);   // read pressure, send convert-temp command
       delay(10);					    // wait for baro sensor to process
       baro_update(0, true);   // read temp, and calculate adjusted pressure
+      delay(10);	   
     
     // load the filters with our current start-up pressure (and climb is assumed to be 0)      
       for (int i = 1; i <= FILTER_VALS_MAX; i++) {
@@ -238,9 +242,17 @@
     // the baro senor requires ~9ms between the command to prep the ADC and actually reading the value.
     // Since this delay is required between both pressure and temp values, we break the sensor processing 
     // up into several steps, to allow other code to process while we're waiting for the ADC to become ready.
-    
+
     // First check if ADC is not busy (i.e., it's been at least 9ms since we sent a "convert ADC" command)
-    if (micros() - baroADCStartTime > 9000) baroADCBusy = false;
+
+    unsigned long microsNow = micros();
+    if (microsNow - baroADCStartTime > 9000) {
+      baroADCBusy = false;
+    } else {
+      Serial.print("BARO BUSY!  ");
+      Serial.print(microsNow - baroADCStartTime);
+      Serial.println(" micros since last reading");
+    }
 
     if (startNewCycle) process_step = 0;
 
@@ -401,6 +413,19 @@
 
   // Update Climb
   void baro_updateClimb() {
+
+    // lastAlt isn't set yet on boot-up, so just assume a zero climb rate for the first sample.
+    if (firstClimbInitialization) {
+      baro.climbRate = 0;
+      baro.climbRateFiltered = 0;
+      baro.climbRateAverage = 0;
+      firstClimbInitialization = false;
+      return;
+    }
+
+
+
+
     //TODO: incorporate ACCEL for added precision/accuracy
 
     // calculate climb rate based on standard altimeter setting (this way climb doesn't artificially change if the setting is adjusted)
@@ -408,7 +433,7 @@
     lastAlt = baro.alt;								          // store last alt value for next time
 
     //filter climb rate
-      baro.climbRateFiltered = 0;
+      int32_t climbRateFilterSummation = 0;      
       int8_t filterBookmark = climbFilterVals[0];       // start at the saved spot in the filter array
       int8_t filterIndex = filterBookmark;              // and create an index to track all the values we need for averaging
 
@@ -419,11 +444,11 @@
 
       // sum up all the values from this spot and previous, for the correct number of samples (user pref)
       for (int i = 0; i < CLIMB_FILTER_VALS_PREF; i++) {
-        baro.climbRateFiltered += climbFilterVals[filterIndex];   
+        climbRateFilterSummation += climbFilterVals[filterIndex];   
         filterIndex--;
         if (filterIndex <= 0) filterIndex = FILTER_VALS_MAX; // wrap around the array
       }
-      baro.climbRateFiltered /= CLIMB_FILTER_VALS_PREF; // divide to get the filtered climb rate
+      baro.climbRateFiltered = climbRateFilterSummation / CLIMB_FILTER_VALS_PREF; // divide to get the filtered climb rate
     
     // now calculate the longer-running average climb value (this is a smoother, slower-changing value for things like glide ratio, etc)
     int32_t total_samples = CLIMB_AVERAGE * FILTER_VALS_MAX;   // CLIMB_AVERAGE seconds * 20 samples per second = total samples to average over
