@@ -195,7 +195,7 @@
 
     // initialize all the other alt variables with current altitude to start      
       lastAlt = baro.alt;		              // used to calculate the alt change for climb rate.  Assume we're stationary to start (previous Alt = Current ALt, so climb rate is zero).  Note: Climb rate uses the un-adjusted (standard) altitude      
-      baro.altInitial = baro.altAdjusted;	        // also save first value to use as starting point (we assume the saved altimeter setting is correct for now, so use adjusted)    
+      baro.altInitial = baro.alt;	        // also save first value to use as starting point (we assume the saved altimeter setting is correct for now, so use adjusted)    
       baro.altAtLaunch = baro.altAdjusted;         // save the starting value as launch altitude (Launch will be updated when timer starts)      
        
     

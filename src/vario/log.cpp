@@ -91,7 +91,7 @@ void log_update() {
     uint32_t timer_time = micros();
 
     // finally, check if we should auto-stop the timer because we've been sitting idle for long enough
-    if (AUTO_START && flightTimer_autoStop()) {  
+    if (AUTO_STOP && flightTimer_autoStop()) {  
       flightTimer_stop();
     } 
 
