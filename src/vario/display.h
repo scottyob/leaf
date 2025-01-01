@@ -8,20 +8,7 @@
 
 #include <U8g2lib.h>
 
-// FIRST CHOOSE YOUR DISPLAY TYPE!!!
-
-//#define DISPLAY_JUNE
-//extern U8G2_ST75256_WO256X128_F_4W_HW_SPI u8g2;   // Leaf V3.2.2  June Huang
-
-#define DISPLAY_ALICE
 extern U8G2_ST75256_JLX19296_F_4W_HW_SPI u8g2;  // Leaf 3.2.2    Alice Green HW
-
-//#define DISPLAY_ALICE_SMALL
-//extern U8G2_ST7539_192X64_F_4W_HW_SPI u8g2;     // Leaf V3.2.0
-
-
-
-
 
 #define LCD_BACKLIGHT    21  // can be used for backlight if desired (also broken out to header)
 #define LCD_RS           17 // 16 on old V3.2.0
@@ -43,7 +30,7 @@ enum display_page_actions {
 };
 
 enum display_main_pages {  
-  page_sats,
+  page_debug,
   page_thermalSimple,
   page_thermal,
   page_nav,
@@ -61,26 +48,10 @@ void display_update(void);
 void display_clear(void);
 void display_setContrast(uint8_t contrast);
 
-void display_battery_icon(uint16_t x, uint16_t y, uint8_t battery_pct);
 
-// make these accessible so we can show these fields in other pages
-  void display_alt(uint8_t cursor_x, uint8_t cursor_y, const uint8_t *font, int32_t displayAlt);
-  void display_flightTimer(uint8_t x, uint8_t y, bool shortstring);
-  void display_clockTime(uint8_t x, uint8_t y);
-//
-
-void display_drawTrianglePointer(uint16_t x, uint16_t y, float angle, uint16_t radius);
-
-void display_test_bat_icon(void);
-void display_test(void);
-void display_test_real(void);
-void display_test_real_2(void);
-void display_test_real_3(void);
-void display_test_big(uint8_t page);
-
-
-void display_page_satellites(void);
+void display_page_debug(void);
 void display_page_charging(void);
+void display_page_splash(void);
 
 
 

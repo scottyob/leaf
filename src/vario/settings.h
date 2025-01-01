@@ -20,8 +20,8 @@
 
   // System
     // Display Contrast
-      #define CONTRAST_MAX		        230		// TODO: find max reasonable value for display we're using 
-      #define CONTRAST_MIN		        180	  // TODO: find min reasonable value for display we're using
+      #define CONTRAST_MAX		        20	  // 20 steps of contrast user selectable (corresponds to actual values sent to dislpay of 115-135)
+      #define CONTRAST_MIN		        0	  
     // Volume (max for both vario and system volume settings)
       #define VOLUME_MAX			 	      3
     // Time Zone Offsets from UTC
@@ -58,7 +58,7 @@
     #define DEF_BLUETOOTH_ON          0     // default bluetooth off
 
   // Display Settings
-    #define DEF_CONTRAST			        195
+    #define DEF_CONTRAST			        7     // default contrast setting
     #define DEF_NAVPG_ALT_TYP         0     // Primary Alt field on Nav page (Baro Alt, GPS Alt, Alt above waypoint, etc)
     #define DEF_THMPG_ALT_TYP         0     // Primary Alt field on Thermal page
     #define DEF_THMPG_ALT2_TYP        0     // Secondary Alt field on Thermal page

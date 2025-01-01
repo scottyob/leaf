@@ -4,6 +4,7 @@
 
 #include "buttons.h"
 #include "display.h"
+#include "displayFields.h"
 #include "fonts.h"
 #include "settings.h"
 #include "baro.h"
