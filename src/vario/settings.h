@@ -46,6 +46,7 @@
     #define DEF_TRACK_SAVE				    1	    // save track log?
     #define DEF_AUTO_START		        0	    // 1 = ENABLE, 0 = DISABLE
     #define DEF_AUTO_STOP		          0	    // 1 = ENABLE, 0 = DISABLE
+    #define DEF_LOG_FORMAT            0     // 0 = KML, 1 = IGC
 
   // Default System Settings
     #define DEF_TIME_ZONE     				0     // mm (in minutes) UTC -8 (PDT) would therefor be -8*60, or 480.  This allows us to cover all time zones, including the :30 minute and :15 minute ones
@@ -61,6 +62,7 @@
     #define DEF_NAVPG_ALT_TYP         0     // Primary Alt field on Nav page (Baro Alt, GPS Alt, Alt above waypoint, etc)
     #define DEF_THMPG_ALT_TYP         0     // Primary Alt field on Thermal page
     #define DEF_THMPG_ALT2_TYP        0     // Secondary Alt field on Thermal page
+    #define DEF_THMSPG_USR1           0     // User field 1 on Thermal simple page
 
 
   // Default Unit Values
@@ -91,6 +93,7 @@
     extern bool TRACK_SAVE;
     extern bool AUTO_START;
     extern bool AUTO_STOP;
+    extern uint8_t LOG_FORMAT;
 
   // System Settings
     extern int16_t TIME_ZONE;
@@ -106,6 +109,8 @@
     extern uint8_t NAVPG_ALT_TYP; 
     extern uint8_t THMPG_ALT_TYP;
     extern uint8_t THMPG_ALT2_TYP;
+    extern uint8_t THMSPG_USR1;
+
 
   // Unit Values
     extern bool UNITS_climb;

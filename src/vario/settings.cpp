@@ -31,6 +31,7 @@
     bool TRACK_SAVE;
     bool AUTO_START;
     bool AUTO_STOP;
+    uint8_t LOG_FORMAT;
 
   // System Settings
     int16_t TIME_ZONE;
@@ -46,6 +47,7 @@
     uint8_t NAVPG_ALT_TYP;
     uint8_t THMPG_ALT_TYP;
     uint8_t THMPG_ALT2_TYP;
+    uint8_t THMSPG_USR1;
 
   // Unit Values
     bool UNITS_climb;
@@ -101,6 +103,7 @@ void settings_loadDefaults() {
     TRACK_SAVE = DEF_TRACK_SAVE;
     AUTO_START = DEF_AUTO_START;
     AUTO_STOP = DEF_AUTO_STOP;
+    LOG_FORMAT = DEF_LOG_FORMAT;
 
   // System Settings
     TIME_ZONE = DEF_TIME_ZONE;
@@ -116,6 +119,8 @@ void settings_loadDefaults() {
     NAVPG_ALT_TYP = DEF_NAVPG_ALT_TYP;
     THMPG_ALT_TYP = DEF_THMPG_ALT_TYP;
     THMPG_ALT2_TYP = DEF_THMPG_ALT2_TYP;
+    THMSPG_USR1 = DEF_THMSPG_USR1;
+
 
   // Unit Values
     UNITS_climb = DEF_UNITS_climb;
@@ -146,6 +151,7 @@ void settings_retrieve() {
     GPS_SETTING =     leafPrefs.getChar("GPS_SETTING");
     TRACK_SAVE =      leafPrefs.getBool("TRACK_SAVE");
     AUTO_START =      leafPrefs.getBool("AUTO_START");
+    LOG_FORMAT =      leafPrefs.getUChar("LOG_FORMAT");
 
   // System Settings
     TIME_ZONE =       leafPrefs.getShort("TIME_ZONE");
@@ -160,7 +166,9 @@ void settings_retrieve() {
     CONTRAST =        leafPrefs.getUChar("CONTRAST");
     NAVPG_ALT_TYP =   leafPrefs.getUChar("NAVPG_ALT_TYP");
     THMPG_ALT_TYP =   leafPrefs.getUChar("THMPG_ALT_TYP");
-    THMPG_ALT2_TYP =   leafPrefs.getUChar("THMPG_ALT2_TYP");
+    THMPG_ALT2_TYP =  leafPrefs.getUChar("THMPG_ALT2_TYP");
+    THMSPG_USR1 =     leafPrefs.getUChar("THMSPG_USR1");
+
 
   // Unit Values
     UNITS_climb =     leafPrefs.getBool("UNITS_climb");
@@ -198,6 +206,7 @@ void settings_save() {
     leafPrefs.putBool("TRACK_SAVE", TRACK_SAVE);
     leafPrefs.putBool("AUTO_START", AUTO_START);
     leafPrefs.putBool("AUTO_STOP", AUTO_STOP);
+    leafPrefs.putUChar("LOG_FORMAT", LOG_FORMAT);
   // System Settings
     leafPrefs.putShort("TIME_ZONE", TIME_ZONE);
     leafPrefs.putChar("VOLUME_SYSTEM", VOLUME_SYSTEM);  
@@ -211,6 +220,7 @@ void settings_save() {
     leafPrefs.putUChar("NAVPG_ALT_TYP", NAVPG_ALT_TYP);
     leafPrefs.putUChar("THMPG_ALT_TYP", THMPG_ALT_TYP);
     leafPrefs.putUChar("THMPG_ALT2_TYP", THMPG_ALT2_TYP);
+    leafPrefs.putUChar("THMSPG_USR1", THMSPG_USR1);
   // Unit Values
     leafPrefs.putBool("UNITS_climb", UNITS_climb);
     leafPrefs.putBool("UNITS_alt", UNITS_alt);

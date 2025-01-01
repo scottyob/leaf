@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "menu_page.h"
+#include "buttons.h"
 
 class LogMenuPage : public SettingsMenuPage {
   public:
@@ -22,8 +23,8 @@ class LogMenuPage : public SettingsMenuPage {
       "SaveLog",
       "AutoStart",
       "AutoStop",
-      "BB",
-      "CC",
+      "  ",
+      "  ",
       "Timer"
     };
 };
