@@ -409,6 +409,9 @@ void navigatePage_button(Button button, ButtonState state, uint8_t count) {
 					}
 					break;
 				case Button::CENTER:
+					if (state == HELD && count == 2) {
+						power_shutdown();
+					}
 					break;
 			}
 			break;

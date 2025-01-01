@@ -21,7 +21,7 @@
   // System
     // Display Contrast
       #define CONTRAST_MAX		        20	  // 20 steps of contrast user selectable (corresponds to actual values sent to dislpay of 115-135)
-      #define CONTRAST_MIN		        0	  
+      #define CONTRAST_MIN		        1	  
     // Volume (max for both vario and system volume settings)
       #define VOLUME_MAX			 	      3
     // Time Zone Offsets from UTC
@@ -63,6 +63,10 @@
     #define DEF_THMPG_ALT_TYP         0     // Primary Alt field on Thermal page
     #define DEF_THMPG_ALT2_TYP        0     // Secondary Alt field on Thermal page
     #define DEF_THMSPG_USR1           0     // User field 1 on Thermal simple page
+    #define DEF_SHOW_DEBUG            0     // Enable debug page
+    #define DEF_SHOW_THRM_SIMP        1     // Enable thermal simple page
+    #define DEF_SHOW_THRM_ADV         0     // Enable thermal adv page
+    #define DEF_SHOW_NAV              1     // Enable nav page
 
 
   // Default Unit Values
@@ -110,7 +114,10 @@
     extern uint8_t THMPG_ALT_TYP;
     extern uint8_t THMPG_ALT2_TYP;
     extern uint8_t THMSPG_USR1;
-
+    extern bool SHOW_DEBUG;
+    extern bool SHOW_THRM_SIMP;
+    extern bool SHOW_THRM_ADV;
+    extern bool SHOW_NAV;
 
   // Unit Values
     extern bool UNITS_climb;

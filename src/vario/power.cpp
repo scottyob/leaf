@@ -5,6 +5,7 @@
   #include "Leaf_SPI.h"
   #include "SDcard.h"
   #include "display.h"
+  #include "displayFields.h"
   #include "gps.h"
   #include "baro.h"
   #include "IMU.h"
@@ -38,8 +39,11 @@ void power_simple_init(void) {
 void power_bootUp() {
 
   power_init();                                     // configure power supply
-  auto button = buttons_init();                  // initialize Button and check if holding the center button is what turned us on
-  if (button == Button::CENTER) powerOnState = POWER_ON;    // if center button, then latch on and start operating!
+  auto button = buttons_init();                     // initialize Button and check if holding the center button is what turned us on
+  if (button == Button::CENTER) {
+    powerOnState = POWER_ON;                        // if center button turned us on, set state to ON (as opposed to charging state, which can turn us on if plugged into USB but not by the center button)
+    display_showOnSplash();                         // show the splash screen if user turned us on
+  }
   else powerOnState = POWER_OFF_USB;                // if not center button, then USB power turned us on, go into charge mode
   settings_init();                                  // grab user settings (or populate defaults if no saved settings)
   power_init_peripherals();                         // init peripherals (even if we're not turning on and just going into charge mode, we still need to initialize devices so we can put some of them back to sleep)
@@ -106,7 +110,7 @@ void power_wake_peripherals() {
 void power_switchToOnState() {
   power_latch_on();
   Serial.println("switch_to_on_state");  
-  powerOnState = POWER_ON;
+  powerOnState = POWER_ON;  
   power_wake_peripherals();
 }
 
@@ -114,7 +118,10 @@ void power_shutdown() {
   Serial.println("power_shutdown"); 
 
   // TODO: maybe show shutting down screen?
-  display_clear();
+  display_clear();  
+  speaker_playSound(fx_exit);
+  display_off_splash();
+  auto shutdownTimeStamp = millis();
 
 
   // saving logs and system data  
@@ -123,13 +130,15 @@ void power_shutdown() {
   }
 
   // save any changed settings this session
-  settings_save();
-  
-  power_sleep_peripherals();
-  delay(100);
-  power_latch_off();  
-  // go to POWER_OFF_USB state, in case device was shut down while plugged into USB, then we can show necessary charging updates etc
-  powerOnState = POWER_OFF_USB;
+  settings_save();  
+  power_sleep_peripherals();  
+
+  while (millis() - shutdownTimeStamp < 3000) {  // wait 3 seconds before shutting down to give user a chance to see the shutdown screen
+    delay(100);
+  }
+  power_latch_off();                            // turn off 3.3V regulator (if we're plugged into USB, we'll stay on)
+  display_clear();                                  
+  powerOnState = POWER_OFF_USB;                 // go to POWER_OFF_USB state, in case device was shut down while plugged into USB, then we can show necessary charging updates etc
 }
 
 

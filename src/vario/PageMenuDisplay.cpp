@@ -10,14 +10,11 @@
 
 enum display_menu_items {
   cursor_display_back,
+  cursor_display_show_debug,
+  cursor_display_show_thrm_sim,
+  cursor_display_show_thrm_adv,
+  cursor_display_show_nav,
   cursor_display_contrast,
-  cursor_display_AA,
-  cursor_display_BB,
-  cursor_display_CC,
-  cursor_display_DD,
-  cursor_display_EE,
-  cursor_display_FF
-
 };
 
 
@@ -30,13 +27,14 @@ void DisplayMenuPage::draw() {
     u8g2.setDrawColor(1);
     u8g2.print("DISPLAY");
     u8g2.drawHLine(0, 15, 64);
+    u8g2.setCursor(0,45);
+    u8g2.print("Show Pages:");
 
   // Menu Items
-    uint8_t start_y = 29;
     uint8_t y_spacing = 16;
     uint8_t setting_name_x = 3;
-    uint8_t setting_choice_x = 44;    
-    uint8_t menu_items_y[] = {190, 45, 60, 75, 90, 105, 120, 135};
+    uint8_t setting_choice_x = 78;    
+    uint8_t menu_items_y[] = {190, 60, 75, 90, 105, 135};
 
     //first draw cursor selection box
     u8g2.drawRBox(setting_choice_x-2, menu_items_y[cursor_position]-14, 22, 16, 2);
@@ -49,26 +47,25 @@ void DisplayMenuPage::draw() {
       if (i == cursor_position) u8g2.setDrawColor(0);
       else u8g2.setDrawColor(1);
       switch (i) {
+        case cursor_display_show_debug:
+          if (SHOW_DEBUG) u8g2.print(char(125));
+          else u8g2.print(char(123));          
+          break;
+        case cursor_display_show_thrm_sim:
+          if (SHOW_THRM_SIMP) u8g2.print(char(125));
+          else u8g2.print(char(123));
+          break;
+        case cursor_display_show_thrm_adv:
+          if (SHOW_THRM_ADV) u8g2.print(char(125));
+          else u8g2.print(char(123));
+          break;
+        case cursor_display_show_nav:
+          if (SHOW_NAV) u8g2.print(char(125));
+          else u8g2.print(char(123));
+          break;
         case cursor_display_contrast:
+          if (CONTRAST < 10) u8g2.print(" ");
           u8g2.print(CONTRAST);
-          break;
-        case cursor_display_AA:
-          u8g2.print("AA");          
-          break;
-        case cursor_display_BB:
-          u8g2.print("BB");          
-          break;
-        case cursor_display_CC:
-          u8g2.print("CC");          
-          break;
-        case cursor_display_DD:
-          u8g2.print("DD");          
-          break;
-        case cursor_display_EE:
-          u8g2.print("EE");          
-          break;
-        case cursor_display_FF:
-          u8g2.print("FF");          
           break;
         case cursor_display_back:
           u8g2.print((char)124);
@@ -81,27 +78,22 @@ void DisplayMenuPage::draw() {
 
 void DisplayMenuPage::setting_change(Button dir, ButtonState state, uint8_t count) {
   switch (cursor_position) {
+
+    case cursor_display_show_debug:
+        if (state == RELEASED && dir == Button::CENTER) settings_toggleBoolOnOff(&SHOW_DEBUG);
+      break;
+    case cursor_display_show_thrm_sim:
+        if (state == RELEASED && dir == Button::CENTER) settings_toggleBoolOnOff(&SHOW_THRM_SIMP);
+      break;
+    case cursor_display_show_thrm_adv:
+        if (state == RELEASED && dir == Button::CENTER) settings_toggleBoolOnOff(&SHOW_THRM_ADV);
+      break;
+    case cursor_display_show_nav:
+        if (state == RELEASED && dir == Button::CENTER) settings_toggleBoolOnOff(&SHOW_NAV);
+      break;
     case cursor_display_contrast:
       if (state == RELEASED && dir != Button::NONE) settings_adjustContrast(dir);
       else if (state == HELD && dir == Button::NONE) settings_adjustContrast(dir);
-      break;
-    case cursor_display_AA:
-
-      break;
-    case cursor_display_BB:
-
-      break;
-    case cursor_display_CC:
-
-      break;
-    case cursor_display_DD:
-
-      break;
-    case cursor_display_EE:
-
-      break;
-    case cursor_display_FF:
-
       break;
     case cursor_display_back:
       if (state == RELEASED) {

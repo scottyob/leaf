@@ -52,16 +52,35 @@ Button buttons_init(void) {
   return button;
 }
 
-// If the current page is charging, show that, otherwise direct any input to shown modal pages
+
+// when holding the center button to turn on, we need to "lock" the buttons until the user releases the center button.
+// Otherwise, we'll turn on, and immediately turn back off again due to the persistent button press.
+bool powerOnLockButtons = true; // default to true, for the first turn on event
+
+void buttons_lockDuringPowerOn() {
+  powerOnLockButtons = true;    // reset for future turn-on events (like waking up from charge mode)
+}
+
+
+// If the current page is charging, handle that, otherwise direct any input to shown modal pages
 // before falling back to the current page.
 Button buttons_update(void) {
 
   Button which_button = buttons_check();  
   ButtonState button_state = buttons_get_state();
+
+  // check if we should disable/lock the buttons during the turn-on button press.  Don't do more button handling until user first lets go of the center button
+  if (powerOnLockButtons && which_button == Button::CENTER) {
+    return which_button;
+  } else {
+    powerOnLockButtons = false;
+  }
+
   if(which_button == Button::NONE || button_state == NO_STATE) return which_button;  // don't take any action if no button
   //TODO: not jumping out of this function on NO_STATE was causing speaker issues... investigate!
     
   power_resetAutoOffCounter();                // pressing any button should reset the auto-off counter
+                                              // TODO: we should probably have a counter for Auto-Timer-Off as well, and button presses should reset that.
   uint8_t currentPage = display_getPage();    // actions depend on which page we're on
 
 
@@ -70,8 +89,10 @@ Button buttons_update(void) {
       case Button::CENTER:
         if (button_state == HELD && button_hold_counter == 1) {          
           display_clear();          
-          display_setPage(page_thermalSimple);
+          display_showOnSplash();
+          display_setPage(page_thermalSimple);  //TODO: set initial page to the user's last used page
           speaker_playSound(fx_enter);
+          buttons_lockDuringPowerOn();  // lock buttons until user lets go of power button
           power_switchToOnState();
         }
         break;
@@ -97,6 +118,7 @@ Button buttons_update(void) {
         }
         break;
     }
+    return which_button;
   }
 
   // If there's a modal page currently shown, we should send the button event to that page
@@ -122,15 +144,13 @@ Button buttons_update(void) {
   } else if (currentPage == page_nav) {
     navigatePage_button(which_button, buttons_get_state(), buttons_get_hold_count());
     display_update();
+
   } else if (currentPage != page_charging) { // NOT CHARGING PAGE (i.e., our satellites test page)
     switch (which_button) {
       case Button::CENTER:
         switch (button_state) {
           case HELD:
-            if (button_hold_counter == 1) {
-              display_clear();
-              speaker_playSound(fx_exit);
-              delay(600);
+            if (button_hold_counter == 2) {
               power_shutdown();
               while(buttons_inspectPins() == Button::CENTER) {} // freeze here until user lets go of power button
               display_setPage(page_charging);              

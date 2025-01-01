@@ -72,19 +72,30 @@ void display_turnPage(uint8_t action) {
       
     case page_next:
       display_page++;
-      if (display_page == page_last) display_page = 0;
+
+      // skip past any pages not enabled for display
+      if (display_page == page_thermalSimple && !SHOW_THRM_SIMP) display_page++;
+      if (display_page == page_thermal && !SHOW_THRM_ADV) display_page++;
+      if (display_page == page_nav && !SHOW_NAV) display_page++;
+    
+      if (display_page == page_last) display_page = 0;  // bound check if we fall off the right side, wrap around to the right side
       break;
 
     case page_prev:
       display_page--;
-      if (display_page < 0) display_page = page_last - 1;
+
+      // skip past any pages not enabled for display
+      if (display_page == page_nav && !SHOW_NAV) display_page--;
+      if (display_page == page_thermal && !SHOW_THRM_ADV) display_page--;
+      if (display_page == page_thermalSimple && !SHOW_THRM_SIMP) display_page--;
+      if (display_page == page_debug && !SHOW_DEBUG) display_page = tempPage; // go back to the page we were on if we can't go further left
+
+      if (display_page < 0) display_page = page_last - 1; // bound check if we fall off the left side -- wrap around to the last page (usually the menu page)
       break;
 
     case page_back:          
       display_page = display_page_prior;      
   }
-  
-
 
   if (display_page != tempPage) display_page_prior = tempPage;
 }
@@ -101,13 +112,27 @@ uint8_t display_getPage() {
   return display_page;
 }
 
-// Draws the current page
-// Will first display charging screen if charging,
+
+uint8_t showSplashScreenFrames = 0;
+
+void display_showOnSplash() {
+  showSplashScreenFrames = 6;
+}
+
+//*********************************************************************
+// MAIN DISPLAY UPDATE FUNCTION
+//*********************************************************************
+// Will first display charging screen if charging, or splash screen if in the process of turning on / waking up
 // Then will display any current modal pages before
-// falling back to the current 
+// falling back to the current page
 void display_update() {
   if (display_page == page_charging) {
     display_page_charging();
+    return;
+  }
+  if (showSplashScreenFrames) {
+    display_on_splash();
+    showSplashScreenFrames--;
     return;
   }
 
@@ -215,29 +240,44 @@ void display_page_charging() {
   
   u8g2.firstPage();
   do { 
+    uint16_t battMV = power_getBattLevel(1);
+    uint16_t battPercent = power_getBattLevel(0);
 
-    display_batt_charging_fullscreen();
+    // Battery Percent 
+    u8g2.setFont(leaf_6x12);
+    u8g2.setCursor(34, 12);
+    u8g2.print(battPercent);
+    u8g2.print('%');
 
-    // Display the current version
-    u8g2.setCursor(0, 16);
-    u8g2.setFont(leaf_5h);
-    u8g2.print("v");
-    u8g2.print(VERSION);
+    display_batt_charging_fullscreen(48, 17);
 
     u8g2.setFont(leaf_6x12);
-    u8g2.setCursor(34, 14);
+    u8g2.setCursor(5, 157);
     if      (power_getInputCurrent() == i100mA)  u8g2.print("100mA");
     else if (power_getInputCurrent() == i500mA)  u8g2.print("500mA");
     else if (power_getInputCurrent() == iMax)  u8g2.print("810mA");
     else if (power_getInputCurrent() == iStandby)  u8g2.print(" OFF");
+
+    u8g2.print(" ");
+    u8g2.print(battMV);
+    u8g2.print("mV");
+
+    // Display the current version
+    u8g2.setCursor(35, 172);
+    u8g2.setFont(leaf_5x8);
+    u8g2.print("v");
+    u8g2.print(VERSION);
     
-    // Bottom Status Icons	
-      // SD Card Present      
-      u8g2.setCursor(12, 191);
-      u8g2.setFont(leaf_icons);
-      char SDicon = 60;
-      if(!SDcard_present()) SDicon = 61;
-      u8g2.print((char)SDicon);
+    // SD Card Present      
+    u8g2.setCursor(12, 191);
+    u8g2.setFont(leaf_icons);      
+    if(!SDcard_present()) {
+      u8g2.print((char)61);
+      u8g2.setFont(leaf_6x12);
+      u8g2.print(" NO SD!");
+    } else {
+      u8g2.print((char)60);
+    }      
 
   } while ( u8g2.nextPage() ); 
   

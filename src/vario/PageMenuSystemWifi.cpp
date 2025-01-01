@@ -169,7 +169,7 @@ void PageMenuSystemWifiUpdate::shown() {
     log_lines.clear();
     log_lines.push_back("*CURRENT VERSION:");
     log_lines.push_back((String) "  " + VERSION);
-    log_lines.push_back("*WIFI CONNECTING...");
+    log_lines.push_back("*CONNECTING TO WIFI...");
 }
 
 void PageMenuSystemWifiUpdate::draw_extra() {

@@ -237,7 +237,10 @@ void thermalSimplePage_button(Button button, ButtonState state, uint8_t count) {
 						speaker_playSound(fx_decrease);
 					}
 					break;
-				case Button::CENTER:
+				case Button::CENTER:				          
+            if (state == HELD && count == 2) {
+              power_shutdown();
+						}
 					break;
 			}
 			break;

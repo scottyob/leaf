@@ -4,6 +4,7 @@
 #include "displayFields.h"
 #include "display.h"
 #include "fonts.h"
+#include "version.h"
 
 #include "power.h"
 #include "gps.h"
@@ -286,8 +287,10 @@ void display_alt(uint8_t cursor_x, uint8_t cursor_y, const uint8_t * font, int32
   u8g2.setCursor(cursor_x, cursor_y);  
   u8g2.setFont(font);
   
+  bool negativeVal = false;
+
   if (displayAlt < 0) {
-    u8g2.print('-');
+    negativeVal = true;
     displayAlt *= -1;
     if (displayAlt > 9999) displayAlt = 9999;        // max size if negative
   } else if (displayAlt > 99999) displayAlt = 99999; // max size if positive
@@ -298,9 +301,12 @@ void display_alt(uint8_t cursor_x, uint8_t cursor_y, const uint8_t * font, int32
   // Thousands piece
   if (displayAlt > 999) {    
     digits = displayAlt/1000;
-    displayAlt -= (1000 * digits); // keep the last 3 digits
-    keepZeros = 1;                            // keep leading zeros for rest of digits since we printed something in thousands place
-    if (digits < 10) u8g2.print(" ");
+    displayAlt -= (1000 * digits);            // save the last 3 digits for later
+    keepZeros = 1;                            // and keep leading zeros for rest of digits since we printed something in thousands place
+    if (digits < 10) {
+      if (negativeVal) u8g2.print('-');       // negative sign for negative values (negative values are capped at 9999 so 'digits < 10' will always be true)
+      else u8g2.print(" ");                   // otherwise leading space as needed for positive values
+    }
     u8g2.print(digits);    
     u8g2.print(',');    
   }
@@ -595,12 +601,8 @@ uint8_t batt_percent_testing = 0;
 uint8_t batt_charging_testing = 1;
 int8_t batt_testing_direction = 1;
 
-void display_batt_charging_fullscreen() {
-
-  // position of battery
-    uint8_t x = 48; // center of battery left/right
-    uint8_t y = 20; // top of battery nib
-
+void display_batt_charging_fullscreen(uint8_t x, uint8_t y) {
+  
   // size of battery
     uint8_t w = 60;//60;
     uint8_t h = 120;//140;
@@ -661,22 +663,6 @@ void display_batt_charging_fullscreen() {
       u8g2.drawLine(x-bolt_x3, bolt_y+bolt_y1, x-bolt_x1, bolt_y+bolt_y1);
     }
   }
-
-  uint16_t battMV = power_getBattLevel(1);
-  uint16_t battADC = power_getBattLevel(2);
-
-  y += h+3;
-  x = 34;
-
-  u8g2.setFont(leaf_6x12);
-  u8g2.setCursor(x, y+=15);
-  u8g2.print(battPercent);
-  u8g2.print('%');
-
-  u8g2.setCursor(x, y+=15);
-  u8g2.print(battMV);
-  u8g2.setCursor(x, y+=15);
-  u8g2.print(battADC);
 }
 
 
@@ -713,6 +699,44 @@ void display_windSock(int16_t x, int16_t y, int16_t radius, float wind_angle) {
   u8g2.drawLine(tail_mid_xprime, tail_mid_yprime, tail_1_xprime, tail_1_yprime);
 }
 
-
 // END OF COMPONENT DISPLAY FUNCTIONS //
 /********************************************************************************************/
+
+
+
+
+// Full Screen Display Functions
+
+void display_splashLogo() {
+  u8g2.drawXBM(0, 20, 96, 123, splash_logo_bmp);
+}
+
+void display_off_splash() {
+  u8g2.firstPage();
+  do { 
+    display_splashLogo();
+
+    u8g2.setFont(leaf_6x12);
+    u8g2.setCursor(20, 180);
+    u8g2.print("GOODBYE");
+  } while ( u8g2.nextPage() ); 
+}
+
+void display_on_splash() {
+  u8g2.firstPage();
+  do { 
+    display_splashLogo();
+
+    u8g2.setFont(leaf_6x12);
+    u8g2.setCursor(28, 170);
+    u8g2.print("HELLO");
+
+    u8g2.setCursor(17, 192);
+    u8g2.print("VER: ");
+    u8g2.print(VERSION);
+  } while ( u8g2.nextPage() );  
+}
+
+
+
+

@@ -14,9 +14,6 @@ extern U8G2_ST75256_JLX19296_F_4W_HW_SPI u8g2;  // Leaf 3.2.2    Alice Green HW
 #define LCD_RS           17 // 16 on old V3.2.0
 #define LCD_RESET        18 // 17 on old V3.2.0
 
-#define CONTRAST_MAX 230
-#define CONTRAST_MIN 180
-
 void GLCD_inst(byte data);
 void GLCD_data(byte data);
 //void GLCD_init(void);
@@ -51,8 +48,7 @@ void display_setContrast(uint8_t contrast);
 
 void display_page_debug(void);
 void display_page_charging(void);
-void display_page_splash(void);
 
-
+void display_showOnSplash(void);
 
 #endif
