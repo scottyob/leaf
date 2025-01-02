@@ -16,8 +16,6 @@ enum log_menu_items {
   cursor_log_saveLog,
   cursor_log_autoStart,
   cursor_log_autoStop,
-  cursor_log_BB,
-  cursor_log_CC,
   cursor_log_timer
 };
 
@@ -37,7 +35,7 @@ void LogMenuPage::draw() {
     uint8_t y_spacing = 16;
     uint8_t setting_name_x = 2;
     uint8_t setting_choice_x = 70;    
-    uint8_t menu_items_y[] = {190, 45, 60, 75, 90, 105, 120, 135};
+    uint8_t menu_items_y[] = {190, 45, 60, 75, 90, /*105, 120,*/ 135};
 
     //first draw cursor selection box
     if (cursor_position == cursor_log_timer) {  // extend the selection box for the timer menu item.  ("START" is wider than all the other menu choices)
@@ -60,24 +58,16 @@ void LogMenuPage::draw() {
           else u8g2.print("_?_");
           break;
         case cursor_log_saveLog:
-          if (TRACK_SAVE) u8g2.print("ON");
-          else u8g2.print("OFF");    
+          if (TRACK_SAVE) u8g2.print(char(125));
+          else u8g2.print(char(123));    
           break;
         case cursor_log_autoStart:
-          if (AUTO_START) u8g2.print("ON");
-          else u8g2.print("OFF");    
+          if (AUTO_START) u8g2.print(char(125));
+          else u8g2.print(char(123));    
           break;
         case cursor_log_autoStop:
-          if (AUTO_STOP) u8g2.print("ON");
-          else u8g2.print("OFF");    
-          break;
-        case cursor_log_BB:
-          if (1) u8g2.print("  ");
-          else u8g2.print("OFF");
-          break;
-        case cursor_log_CC:
-          if (1) u8g2.print("  ");
-          else u8g2.print("OFF");
+          if (AUTO_STOP) u8g2.print(char(125));
+          else u8g2.print(char(123));    
           break;
         case cursor_log_timer:
           u8g2.setCursor(setting_choice_x-14, menu_items_y[i]);
@@ -109,14 +99,8 @@ void LogMenuPage::setting_change(Button dir, ButtonState state, uint8_t count) {
     case cursor_log_autoStop:
       if (state == RELEASED) settings_toggleBoolOnOff(&AUTO_STOP);
       break;
-    case cursor_log_BB:
-
-      break;
-    case cursor_log_CC:
-
-      break;
     case cursor_log_timer:
-      if (dir == Button::NONE) {
+      if (dir == Button::CENTER) {
         if (state == RELEASED) flightTimer_toggle();
         else if (state == HELD) flightTimer_reset();
       }

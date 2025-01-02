@@ -42,25 +42,8 @@ void thermalPage_draw() {
   u8g2.firstPage();
   do { 
 
-		// Header Info ****************************************************
-			// clock time
-			u8g2.setFont(leaf_6x10);
-			display_clockTime(0, 10, false);
-
-			//heading
-			u8g2.setFont(leaf_7x10);
-			display_heading(40, 10, true);
-
-			//battery 
-			display_battIcon(89, 13, true);
-
-			//speed
-			u8g2.setFont(leaf_6x12);
-			display_speed(0,24);
-			u8g2.setFont(leaf_5h);
-			u8g2.setCursor(u8g2.getCursorX()+2, 24);
-			u8g2.print("MPH");
-			
+		// draw all status icons, clock, timer, etc (and pass along if timer is selected)
+		display_headerAndFooter(false, (cursor_position == cursor_thermalPage_timer));
 			
 		// Main Info ****************************************************
 			uint8_t topOfFrame = 30;
@@ -113,25 +96,6 @@ void thermalPage_draw() {
 
     // Footer Info ****************************************************
 		
-			//flight timer (display selection box if selected)
-			display_flightTimer(51, 191, 0, (cursor_position == cursor_thermalPage_timer));			
-
-			// Bottom Status Icons	
-				// SD Card Present
-				char SDicon = 60;
-				if(!SDcard_present()) SDicon = 61;
-				u8g2.setCursor(12, 191);
-				u8g2.setFont(leaf_icons);
-				u8g2.print((char)SDicon);
-			
-
-
-
-		// Testing
-		//u8g2.drawBox(8,174, 16, 16);
-
-
-
     
   } while ( u8g2.nextPage() ); 
   
@@ -188,13 +152,13 @@ void thermalPage_button(Button button, ButtonState state, uint8_t count) {
 					break;
 				case Button::LEFT:
 					if (NAVPG_ALT_TYP == altType_MSL && (state == PRESSED || state == HELD || state == HELD_LONG)) {
-          	baro_adjustAltSetting(Button::LEFT, count);
+          	baro_adjustAltSetting(1, count);
           	speaker_playSound(fx_neutral);
         	}
 					break;
 				case Button::RIGHT:
 					if (NAVPG_ALT_TYP == altType_MSL && (state == PRESSED || state == HELD || state == HELD_LONG)) {
-          	baro_adjustAltSetting(Button::RIGHT, count);
+          	baro_adjustAltSetting(-1, count);
           	speaker_playSound(fx_neutral);
         	}
 					break;

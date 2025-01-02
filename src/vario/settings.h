@@ -7,7 +7,7 @@
 // Setting bounds and definitions
   // Vario 
     // Sink Alarm
-      #define SINK_ALARM_MAX 	  	   -6
+      #define SINK_ALARM_MAX 	  	   -6     // m/s sink
       #define SINK_ALARM_MIN		 	   -2
     // Vario Sensitivity
       #define VARIO_AVERAGE_MAX 	    6			// units of 1/2 seconds, so 3sec max

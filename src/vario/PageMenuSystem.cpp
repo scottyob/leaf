@@ -23,6 +23,8 @@ enum system_menu_items {
   cursor_system_reset
 };
 
+// used for counting how long the user has held the button down to reset the settings
+uint8_t reset_settings_timer = 0;
 
 void SystemMenuPage::draw() {
   int16_t displayTimeZone = TIME_ZONE;
@@ -77,9 +79,9 @@ void SystemMenuPage::draw() {
           break;
 
         case cursor_system_poweroff:
-          u8g2.setCursor(setting_choice_x + 4, menu_items_y[i]);
-          if (AUTO_OFF) u8g2.print("ON");
-          else u8g2.print("OFF");
+          u8g2.setCursor(setting_choice_x + 8, menu_items_y[i]);
+          if (AUTO_OFF) u8g2.print((char)125);
+          else u8g2.print((char)123);
           break;
 
         case cursor_system_charge:
@@ -91,15 +93,14 @@ void SystemMenuPage::draw() {
           break;
 
         case cursor_system_ecomode:
-          u8g2.setCursor(setting_choice_x + 4, menu_items_y[i]);
-          if (ECO_MODE) u8g2.print("ON");
-          else u8g2.print("OFF");
+          u8g2.setCursor(setting_choice_x + 8, menu_items_y[i]);
+          if (ECO_MODE) u8g2.print((char)125);
+          else u8g2.print((char)123);
           break;
 
         case cursor_system_wifi:
-          u8g2.setCursor(setting_choice_x + 4, menu_items_y[i]);
-          if (WIFI_ON) u8g2.print("ON");
-          else u8g2.print("OFF");
+          u8g2.setCursor(setting_choice_x + 8, menu_items_y[i]);
+          u8g2.print((char)126);          
           break;
 
         case cursor_system_bluetooth:
@@ -110,7 +111,10 @@ void SystemMenuPage::draw() {
 
         case cursor_system_reset:
           u8g2.setCursor(setting_choice_x + 8, menu_items_y[i]);
-          u8g2.print((char)126);
+          if (cursor_position == cursor_system_reset) {
+            u8g2.setCursor(setting_choice_x, menu_items_y[i]);
+            u8g2.print("HOLD");
+          } else u8g2.print((char)126);
           break;
 
         case cursor_system_back:
@@ -120,8 +124,16 @@ void SystemMenuPage::draw() {
       }
     u8g2.setDrawColor(1);
     }
-  } while ( u8g2.nextPage() ); 
+    
+    if (reset_settings_timer && buttons_get_hold_count()) {
+      u8g2.drawBox(0,156,reset_settings_timer, 4);
+    } else {
+      reset_settings_timer = 0;
+    }
+
+  } while ( u8g2.nextPage() );   
 }
+
 
 
 void SystemMenuPage::setting_change(Button dir, ButtonState state, uint8_t count) {
@@ -155,9 +167,16 @@ void SystemMenuPage::setting_change(Button dir, ButtonState state, uint8_t count
       if (state == RELEASED) {}
       break;
     case cursor_system_reset:
-      if (state == RELEASED) {}
-      if (state == HELD) {
-        settings_reset();
+      if (state == RELEASED || state == NO_STATE) {
+        reset_settings_timer = 0;
+      }
+      if ((state == HELD || state == HELD_LONG) && count <= 12) {
+        reset_settings_timer = count*8;
+        if (count == 12) {
+          settings_reset();
+          speaker_playSound(fx_confirm);
+          reset_settings_timer = 0;
+        }
       }
       break;
     case cursor_system_back:        

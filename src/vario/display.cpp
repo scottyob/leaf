@@ -116,7 +116,7 @@ uint8_t display_getPage() {
 uint8_t showSplashScreenFrames = 0;
 
 void display_showOnSplash() {
-  showSplashScreenFrames = 6;
+  showSplashScreenFrames = 3;
 }
 
 //*********************************************************************

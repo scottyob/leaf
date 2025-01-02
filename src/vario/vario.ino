@@ -74,7 +74,7 @@ void setup() {
 
   // Start USB Serial Debugging Port
     Serial.begin(115200);
-    delay(500);
+    delay(200);
     Serial.println("Starting Setup");
 
   // turn on and handle all device initialization

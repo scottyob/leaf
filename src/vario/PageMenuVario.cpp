@@ -20,8 +20,6 @@ enum vario_menu_items {
   cursor_vario_climbavg,
   cursor_vario_climbstart,
   cursor_vario_sinkalarm,
-  cursor_vario_altadj
-
 };
 
 
@@ -75,9 +73,6 @@ void VarioMenuPage::draw() {
         case cursor_vario_sinkalarm:          
           u8g2.print(SINK_ALARM);
           break;
-        case cursor_vario_altadj:
-          u8g2.print("-/+");
-          break;
         case cursor_vario_back:
           u8g2.print((char)124);
           break;        
@@ -111,20 +106,6 @@ void VarioMenuPage::setting_change(Button dir, ButtonState state, uint8_t count)
       break;
     case cursor_vario_sinkalarm:
       if (state == RELEASED) settings_adjustSinkAlarm(dir);
-      break;
-    case cursor_vario_altadj:
-      if (dir == Button::NONE && count == 1 && state == HELD) {  // if center button held for 1 'action time'
-        if (settings_matchGPSAlt()) { // successful adjustment of altimeter setting to match GPS altitude
-          speaker_playSound(fx_enter);  
-        } else {                      // unsuccessful 
-          speaker_playSound(fx_cancel);
-        }
-      } else if (dir != Button::NONE) {
-        if (state == PRESSED || state == HELD || state == HELD_LONG) {
-          baro_adjustAltSetting(dir, count);
-          speaker_playSound(fx_neutral);
-        }
-      }
       break;
     case cursor_vario_back:     
       if (state == RELEASED) {

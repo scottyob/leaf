@@ -13,9 +13,7 @@ char string_satNum[] = "00";
 
 enum gps_menu_items { 
   cursor_gps_back,
-  cursor_gps_update,
-  cursor_gps_aa,
-  cursor_gps_bb
+  cursor_gps_update
 };
 
 
@@ -30,15 +28,15 @@ void GPSMenuPage::draw() {
     u8g2.drawHLine(0, 15, 64);
 
   // GPS constellation and lat/long
-    drawConstellation(0, 20, 63);
+    drawConstellation(3, 22, 75);
 
   // Menu Items
     u8g2.setFont(leaf_6x12);
     uint8_t start_y = 29;
     uint8_t y_spacing = 16;
     uint8_t setting_name_x = 3;
-    uint8_t setting_choice_x = 44;    
-    uint8_t menu_items_y[] = {190, 140, 155, 170};
+    uint8_t setting_choice_x = 74;    
+    uint8_t menu_items_y[] = {190, 155};
 
     //first draw cursor selection box
     u8g2.drawRBox(setting_choice_x-2, menu_items_y[cursor_position]-14, 22, 16, 2);
@@ -52,16 +50,8 @@ void GPSMenuPage::draw() {
       else u8g2.setDrawColor(1);
       switch (i) {
         case cursor_gps_update:
-          if (UNITS_alt) u8g2.print("ft");
-          else u8g2.print(" m");
-          break;
-        case cursor_gps_aa:
-          if (UNITS_climb) u8g2.print("fpm");
-          else u8g2.print("m/s");    
-          break;
-        case cursor_gps_bb:
-          if (UNITS_speed) u8g2.print("mph");
-          else u8g2.print("kph");
+          u8g2.setCursor(setting_choice_x+4, menu_items_y[i]);
+          u8g2.print(GPS_SETTING);          
           break;
         case cursor_gps_back:
           u8g2.print((char)124);
@@ -76,12 +66,6 @@ void GPSMenuPage::draw() {
 void GPSMenuPage::setting_change(Button dir, ButtonState state, uint8_t count) {
   switch (cursor_position) {
     case cursor_gps_update:
-
-      break;
-    case cursor_gps_aa:
-
-      break;
-    case cursor_gps_bb:
 
       break;
     case cursor_gps_back:
@@ -151,13 +135,13 @@ void GPSMenuPage::drawConstellation(uint8_t x, uint8_t y, uint16_t size) {
     
    
   //draw lat long
-    //u8g2.setFont(leaf_5h);
-    u8g2.drawStr(0, size + y + 10, "Lat:");
-    u8g2.setCursor(16+8, size + y + 10);
+    u8g2.setFont(leaf_5x8);
+    u8g2.setCursor(0, size + y + 12);
+    u8g2.print("Lat:");    
     u8g2.print(gps.location.lat(), 7);
 
-    u8g2.drawStr(0, size + y + 20, "Lon:");
-    u8g2.setCursor(16, size + y + 20);
+    u8g2.setCursor(0, size + y + 22);
+    u8g2.print("Lon:");    
     u8g2.print(gps.location.lng(), 7);
 }
 

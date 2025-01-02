@@ -46,38 +46,11 @@ void thermalSimplePage_draw() {
   u8g2.firstPage();
   do { 
 
-		// Status Icons and Info ****************************************************
-			// clock time
-			u8g2.setFont(leaf_6x10);
-			display_clockTime(0, 10, false);
-			
-			//battery 
-			display_battIcon(0, 192, true);
-
-			// SD Card Present
-			char SDicon = 60;
-			if(!SDcard_present()) SDicon = 61;
-			u8g2.setCursor(10, 192);
-			u8g2.setFont(leaf_icons);
-			u8g2.print((char)SDicon);
+		// draw all status icons, clock, timer, etc (and pass along if timer is selected)
+		display_headerAndFooter(false, (thermalSimple_page_cursor_position == cursor_thermalSimplePage_timer));
 			
 
-
-		// Heading, Speed and Wind *******************************************
-
-			//heading
-			u8g2.setFont(leaf_7x10);
-			display_heading(37, 10, true);
-
-			//speed
-			u8g2.setFont(leaf_8x14);
-			display_speed(70,14);
-			u8g2.setFont(leaf_5h);			
-			u8g2.setCursor(82, 21);
-			if (UNITS_speed) u8g2.print("MPH");
-			else u8g2.print("KPH");
-
-			//wind
+		//wind
 			u8g2.drawDisc(49, 25, 12);
 			u8g2.setDrawColor(0);
 			display_windSock(49, 25, 10, test_wind_angle);//0.78);
@@ -182,20 +155,7 @@ void thermalSimplePage_draw() {
 
     // Footer Info ****************************************************
 		
-			//flight timer (display selection box if selected)
-			display_flightTimer(51, 191, 0, (thermalSimple_page_cursor_position == cursor_thermalSimplePage_timer));			
-
-			// Bottom Status Icons	
-				
-			
-
-
-
-		// Testing
-		//u8g2.drawBox(8,174, 16, 16);
-
-
-
+						
     
   } while ( u8g2.nextPage() ); 
   
@@ -252,13 +212,13 @@ void thermalSimplePage_button(Button button, ButtonState state, uint8_t count) {
 					break;
 				case Button::LEFT:
 					if (NAVPG_ALT_TYP == altType_MSL && (state == PRESSED || state == HELD || state == HELD_LONG)) {
-          	baro_adjustAltSetting(Button::LEFT, count);
+          	baro_adjustAltSetting(1, count);
           	speaker_playSound(fx_neutral);
         	}
 					break;
 				case Button::RIGHT:
 					if (NAVPG_ALT_TYP == altType_MSL && (state == PRESSED || state == HELD || state == HELD_LONG)) {
-          	baro_adjustAltSetting(Button::RIGHT, count);
+          	baro_adjustAltSetting(-1, count);
           	speaker_playSound(fx_neutral);
         	}
 					break;

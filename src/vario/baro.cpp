@@ -71,13 +71,13 @@
   // flag to set first climb rate sample to 0 (this allows us to wait for a second baro altitude sample to calculate any altitude change)
   bool firstClimbInitialization = true;
 
-  void baro_adjustAltSetting(Button dir, uint8_t count) {
+  void baro_adjustAltSetting(int8_t dir, uint8_t count) {
     float increase = .001;              //     
     if (count >= 1) increase *= 5;
     if (count >= 8) increase *= 4;
 
-    if (dir == Button::RIGHT) baro.altimeterSetting += increase;
-    else if (dir == Button::LEFT) baro.altimeterSetting -= increase;	
+    if (dir >= 1) baro.altimeterSetting += increase;
+    else if (dir <= -1) baro.altimeterSetting -= increase;	
     ALT_SETTING = baro.altimeterSetting;
   }
 

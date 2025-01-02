@@ -9,7 +9,7 @@ class LogMenuPage : public SettingsMenuPage {
   public:
     LogMenuPage() {
       cursor_position = 0;
-      cursor_max = 7;
+      cursor_max =5;
     }
     void draw();
 
@@ -23,8 +23,6 @@ class LogMenuPage : public SettingsMenuPage {
       "SaveLog",
       "AutoStart",
       "AutoStop",
-      "  ",
-      "  ",
       "Timer"
     };
 };

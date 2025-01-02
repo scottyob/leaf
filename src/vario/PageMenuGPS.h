@@ -9,7 +9,7 @@ class GPSMenuPage : public SettingsMenuPage {
   public:
     GPSMenuPage() {
       cursor_position = 0;
-      cursor_max = 3;
+      cursor_max = 1;
     }
     void draw();
 
@@ -19,11 +19,10 @@ class GPSMenuPage : public SettingsMenuPage {
     void setting_change(Button dir, ButtonState state, uint8_t count);
 
   private:
-    static constexpr char * labels[4] = {
+    static constexpr char * labels[2] = {
       "Back",
-      "Update",
-      "AA",
-      "BB:"
+      "Update(sec)"
+
     };
 };
 

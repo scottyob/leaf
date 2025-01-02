@@ -9,19 +9,12 @@ class AltimeterMenuPage : public SettingsMenuPage {
   public:
     AltimeterMenuPage() {
       cursor_position = 0;
-      cursor_max = 2;
+      cursor_max = 3;
     }
     void draw();
 
   protected:
     void setting_change(Button button, ButtonState state, uint8_t count);
-
-  private:
-    static constexpr char * labels[3] = {
-      "Back",
-			"GPS.Sync",
-      "Adjust Alt"      
-    };
 };
 
 
