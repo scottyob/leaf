@@ -108,7 +108,7 @@ void navigatePage_draw() {
 		// draw all status icons, clock, timer, etc (and pass along if timer is selected)
 		display_headerAndFooter(true, (navigatePage_cursorPosition == cursor_navigatePage_timer));
 
-			
+
 		///////////////////////////////////////////////////
 		// Nav Circle
 
@@ -144,11 +144,11 @@ void navigatePage_draw() {
 
 
 		// Waypoint Pointer
-			if (gpxNav.navigating) {
-				uint8_t waypoint_tip_r = 23;
-				uint8_t waypoint_shaft_r = 20;    
-				uint8_t waypoint_tail_r = 18;
-				float waypoint_arrow_angle = 0.205;
+			if (gpxNav.navigating) {				
+				uint8_t waypoint_tip_r = nav_r - 3;
+				uint8_t waypoint_shaft_r = waypoint_tip_r - 3;    
+				uint8_t waypoint_tail_r = waypoint_tip_r - 5;
+				float waypoint_arrow_angle = 0.15; //0.205;
 				
 				float directionToWaypoint = gpxNav.turnToActive * DEG_TO_RAD;
 

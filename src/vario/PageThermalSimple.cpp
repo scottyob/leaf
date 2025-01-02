@@ -73,9 +73,9 @@ void thermalSimplePage_draw() {
         uint8_t alt_y = 50;
 				//Altitude header labels
 				u8g2.setFont(leaf_labels);
-				u8g2.setCursor(varioBarWidth+44, alt_y);		
+				u8g2.setCursor(varioBarWidth+52, alt_y);		
 				print_alt_label(THMPG_ALT_TYP);
-				u8g2.setCursor(96-9, alt_y);		
+				u8g2.setCursor(varioBarWidth+40, alt_y);		
 				if (UNITS_alt) u8g2.print("ft");
 				else u8g2.print("m");
 
@@ -93,7 +93,10 @@ void thermalSimplePage_draw() {
 			display_climbRatePointerBox(varioBarWidth, 84, 76, 27, 13);     // x, y, w, h, triangle size
 			display_climbRate(20, 108, leaf_21h, baro.climbRateFiltered);
 			u8g2.setDrawColor(0);
-			if (UNITS_climb) u8g2.print("f");
+			u8g2.setFont(leaf_5h);
+			u8g2.print(" ");				// put a space, but using a small font so the space isn't too wide
+			u8g2.setFont(leaf_21h);
+			if (UNITS_climb) u8g2.print('f');
 			else u8g2.print('m');
 			u8g2.setDrawColor(1);
 			
