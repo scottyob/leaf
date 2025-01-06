@@ -5,7 +5,6 @@
 
 #include "SDcard.h"
 #include "gps.h"
-#include "kml.h"
 #include "log.h"
 
 #define DEBUG_SDCARD true
@@ -342,99 +341,6 @@ void SDcard_test(void) {
   testFileIO(SD_MMC, "/test.txt");
   Serial.printf("Total space: %lluMB\n", SD_MMC.totalBytes() / (1024 * 1024));
   Serial.printf("Used space: %lluMB\n", SD_MMC.usedBytes() / (1024 * 1024));
-}
-
-// Create & log flight test data for debugging and tuning
-
-String dataSaveDir = "/Data/";
-String currentDataFile;
-File dataFile;
-String dataFileName;
-
-bool SDcard_createDataFile(String filename) {
-  dataFileName = filename;
-  createDir(SD_MMC, dataSaveDir.c_str());
-  currentDataFile = dataSaveDir + filename;
-
-  String header = "millis,sensor, value (lat), lng, alt m, speed mps, heading deg\n";
-
-  writeFile(SD_MMC, currentDataFile.c_str(), header.c_str());
-  dataFile = SD_MMC.open(currentDataFile.c_str(), FILE_APPEND);
-
-  // check if file was written properly, and return false if not
-  if (!dataFile) {
-    return false;
-  } else {
-    return true;
-  }
-}
-
-void SDcard_writeData(String data) {
-  String entry = String(millis()) + "," + data + "\n";
-  appendOpenFile(dataFile, entry.c_str());
-}
-
-void SDcard_closeDataFile() { dataFile.close(); }
-
-// Creating and saving track log files to SDCard
-
-String saveDir = "/Tracks/";
-String currentTrackFile;
-bool trackFileStarted = false;
-File trackFile;
-String trackFileName;
-
-bool SDcard_createTrackFile(String filename) {
-  trackFileName = filename;
-  createDir(SD_MMC, saveDir.c_str());
-  currentTrackFile = saveDir + filename;
-  writeFile(SD_MMC, currentTrackFile.c_str(), KMLtrackHeader);
-
-  trackFile = SD_MMC.open(currentTrackFile.c_str(), FILE_APPEND);
-
-  trackFileStarted = true;
-
-  // check if file was written properly, and return false if not
-  if (!trackFile) {
-    return false;
-  } else {
-    return true;
-  }
-}
-
-void SDcard_writeLogData(String coordinates) {
-  uint32_t time = micros();
-  Serial.print("startWriteLog: ");
-  Serial.println(time);
-
-  // String logData = log_getKMLCoordinates();
-  appendOpenFile(trackFile, coordinates.c_str());
-  // appendOpenFile(logFileOpen, coordinates.c_str());
-
-  Serial.println(coordinates);
-
-  Serial.print("endWriteLog @: ");
-  Serial.println(micros());
-
-  time = micros() - time;
-  Serial.print("writeLoggy: ");
-  Serial.println(time);
-}
-
-void SDcard_writeLogFooter(String trackName, String trackDescription) {
-  appendOpenFile(trackFile, KMLtrackFooterA);
-  appendOpenFile(trackFile, trackName.c_str());
-  appendOpenFile(trackFile, KMLtrackFooterB);
-  appendOpenFile(trackFile, trackDescription.c_str());
-  appendOpenFile(trackFile, KMLtrackFooterC);
-  appendOpenFile(
-      trackFile,
-      trackFileName.c_str());  // KML file title (in google earth) same as long file name on SDcard
-  appendOpenFile(trackFile, KMLtrackFooterD);
-  // skipping KML file description.  Not needed and clogs up the google earth places list
-  appendOpenFile(trackFile, KMLtrackFooterE);
-
-  trackFile.close();
 }
 
 void SDcard_testStuff() {

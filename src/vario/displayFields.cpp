@@ -134,7 +134,7 @@ void display_flightTimer(uint8_t x, uint8_t y, bool shortstring, bool selected) 
 
   u8g2.setFont(leaf_6x12);
   u8g2.setCursor(x + 2, y - 2);
-  u8g2.print(flightTimer_getString(shortstring));
+  u8g2.print(flightTimer_getString());
   u8g2.setDrawColor(1);
 
   if (selected) {

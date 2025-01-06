@@ -14,6 +14,7 @@
 #include "gpx.h"
 #include "log.h"
 #include "settings.h"
+#include "telemetry.h"
 
 #define DEBUG_GPS 0
 
@@ -239,8 +240,8 @@ void gps_calculateGlideRatio() {
 }
 
 void gps_updateAccuracy() {
-  gpsAccuracy.latError = 2.5; //atof(latAccuracy.value());
-  gpsAccuracy.lonError = 1.5; //atof(lonAccuracy.value());
+  gpsAccuracy.latError = 2.5;  // atof(latAccuracy.value());
+  gpsAccuracy.lonError = 1.5;  // atof(lonAccuracy.value());
   gpsAccuracy.error = sqrt(gpsAccuracy.latError * gpsAccuracy.latError +
                            gpsAccuracy.lonError * gpsAccuracy.lonError);
 }
@@ -252,14 +253,12 @@ void gps_update() {
   gps_updateAccuracy();
   gps_calculateGlideRatio();
 
-  if (logbook.dataFileStarted) {
-    String gpsName = "gps,";
-    String gpsEntryString = gpsName + String(gps.location.lat(), 8) + ',' +
-                            String(gps.location.lng(), 8) + ',' + String(gps.altitude.meters()) +
-                            ',' + String(gps.speed.mps()) + ',' + String(gps.course.deg());
+  String gpsName = "gps,";
+  String gpsEntryString = gpsName + String(gps.location.lat(), 8) + ',' +
+                          String(gps.location.lng(), 8) + ',' + String(gps.altitude.meters()) +
+                          ',' + String(gps.speed.mps()) + ',' + String(gps.course.deg());
 
-    SDcard_writeData(gpsEntryString);
-  }
+  Telemetry.writeText(gpsEntryString);
 
   /*
 
@@ -340,7 +339,7 @@ char gps_read_buffer() {
 // copy data from each satellite message into the sats[] array.  Then, if we reach the complete set
 // of sentences, copy the fresh sat data into the satDisplay[] array for showing on LCD screen when
 // needed.
-void gps_updateSatList() {  
+void gps_updateSatList() {
   // copy data if we have a complete single sentence
   if (totalGPGSVMessages.isUpdated()) {
     for (int i = 0; i < 4; ++i) {
@@ -470,64 +469,27 @@ uint16_t gps_getLocalTimeHHMM() {
   return LocalTimeHHMM;
 }
 
-uint32_t gps_getLocalDate() {
-  uint32_t returnDate = 0;  // return 0 if failure
-  int8_t timeZoneDay = 0;   // to track if we need to adjust a day
-  uint8_t adjustedDay = 0;
-  uint8_t adjustedMonth = 0;
-  uint8_t adjustedYear = 0;
+// Not a proper Iso8601 date, as we strip out the timezone.
+String gps_getIso8601Date() {
+  // Get the raw date from GPS
+  int day = gps.date.day();
+  int month = gps.date.month();
+  int year = gps.date.year();
 
-  if (gps.date.isValid() && gps.time.isValid()) {
-    uint8_t adjustedDay = gps.date.day();
-    uint8_t adjustedMonth = gps.date.month();
-    uint16_t adjustedYear = gps.date.year();
+  // Calculate timezone offset hours and minutes
+  int tzHours = TIME_ZONE / 60;
+  int tzMinutes = abs(TIME_ZONE % 60);
 
-    // check if time zone changes the date
-    timeInMinutes =
-        gps.time.hour() * 60 + gps.time.minute() + TIME_ZONE;  // correct for local time zone
-    if (timeInMinutes < 0)
-      timeZoneDay = -1;
-    else if (timeInMinutes >= 24 * 60)
-      timeZoneDay = 1;
-    adjustedDay = gps.date.day() + timeZoneDay;
+  // Format the date in ISO 8601 "pretty" format
+  char buffer[11];
+  snprintf(buffer, sizeof(buffer), "%04d-%02d-%02d", year, month, day);
 
-    // handle rolling back a day
-    if (adjustedDay == 0) {
-      adjustedMonth -= 1;
-      if (adjustedMonth == 0) {
-        adjustedMonth = 12;
-        adjustedYear -= 1;
-      }
-      if (adjustedMonth == 4 || adjustedMonth == 6 || adjustedMonth == 9 || adjustedMonth == 11)
-        adjustedDay = 30;
-      else if (adjustedMonth == 2) {
-        if (adjustedYear % 4 == 0)
-          adjustedDay = 29;
-        else
-          adjustedDay = 28;
-      } else {
-        adjustedDay = 31;
-      }
-      // handle rolling forward a day
-    } else if (adjustedDay == 31 && (adjustedMonth == 4 || adjustedMonth == 6 ||
-                                     adjustedMonth == 9 || adjustedMonth == 11)) {
-      adjustedDay = 1;
-      adjustedMonth++;
-    } else if ((adjustedDay == 29 && adjustedMonth == 2 && (adjustedYear % 4) != 0) ||
-               (adjustedDay == 30 && adjustedMonth == 2 && (adjustedYear % 4) == 0)) {
-      adjustedDay = 1;
-      adjustedMonth++;
-    } else if (adjustedDay == 32) {
-      adjustedDay = 1;
-      adjustedMonth++;
-      if (adjustedMonth == 13) {
-        adjustedMonth = 1;
-        adjustedYear++;
-      }
-    }
+  // Consider a method to return a non-truncated version like this in the future
+  // Format the date in ISO 8601 "pretty" format
+  // char buffer[32];
+  // snprintf(buffer, sizeof(buffer), "%04d-%02d-%02dT00:00:00%+03d:%02d",
+  //  year, month, day, tzHours, tzMinutes);
 
-    returnDate = adjustedYear * 10000 + adjustedMonth * 100 + adjustedDay;
-  }
-  return returnDate;
+  return String(buffer);
 }
 //
