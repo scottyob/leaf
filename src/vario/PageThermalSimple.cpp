@@ -300,6 +300,7 @@ case cursor_thermalSimplePage_userField2:
           } else if (state == HELD) {
             flightTimer_reset();
             thermalSimple_page_cursor_position = cursor_thermalSimplePage_none;
+						buttons_lockAfterHold();	// lock buttons so we don't turn off if user keeps holding button
           }
 
           break;

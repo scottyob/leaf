@@ -60,10 +60,12 @@ Button buttons_init(void) {
 // when holding the center button to turn on, we need to "lock" the buttons until the user releases
 // the center button. Otherwise, we'll turn on, and immediately turn back off again due to the
 // persistent button press.
-bool powerOnLockButtons = true;  // default to true, for the first turn on event
+bool centerHoldLockButtons = true;  // default to true, for the first turn on event
 
-void buttons_lockDuringPowerOn() {
-  powerOnLockButtons = true;  // reset for future turn-on events (like waking up from charge mode)
+// call this function after performing a center-hold button action if no additional center-hold actions 
+// should be taken until user lets go of the center button (example: resetting timer, then turning off)
+void buttons_lockAfterHold() {
+  centerHoldLockButtons = true;  // lock from further actions until user lets go of center button
 }
 
 // If the current page is charging, handle that, otherwise direct any input to shown modal pages
@@ -72,12 +74,13 @@ Button buttons_update(void) {
   Button which_button = buttons_check();
   ButtonState button_state = buttons_get_state();
 
-  // check if we should disable/lock the buttons during the turn-on button press.  Don't do more
-  // button handling until user first lets go of the center button
-  if (powerOnLockButtons && which_button == Button::CENTER) {
-    return which_button;
+  // check if we should avoid executing further actions if buttons are 'locked' due to an already
+  // executed center-hold event.  This prevents multiple sequential actions being executed if user
+  // keeps holding the center button (i.e., resetting timer, then turning off)
+  if (centerHoldLockButtons && which_button == Button::CENTER) {
+    return which_button;    // return early without executing further tasks
   } else {
-    powerOnLockButtons = false;
+    centerHoldLockButtons = false;  // user let go of center button, so we can reset the lock.
   }
 
   if (which_button == Button::NONE || button_state == NO_STATE)
@@ -98,7 +101,7 @@ Button buttons_update(void) {
           display_setPage(
               page_thermalSimple);  // TODO: set initial page to the user's last used page
           speaker_playSound(fx_enter);
-          buttons_lockDuringPowerOn();  // lock buttons until user lets go of power button
+          buttons_lockAfterHold();  // lock buttons until user lets go of power button
           power_switchToOnState();
         }
         break;

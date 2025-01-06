@@ -471,6 +471,7 @@ void navigatePage_button(Button button, ButtonState state, uint8_t count) {
           if (state == HELD) {
             gpx_cancelNav();
             navigatePage_cursorPosition = cursor_navigatePage_none;
+						buttons_lockAfterHold();	// lock buttons so we don't turn off if user keeps holding button
           }
           break;
       }
