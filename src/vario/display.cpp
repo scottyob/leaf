@@ -348,8 +348,12 @@ void display_page_debug() {
 
     u8g2.setCursor(65, 110);
     u8g2.print(baro.altimeterSetting);
+    u8g2.setCursor(65, 140);
+    u8g2.print(gpsAccuracy.error);
 
     gpsMenuPage.drawConstellation(0, 100, 63);
+
+    
 
   } while (u8g2.nextPage());
 }

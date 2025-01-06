@@ -40,6 +40,12 @@ struct gps_sat_info {
 };
 extern struct gps_sat_info sats[MAX_SATELLITES];
 extern struct gps_sat_info satsDisplay[MAX_SATELLITES];
+struct gps_accuracy {
+  float latError;
+  float lonError;
+  float error;
+};
+extern gps_accuracy gpsAccuracy;
 
 // enum time_formats {hhmmss, }
 

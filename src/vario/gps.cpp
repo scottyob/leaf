@@ -59,12 +59,17 @@ TinyGPSCustom elevation[4];  // to be initialized later
 TinyGPSCustom azimuth[4];    // to be initialized later
 TinyGPSCustom snr[4];        // to be initialized later
 
+// Custom objects for position/fix accuracy.
+// Need to read from the GST sentence which TinyGPS doesn't do by default
+TinyGPSCustom latAccuracy(gps, "GPGST", 6);  // Latitude error - standard deviation
+TinyGPSCustom lonAccuracy(gps, "GPGST", 7);  // Longitude error - standard deviation
+gps_accuracy gpsAccuracy;
+
 // Enable GPS Backup Power (to save satellite data and allow faster start-ups)
 // This consumes a minor amount of current from the battery
 // There is a loop-back pullup resistor from the backup power output to its own ENABLE line, so once
 // backup is turned on, it will stay on even if the main processor is shut down. Typically, the
 // backup power is only turned off to enable a full cold reboot/reset of the GPS module.
-
 void gps_setBackupPower(bool backup_power_on) {
   if (backup_power_on)
     digitalWrite(GPS_BACKUP_EN, HIGH);
@@ -233,10 +238,18 @@ void gps_calculateGlideRatio() {
   }
 }
 
+void gps_updateAccuracy() {
+  gpsAccuracy.latError = 2.5; //atof(latAccuracy.value());
+  gpsAccuracy.lonError = 1.5; //atof(lonAccuracy.value());
+  gpsAccuracy.error = sqrt(gpsAccuracy.latError * gpsAccuracy.latError +
+                           gpsAccuracy.lonError * gpsAccuracy.lonError);
+}
+
 void gps_update() {
   // update sats if we're tracking sat NMEA sentences
   updateGPXnav();
   gps_updateSatList();
+  gps_updateAccuracy();
   gps_calculateGlideRatio();
 
   if (logbook.dataFileStarted) {
@@ -327,7 +340,7 @@ char gps_read_buffer() {
 // copy data from each satellite message into the sats[] array.  Then, if we reach the complete set
 // of sentences, copy the fresh sat data into the satDisplay[] array for showing on LCD screen when
 // needed.
-void gps_updateSatList() {
+void gps_updateSatList() {  
   // copy data if we have a complete single sentence
   if (totalGPGSVMessages.isUpdated()) {
     for (int i = 0; i < 4; ++i) {
