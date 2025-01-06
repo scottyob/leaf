@@ -14,14 +14,17 @@ Arduino board: ESP32S3 Dev Module
 
 (see [Arduino workflow](../../.github/workflows/arduino.yaml) to confirm specifics)
 
-## Programming
+## Programming with PlatformIO
+
+See [leaf README](../README.md)
+
+## Programming with Arduino
 
 To program the current hardware:
 
 * Install Arduino IDE and [ESP Board Manager Package](#esp32-configuration)
 * Install [required libraries](#required-libraries)
 * Plug board into USB
-* Connect ground ("GD" through-hole) and "3V3" to 3.3V from an external power supply
 * Select the [appropriate board](#esp32-configuration) and port in the Arduino IDE
 * Configure the [appropriate board settings](#esp32-configuration)
 
