@@ -3,7 +3,7 @@
 // Module is responsible for logging a flight
 
 #include <Arduino.h>
-#include "logbook/flight.h"
+#include "flight.h"
 
 // Auto Start/Stop Timer Thresholds
 #define AUTO_START_MIN_SPEED 5  // mph minimum before timer will auto-start
