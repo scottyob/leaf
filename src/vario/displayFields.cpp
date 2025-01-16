@@ -687,6 +687,43 @@ void display_batt_charging_fullscreen(uint8_t x, uint8_t y) {
   }
 }
 
+
+// GPS Status Icon
+uint8_t blink = 0;
+
+void display_GPS_icon(uint8_t x, uint8_t y) {
+  u8g2.setDrawColor(1);
+  u8g2.setFont(leaf_icons);
+  u8g2.setCursor(x, y);
+
+  if (GPS_SETTING == 0) {   // GPS Off
+    u8g2.print((char)44);   // GPS icon with X through it
+  } else if (GPS_SETTING) { // GPS not-off
+    if (gpsFixInfo.fix) {
+      u8g2.print((char)43); // GPS icon with fix
+    } else {
+      //blink the icon to convey "searching"
+      if (blink) {
+        u8g2.print((char)42); // GPS icon without fix        
+        blink = 0;
+      } else {
+        u8g2.print((char)41); // GPS icon with fix
+        blink = 1;
+      }      
+      u8g2.setFont(leaf_5h);
+      u8g2.setCursor(x + 4, y-4);
+      
+      if (gpsFixInfo.numberOfSats > 9) {
+        u8g2.print("9");
+      } else {
+        if (gpsFixInfo.numberOfSats == 1) u8g2.setCursor(x+5, y-4);
+        u8g2.print(gpsFixInfo.numberOfSats);
+      }
+    }
+  }
+}
+
+
 // Wind Sock Triangle
 void display_windSock(int16_t x, int16_t y, int16_t radius, float wind_angle) {
   // int16_t wind_triangle_radius = 10;
@@ -742,6 +779,9 @@ void display_headerAndFooter(bool headingShowTurn, bool timerSelected) {
   u8g2.setCursor(10, 192);
   u8g2.setFont(leaf_icons);
   u8g2.print((char)SDicon);
+
+  // GPS status icon
+  display_GPS_icon(23, 192);
 
   // Heading in top center
   uint8_t heading_x = 38;

@@ -16,7 +16,7 @@
 #include "settings.h"
 #include "telemetry.h"
 
-#define DEBUG_GPS 0
+#define DEBUG_GPS 1
 
 // Setup GPS
 #define gpsPort \
@@ -38,23 +38,21 @@ const char disableVTG[] PROGMEM = "$PAIR062,5,0";  // disable message
 uint32_t gpsBootReady = 0;
 
 // Satellite tracking
-struct gps_sat_info
-    sats[MAX_SATELLITES];  // GLOBAL GPS satellite info for storing values straight from the GPS
-struct gps_sat_info satsDisplay[MAX_SATELLITES];  // Cached version of the sat info for showing on
-                                                  // display (this will be re-written each time a
-                                                  // total set of new sat info is available)
-TinyGPSCustom totalGPGSVMessages(
-    gps,
-    "GPGSV",
-    1);  // $GPGSV sentence, the first element is how many GSV messages (N) total will be sent
-TinyGPSCustom messageNumber(gps,
-                            "GPGSV",
-                            2);  // $GPGSV sentence, second element is the message number (x of N)
-TinyGPSCustom satsInView(gps,
-                         "GPGSV",
-                         3);  // $GPGSV sentence, third element is how many satellites in view
-// Fields for capturing the information from GSV strings (each GSV sentence will have info for at
-// most 4 satellites)
+
+// GPS satellite info for storing values straight from the GPS
+struct gps_sat_info sats[MAX_SATELLITES];  
+
+// Cached version of the sat info for showing on display (this will be re-written each time a
+// total set of new sat info is available)
+struct gps_sat_info satsDisplay[MAX_SATELLITES];  
+
+// $GPGSV sentence parsing
+TinyGPSCustom totalGPGSVMessages(gps, "GPGSV", 1); // first element is # messages (N) total 
+TinyGPSCustom messageNumber(gps, "GPGSV", 2);  // second element is message number (x of N)
+TinyGPSCustom satsInView(gps, "GPGSV", 3);  // third element is # satellites in view
+
+// Fields for capturing the information from GSV strings
+// (each GSV sentence will have info for at most 4 satellites)
 TinyGPSCustom satNumber[4];  // to be initialized later
 TinyGPSCustom elevation[4];  // to be initialized later
 TinyGPSCustom azimuth[4];    // to be initialized later
@@ -64,7 +62,9 @@ TinyGPSCustom snr[4];        // to be initialized later
 // Need to read from the GST sentence which TinyGPS doesn't do by default
 TinyGPSCustom latAccuracy(gps, "GPGST", 6);  // Latitude error - standard deviation
 TinyGPSCustom lonAccuracy(gps, "GPGST", 7);  // Longitude error - standard deviation
-gps_accuracy gpsAccuracy;
+TinyGPSCustom fix(gps, "GNGGA", 6);          // Fix (0=none, 1=GPS, 2=DGPS, 3=Valid PPS)  
+TinyGPSCustom fixMode(gps, "GNGSA", 2);      // Fix mode (1=No fix, 2=2D fix, 3=3D fix) 
+GPSFixInfo gpsFixInfo;
 
 // Enable GPS Backup Power (to save satellite data and allow faster start-ups)
 // This consumes a minor amount of current from the battery
@@ -202,25 +202,7 @@ void gps_init(void) {
   */
 }  // gps_init
 
-void gps_test(void) {
-  // Rebroadcast GPS serial data to debugger port
-  while (gpsPort.available() > 0) {
-    Serial.print(char(gpsPort.read()));
-  }
 
-  /*
-  while (gps.available( gpsPort )) {
-    fix = gps.read();
-
-    gps_displaySatellitesInView();
-  }
-  */
-}
-
-float fakeGPSAlt = 0;
-float fakeSpeed = 0;
-float fakeSpeedIncrement = 3;
-float fakeCourse = 0;
 
 float glideRatio;
 
@@ -239,18 +221,25 @@ void gps_calculateGlideRatio() {
   }
 }
 
-void gps_updateAccuracy() {
-  gpsAccuracy.latError = 2.5;  // atof(latAccuracy.value());
-  gpsAccuracy.lonError = 1.5;  // atof(lonAccuracy.value());
-  gpsAccuracy.error = sqrt(gpsAccuracy.latError * gpsAccuracy.latError +
-                           gpsAccuracy.lonError * gpsAccuracy.lonError);
+void gps_updateFixInfo() {
+  // fix status and mode
+  gpsFixInfo.fix = atoi(fix.value());
+  gpsFixInfo.fixMode = atoi(fixMode.value());
+
+
+  // solution accuracy
+  //gpsFixInfo.latError = 2.5; //atof(latAccuracy.value());
+  //gpsFixInfo.lonError = 1.5; //atof(lonAccuracy.value());
+  //gpsFixInfo.error = sqrt(gpsFixInfo.latError * gpsFixInfo.latError +
+  //                         gpsFixInfo.lonError * gpsFixInfo.lonError);
+  gpsFixInfo.error = (float)gps.hdop.value() * 5 / 100;
 }
 
 void gps_update() {
   // update sats if we're tracking sat NMEA sentences
   updateGPXnav();
   gps_updateSatList();
-  gps_updateAccuracy();
+  gps_updateFixInfo();
   gps_calculateGlideRatio();
 
   String gpsName = "gps,";
@@ -275,66 +264,20 @@ void gps_update() {
   */
 }
 
-void gps_updateFakeNumbers() {
-  fakeCourse += 5;
-  if (fakeCourse >= 360) fakeCourse = 0;
-
-  fakeSpeed += fakeSpeedIncrement;
-  if (fakeSpeed >= 200) {
-    fakeSpeed = 200;
-    fakeSpeedIncrement = -3;
-  } else if (fakeSpeed <= 0) {
-    fakeSpeed = 0;
-    fakeSpeedIncrement = 3;
-  }
-}
-
-float fakeWaypointBearing = 90;
-
-float gps_getAltMeters() { return fakeGPSAlt; }  // gps.altitude.meters(); }
-float gps_getSpeed_kph() { return fakeSpeed; }   // gps.speed.kmph(); }
-float gps_getSpeed_mph() { return fakeSpeed; }   // gps.speed.mph(); }
-float gps_getCourseDeg() { return fakeCourse; }  // gps.course.deg(); }
-const char* gps_getCourseCardinal() { return gps.cardinal(gps_getCourseDeg()); }
-
-float gps_getWaypointBearing() { return fakeWaypointBearing; }
 
 float gps_getGlideRatio() { return glideRatio; }
-
-float gps_getRelativeBearing() {
-  float desiredCourse = gps_getWaypointBearing();
-  float ourCourse = gps_getCourseDeg();
-  float offCourse = desiredCourse - ourCourse;
-  if (offCourse < -180)
-    offCourse += 360;
-  else if (offCourse > 180)
-    offCourse -= 360;
-
-  return offCourse;
-}
-
-bool commandSent = false;
 
 bool gps_read_buffer_once() {
   if (gpsPort.available()) {
     char a = gpsPort.read();
     gps.encode(a);
     if (DEBUG_GPS) Serial.print(a);
-    // gps.encode(gpsPort.read());
     return true;
   } else {
     return false;
   }
 }
 
-char gps_read_buffer() {
-  while (gpsPort.available() > 0) {
-    char a = gpsPort.read();
-    gps.encode(a);
-    Serial.print(a);
-  }
-  return 0;
-}
 
 // copy data from each satellite message into the sats[] array.  Then, if we reach the complete set
 // of sentences, copy the fresh sat data into the satDisplay[] array for showing on LCD screen when
@@ -357,6 +300,8 @@ void gps_updateSatList() {
     int totalMessages = atoi(totalGPGSVMessages.value());
     int currentMessage = atoi(messageNumber.value());
     if (totalMessages == currentMessage) {
+      uint8_t satelliteCount = 0;
+
       for (int i = 0; i < MAX_SATELLITES; ++i) {
         // copy data
         satsDisplay[i].elevation = sats[i].elevation;
@@ -364,10 +309,14 @@ void gps_updateSatList() {
         satsDisplay[i].snr = sats[i].snr;
         satsDisplay[i].active = sats[i].active;
 
+        // keep track of how many satellites we can see while we're scanning through all the ID's (i)
+        if (satsDisplay[i].active) satelliteCount++;
+
         // then negate the source, so it will only be used if it's truly updated again (i.e.,
         // received again in an NMEA sat message)
         sats[i].active = false;
       }
+      gpsFixInfo.numberOfSats = satelliteCount;  // save counted satellites
     }
   }
 }

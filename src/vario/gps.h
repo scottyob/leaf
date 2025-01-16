@@ -41,17 +41,19 @@ struct gps_sat_info {
 };
 extern struct gps_sat_info sats[MAX_SATELLITES];
 extern struct gps_sat_info satsDisplay[MAX_SATELLITES];
-struct gps_accuracy {
-  float latError;
-  float lonError;
+struct GPSFixInfo {
+  //float latError;
+  //float lonError;
   float error;
+  uint8_t numberOfSats;
+  uint8_t fix;
+  uint8_t fixMode;
 };
-extern gps_accuracy gpsAccuracy;
+extern GPSFixInfo gpsFixInfo;
 
 // enum time_formats {hhmmss, }
 
 void gps_init(void);
-char gps_read_buffer(void);
 bool gps_read_buffer_once(void);
 void gps_update(void);
 
@@ -67,9 +69,6 @@ bool gps_getLocalDateTime(tm& cal);
 
 void gps_updateSatList(void);
 
-void gps_test(void);
-void gps_test_sats(void);
-
 void gps_setBackupPower(bool backup_power_on);
 void gps_enterBackupMode(void);
 void gps_softReset(void);
@@ -78,14 +77,6 @@ void gps_shutdown(void);
 void gps_wake(void);
 void gps_sleep(void);
 
-void gps_updateFakeNumbers(void);
-
-float gps_getAltMeters(void);
-float gps_getSpeed_kph(void);
-float gps_getSpeed_mph(void);
-float gps_getCourseDeg(void);
-const char *gps_getCourseCardinal(void);
-float gps_getRelativeBearing(void);
 float gps_getGlideRatio(void);
 
 #endif
