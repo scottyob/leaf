@@ -56,7 +56,7 @@ void VarioMenuPage::draw() {
           u8g2.print(VOLUME_VARIO);
           break;
         case cursor_vario_sensitive:
-          u8g2.print(VARIO_AVERAGE);
+          u8g2.print(VARIO_SENSE);
           break;
         case cursor_vario_tones:
           u8g2.print("!!");

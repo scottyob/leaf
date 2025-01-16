@@ -19,12 +19,8 @@
 // Filter values to average/smooth out the baro sensor
 
 // User Settings for Vario
-#define FILTER_VALS_MAX 20  // total array size max; for both altitude and climb
-#define PRESSURE_FILTER_VALS_PREF \
-  20  // user setting for how many altitude samples to filter over, from 1 to 20
-#define CLIMB_FILTER_VALS_PREF \
-  20  // how many climb rate values to average over, from 1 to 20 (20 = 1 second of data).  This is
-      // to reduce noise.
+uint8_t filterValsPref = 20; // default samples to average (will be adjusted by VARIO_SENSE user setting)
+#define FILTER_VALS_MAX 30  // total array size max; for both altitude and climb
 int32_t pressureFilterVals[FILTER_VALS_MAX + 1];  // use [0] as the index / bookmark
 int32_t climbFilterVals[FILTER_VALS_MAX + 1];     // use [0] as the index / bookmark
 
@@ -34,7 +30,7 @@ int32_t climbFilterVals[FILTER_VALS_MAX + 1];     // use [0] as the index / book
      // average)
 
 // LinearRegression to average out noisy sensor readings
-LinearRegression<PRESSURE_FILTER_VALS_PREF> pressure_lr;
+LinearRegression<20> pressure_lr;
 
 // probably gonna delete these
 /*
@@ -422,41 +418,47 @@ void baro_calculatePressure() {
 //
 // When filtering the pressure values, the most recent N values are summed up (from the bookmarked
 // spot back to N spots before that), then divided by N to get the average.
-//  (where N is presently PRESSURE_FILTER_VALS_PREF == FILTER_VALS_MAX)
-//
-// TODO: Eventually we will support the user adjusting the sensitivity by reducing the size of
-// PRESSURE_FILTER_VALS_PREF to average over fewer samples, if higher sensitivity (less noise
-// reduction) is desired.
+//  (where N is calculated based on sensitivity user preference VARIO_SENSE)
 //
 // NOTE: We have also explored performing a linear regeression on the last N samples to get a more
-// accurate filtered value.  This is still in testing, and not currently being used in the code.
+// accurate filtered value.  This is still in testing, and not currently being used.
 //
 void baro_filterPressure(void) {
+  // first calculate filter size based on user preference
+  switch (VARIO_SENSE) {
+    case 1: filterValsPref = 30; break;
+    case 2: filterValsPref = 25; break;
+    case 3: filterValsPref = 20; break;
+    case 4: filterValsPref = 15; break;
+    case 5: filterValsPref = 10; break;
+    default: filterValsPref = 20; break;
+  }
+
   // new way with regression:
-  pressure_lr.update((double)millis(), (double)baro.alt);
-  LinearFit fit = pressure_lr.fit();
-  baro.pressureRegression = linear_value(&fit, (double)millis());
+    pressure_lr.update((double)millis(), (double)baro.alt);
+    LinearFit fit = pressure_lr.fit();
+    baro.pressureRegression = linear_value(&fit, (double)millis());
 
   // old way with averaging last N values equally:
-  baro.pressureFiltered = 0;
-  int8_t filterBookmark = pressureFilterVals[0];  // start at the saved spot in the filter array
-  int8_t filterIndex =
-      filterBookmark;  // and create an index to track all the values we need for averaging
+    baro.pressureFiltered = 0;
+    int8_t filterBookmark = pressureFilterVals[0];  // start at the saved spot in the filter array
+    int8_t filterIndex =
+        filterBookmark;  // and create an index to track all the values we need for averaging
 
-  pressureFilterVals[filterBookmark] =
-      baro.pressure;                       // load in the new value at the bookmarked spot
-  if (++filterBookmark > FILTER_VALS_MAX)  // increment bookmark for next time
-    filterBookmark = 1;                    // wrap around the array for next time if needed
-  pressureFilterVals[0] = filterBookmark;  // and save the bookmark for next time
+    pressureFilterVals[filterBookmark] =
+        baro.pressure;                       // load in the new value at the bookmarked spot
+    if (++filterBookmark > FILTER_VALS_MAX)  // increment bookmark for next time
+      filterBookmark = 1;                    // wrap around the array for next time if needed
+    pressureFilterVals[0] = filterBookmark;  // and save the bookmark for next time
 
-  // sum up all the values from this spot and previous, for the correct number of samples (user
-  // pref)
-  for (int i = 0; i < PRESSURE_FILTER_VALS_PREF; i++) {
-    baro.pressureFiltered += pressureFilterVals[filterIndex];
-    filterIndex--;
-    if (filterIndex <= 0) filterIndex = FILTER_VALS_MAX;  // wrap around the array
-  }
-  baro.pressureFiltered /= PRESSURE_FILTER_VALS_PREF;  // divide to get the average
+    // sum up all the values from this spot and previous, for the correct number of samples (user
+    // pref)
+    for (int i = 0; i < filterValsPref; i++) {
+      baro.pressureFiltered += pressureFilterVals[filterIndex];
+      filterIndex--;
+      if (filterIndex <= 0) filterIndex = FILTER_VALS_MAX;  // wrap around the array
+    }
+    baro.pressureFiltered /= filterValsPref;  // divide to get the average
 }
 
 void baro_calculateAlt() {
@@ -502,13 +504,13 @@ void baro_updateClimb() {
 
   // sum up all the values from this spot and previous, for the correct number of samples (user
   // pref)
-  for (int i = 0; i < CLIMB_FILTER_VALS_PREF; i++) {
+  for (int i = 0; i < filterValsPref; i++) {
     climbRateFilterSummation += climbFilterVals[filterIndex];
     filterIndex--;
     if (filterIndex <= 0) filterIndex = FILTER_VALS_MAX;  // wrap around the array
   }
   baro.climbRateFiltered =
-      climbRateFilterSummation / CLIMB_FILTER_VALS_PREF;  // divide to get the filtered climb rate
+      climbRateFilterSummation / filterValsPref;  // divide to get the filtered climb rate
 
   // now calculate the longer-running average climb value (this is a smoother, slower-changing value
   // for things like glide ratio, etc)

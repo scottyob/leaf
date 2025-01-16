@@ -16,14 +16,20 @@ typedef uint8_t SettingLogFormat;
 // Sink Alarm
 #define SINK_ALARM_MAX -6  // m/s sink
 #define SINK_ALARM_MIN -2
-// Vario Sensitivity
-#define VARIO_AVERAGE_MAX 6  // units of 1/2 seconds, so 3sec max
-#define VARIO_AVERAGE_MIN \
-  1  // units of 1/2 seconds, so .5sec min
-     // Lifty Air Thermal Sniffer
-#define LIFTY_AIR_MAX \
-  -80  // max sinkrate to begin lifty air (so -.8m/s sinkrate and higher will trigger)
-       // Climb settings
+
+/* Vario Sensitivity
+setting | samples | time avg
+    1   |   30    | 1.5  second
+    2   |   25    | 1.25 second
+    3   |   20    | 1    second
+    4   |   15    | 0.75 second
+    5   |   10    | 0.5  second
+*/
+#define VARIO_SENSE_MAX 5  // units of 1/4 seconds
+#define VARIO_SENSE_MIN 1
+// Lifty Air Thermal Sniffer
+#define LIFTY_AIR_MAX -80  // cm/s - sinking less than this will trigger
+// Climb settings
 #define CLIMB_AVERAGE_MAX 3  // units of 10 seconds, so max 30 sec averaging
 #define CLIMB_START_MAX 50   // cm/s when climb note begins
 
@@ -42,7 +48,7 @@ typedef uint8_t SettingLogFormat;
 // Default Settings
 // Default Vario Settings
 #define DEF_SINK_ALARM -4    // m/s sink
-#define DEF_VARIO_AVERAGE 2  // in half-seconds.  1s seems to be good, so use value of 2 for default
+#define DEF_VARIO_SENSE  3   // 3 = 1 second avg (up and down 1/4 sec from there)
 #define DEF_CLIMB_AVERAGE 1  // in units of 5-seconds.  (def = 1 = 5sec)
 #define DEF_CLIMB_START 5    // cm/s when climb note begins
 #define DEF_VOLUME_VARIO 1   // 0=off, 1=low, 2=med, 3=high
@@ -98,7 +104,7 @@ typedef uint8_t SettingLogFormat;
 // Global Variables for Current Settings
 // Vario Settings
 extern int8_t SINK_ALARM;
-extern int8_t VARIO_AVERAGE;
+extern int8_t VARIO_SENSE;
 extern int8_t CLIMB_AVERAGE;
 extern int8_t CLIMB_START;
 extern int8_t VOLUME_VARIO;

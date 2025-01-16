@@ -17,7 +17,7 @@
 // Vario Settings
 int8_t VOLUME_VARIO;
 bool VARIO_TONES;
-int8_t VARIO_AVERAGE;
+int8_t VARIO_SENSE;
 int8_t CLIMB_AVERAGE;
 int8_t CLIMB_START;
 int8_t LIFTY_AIR;
@@ -93,7 +93,7 @@ void factoryResetVario() {
 void settings_loadDefaults() {
   // Vario Settings
   SINK_ALARM = DEF_SINK_ALARM;
-  VARIO_AVERAGE = DEF_VARIO_AVERAGE;
+  VARIO_SENSE = DEF_VARIO_SENSE;
   CLIMB_AVERAGE = DEF_CLIMB_AVERAGE;
   CLIMB_START = DEF_CLIMB_START;
   VOLUME_VARIO = DEF_VOLUME_VARIO;
@@ -145,7 +145,7 @@ void settings_retrieve() {
 
   // Vario Settings
   SINK_ALARM = leafPrefs.getChar("SINK_ALARM");
-  VARIO_AVERAGE = leafPrefs.getChar("VARIO_AVERAGE");
+  VARIO_SENSE = leafPrefs.getChar("VARIO_SENSE");
   CLIMB_AVERAGE = leafPrefs.getChar("CLIMB_AVERAGE");
   CLIMB_START = leafPrefs.getChar("CLIMB_START");
   VOLUME_VARIO = leafPrefs.getChar("VOLUME_VARIO");
@@ -205,7 +205,7 @@ void settings_save() {
 
   // Vario Settings
   leafPrefs.putChar("SINK_ALARM", SINK_ALARM);
-  leafPrefs.putChar("VARIO_AVERAGE", VARIO_AVERAGE);
+  leafPrefs.putChar("VARIO_SENSE", VARIO_SENSE);
   leafPrefs.putChar("CLIMB_AVERAGE", CLIMB_AVERAGE);
   leafPrefs.putChar("CLIMB_START", CLIMB_START);
   leafPrefs.putChar("VOLUME_VARIO", VOLUME_VARIO);
@@ -339,14 +339,14 @@ void settings_adjustVarioAverage(Button dir) {
 
   if (dir == Button::RIGHT) {
     sound = fx_increase;
-    if (++VARIO_AVERAGE >= VARIO_AVERAGE_MAX) {
-      VARIO_AVERAGE = VARIO_AVERAGE_MAX;
+    if (++VARIO_SENSE >= VARIO_SENSE_MAX) {
+      VARIO_SENSE = VARIO_SENSE_MAX;
       sound = fx_double;
     }
   } else {
     sound = fx_decrease;
-    if (--VARIO_AVERAGE <= VARIO_AVERAGE_MIN) {
-      VARIO_AVERAGE = VARIO_AVERAGE_MIN;
+    if (--VARIO_SENSE <= VARIO_SENSE_MIN) {
+      VARIO_SENSE = VARIO_SENSE_MIN;
       sound = fx_double;
     }
   }
