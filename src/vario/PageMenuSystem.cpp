@@ -77,8 +77,10 @@ void SystemMenuPage::draw() {
           break;
 
         case cursor_system_volume:
-          u8g2.setCursor(setting_choice_x + 12, menu_items_y[i]);
-          u8g2.print(VOLUME_SYSTEM);
+          u8g2.setCursor(setting_choice_x + 12, menu_items_y[i]);          
+          u8g2.setFont(leaf_icons);
+          u8g2.print(char('I' + VOLUME_SYSTEM));
+          u8g2.setFont(leaf_6x12);
           break;
 
         case cursor_system_poweroff:

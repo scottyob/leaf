@@ -53,7 +53,9 @@ void VarioMenuPage::draw() {
         u8g2.setDrawColor(1);
       switch (i) {
         case cursor_vario_volume:
-          u8g2.print(VOLUME_VARIO);
+          u8g2.setFont(leaf_icons);
+          u8g2.print(char('I' + VOLUME_VARIO));
+          u8g2.setFont(leaf_6x12);
           break;
         case cursor_vario_sensitive:
           u8g2.print(VARIO_SENSE);

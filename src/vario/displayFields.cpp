@@ -356,48 +356,48 @@ void display_varioBar(uint8_t varioBarFrame_top,
   // needed if varioBar overlaps something else u8g2.setDrawColor(1);
 
   // Fill varioBar
-  uint8_t varioBarFill_top = varioBarFrame_top + 1;
-  uint8_t varioBarFill_bot = varioBarFrame_top + varioBarFrame_length - 2;
-  uint8_t varioBarFill_top_length = varioBarFrame_mid - varioBarFill_top + 1;
-  uint8_t varioBarFill_bot_length = varioBarFill_bot - varioBarFrame_mid + 1;
+    uint8_t varioBarFill_top = varioBarFrame_top + 1;
+    uint8_t varioBarFill_bot = varioBarFrame_top + varioBarFrame_length - 2;
+    uint8_t varioBarFill_top_length = varioBarFrame_mid - varioBarFill_top + 1;
+    uint8_t varioBarFill_bot_length = varioBarFill_bot - varioBarFrame_mid + 1;
 
-  int16_t varioBarFill_pixels = 0;
-  uint8_t varioBarFill_start = 1;
-  uint8_t varioBarFill_end = 1;
+    int16_t varioBarFill_pixels = 0;
+    uint8_t varioBarFill_start = 1;
+    uint8_t varioBarFill_end = 1;
 
-  if (displayBarClimbRate > 2 * varioBar_climbRateMax ||
-      displayBarClimbRate < 2 * varioBar_climbRateMin) {
-    // do nothing, the bar is maxxed out which looks empty
+    if (displayBarClimbRate > 2 * varioBar_climbRateMax ||
+        displayBarClimbRate < 2 * varioBar_climbRateMin) {
+      // do nothing, the bar is maxxed out which looks empty
 
-  } else if (displayBarClimbRate > varioBar_climbRateMax) {
-    // fill top half inverted
-    varioBarFill_pixels = varioBarFill_top_length * (displayBarClimbRate - varioBar_climbRateMax) /
-                          varioBar_climbRateMax;
-    varioBarFill_start = varioBarFill_top;
-    varioBarFill_end = varioBarFrame_mid - varioBarFill_pixels;
+    } else if (displayBarClimbRate > varioBar_climbRateMax) {
+      // fill top half inverted
+      varioBarFill_pixels = varioBarFill_top_length * (displayBarClimbRate - varioBar_climbRateMax) /
+                            varioBar_climbRateMax;
+      varioBarFill_start = varioBarFill_top;
+      varioBarFill_end = varioBarFrame_mid - varioBarFill_pixels;
 
-  } else if (displayBarClimbRate < varioBar_climbRateMin) {
-    // fill bottom half inverted
-    varioBarFill_pixels = varioBarFill_bot_length * (displayBarClimbRate - varioBar_climbRateMin) /
-                          varioBar_climbRateMin;
-    varioBarFill_start = varioBarFrame_mid + varioBarFill_pixels;
-    varioBarFill_end = varioBarFill_bot;
+    } else if (displayBarClimbRate < varioBar_climbRateMin) {
+      // fill bottom half inverted
+      varioBarFill_pixels = varioBarFill_bot_length * (displayBarClimbRate - varioBar_climbRateMin) /
+                            varioBar_climbRateMin;
+      varioBarFill_start = varioBarFrame_mid + varioBarFill_pixels;
+      varioBarFill_end = varioBarFill_bot;
 
-  } else if (displayBarClimbRate < 0) {
-    // fill bottom half positive
-    varioBarFill_pixels = varioBarFill_bot_length * (displayBarClimbRate) / varioBar_climbRateMin;
-    varioBarFill_start = varioBarFrame_mid;
-    varioBarFill_end = varioBarFrame_mid + varioBarFill_pixels;
+    } else if (displayBarClimbRate < 0) {
+      // fill bottom half positive
+      varioBarFill_pixels = varioBarFill_bot_length * (displayBarClimbRate) / varioBar_climbRateMin;
+      varioBarFill_start = varioBarFrame_mid;
+      varioBarFill_end = varioBarFrame_mid + varioBarFill_pixels;
 
-  } else {
-    // fill top half positive
-    varioBarFill_pixels = varioBarFill_top_length * (displayBarClimbRate) / varioBar_climbRateMax;
-    varioBarFill_start = varioBarFrame_mid - varioBarFill_pixels;
-    varioBarFill_end = varioBarFrame_mid;
-  }
+    } else {
+      // fill top half positive
+      varioBarFill_pixels = varioBarFill_top_length * (displayBarClimbRate) / varioBar_climbRateMax;
+      varioBarFill_start = varioBarFrame_mid - varioBarFill_pixels;
+      varioBarFill_end = varioBarFrame_mid;
+    }
 
-  u8g2.drawBox(
-      1, varioBarFill_start, varioBarFrame_width - 2, varioBarFill_end - varioBarFill_start + 1);
+    u8g2.drawBox(
+        1, varioBarFill_start, varioBarFrame_width - 2, varioBarFill_end - varioBarFill_start + 1);
 
   // Tick marks on varioBar
   uint8_t tickSpacing = varioBarFill_top_length / 5;  // start with top half tick spacing
@@ -420,6 +420,7 @@ void display_varioBar(uint8_t varioBarFrame_top,
     }
   }
 }
+
 
 void display_climbRatePointerBox(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t triSize) {
   u8g2.setDrawColor(1);

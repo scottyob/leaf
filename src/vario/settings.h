@@ -47,7 +47,7 @@ setting | samples | time avg
 
 // Default Settings
 // Default Vario Settings
-#define DEF_SINK_ALARM -4    // m/s sink
+#define DEF_SINK_ALARM -2    // m/s sink
 #define DEF_VARIO_SENSE  3   // 3 = 1 second avg (up and down 1/4 sec from there)
 #define DEF_CLIMB_AVERAGE 1  // in units of 5-seconds.  (def = 1 = 5sec)
 #define DEF_CLIMB_START 5    // cm/s when climb note begins
@@ -57,7 +57,7 @@ setting | samples | time avg
 #define DEF_LIFTY_AIR \
   -40  // In units of cm/s (a sink rate of 30cm/s means the air itself is going up).  '0' is off.
        // (lift air will apply from the lifty_air setting up to the climb_start value)
-#define DEF_ALT_SETTING 29.92  // altimeter setting
+#define DEF_ALT_SETTING 29.921  // altimeter setting
 #define DEF_ALT_SYNC_GPS 0     // lock altimeter to GPS alt (to avoid local pressure setting issues)
 
 // Default GPS & Track Log Settings
@@ -98,7 +98,7 @@ setting | samples | time avg
 #define DEF_UNITS_temp 0      // 0 (celcius), 			1 (fahrenheit)
 #define DEF_UNITS_speed 0     // 0 (kph), 				  1 (mph)
 #define DEF_UNITS_heading 0   // 0 (342 deg), 		  1 (NNW)
-#define DEF_UNITS_distance 0  // 0 (km, or m for <1km), 	1 (miles, or ft for < 1000 feet)
+#define DEF_UNITS_distance 0  // 0 (km, or m for <1km),	1 (miles, or ft for < 1000 feet)
 #define DEF_UNITS_hours 1     // 0 (24-hour time),  1 (12 hour time),
 
 // Global Variables for Current Settings
