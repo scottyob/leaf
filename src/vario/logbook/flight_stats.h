@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ArduinoJson.h>
 #include "Arduino.h"
 #include "baro.h"
 #include "settings.h"
@@ -31,6 +32,16 @@ class FlightStats {
   // Flight duration, in seconds
   unsigned long duration = 0;
   unsigned long logStartedAt = 0;  // Time flight started (seconds started since boot)
+
+  void writeJsonToFile(Stream& writer) {
+    JsonDocument doc;
+
+    JsonObject startEntryEvent;
+    startEntryEvent["time"] = strftime("%Y-%m-%dT%H:%M:%S", logStartedAt);
+    doc["start"] = startEntryEvent;
+
+    serializeJson(doc, writer);
+  }
 
   String toString() const {
     Serial.print("creating track description...");
