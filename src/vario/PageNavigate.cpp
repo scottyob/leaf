@@ -15,6 +15,7 @@
 #include "settings.h"
 #include "speaker.h"
 #include "tempRH.h"
+#include "wind_estimate/wind_estimate.h"
 
 enum navigate_page_items {
   cursor_navigatePage_none,
@@ -107,8 +108,6 @@ void navigatePage_destinationSelect(Button dir) {
   }
 }
 
-float test_wind_angle_nav = 0;
-
 void navigatePage_draw() {
   // if cursor is selecting something, count toward the timeOut value before we reset cursor
   if (navigatePage_cursorPosition != cursor_navigatePage_none &&
@@ -120,7 +119,15 @@ void navigatePage_draw() {
   u8g2.firstPage();
   do {
     // draw all status icons, clock, timer, etc (and pass along if timer is selected)
-    display_headerAndFooter(true, (navigatePage_cursorPosition == cursor_navigatePage_timer));
+    display_headerAndFooter(navigatePage_cursorPosition == cursor_navigatePage_timer);
+
+    // Track/Heading Top Center
+    uint8_t heading_x = 38;
+    uint8_t heading_y = 10;
+    u8g2.setFont(leaf_7x10);
+    display_headingTurn(heading_x, heading_y);
+
+
 
     ///////////////////////////////////////////////////
     // Nav Circle
@@ -207,13 +214,12 @@ void navigatePage_draw() {
     }
 
     // Wind sock
+    WindEstimate windEstimate = getWindEstimate();
     u8g2.drawDisc(nav_x, nav_y, wind_r + 2);
     u8g2.setDrawColor(0);
-    display_windSock(nav_x, nav_y, wind_r, test_wind_angle_nav);  // 0.78);
+    display_windSockArrow(nav_x, nav_y, wind_r);  // 0.78);
     u8g2.setDrawColor(1);
 
-    test_wind_angle_nav += .1;
-    if (test_wind_angle_nav > 2 * PI) test_wind_angle_nav -= (2 * PI);
 
     ///////////////////////////////////////////////////
     // Vario Info *************************************

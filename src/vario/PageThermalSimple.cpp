@@ -16,6 +16,7 @@
 #include "settings.h"
 #include "speaker.h"
 #include "tempRH.h"
+#include "wind_estimate/wind_estimate.h"
 
 enum thermalSimple_page_items {
   cursor_thermalSimplePage_none,
@@ -34,7 +35,6 @@ uint8_t thermalSimple_page_cursor_timeCount =
 uint8_t thermalSimple_page_cursor_timeOut =
     8;  // after 8 page draws (4 seconds) reset the cursor if a button hasn't been pushed.
 
-float test_wind_angle = 0;
 
 void thermalSimplePage_draw() {
   // if cursor is selecting something, count toward the timeOut value before we reset cursor
@@ -47,20 +47,25 @@ void thermalSimplePage_draw() {
   u8g2.firstPage();
   do {
     // draw all status icons, clock, timer, etc (and pass along if timer is selected)
-    display_headerAndFooter(false,
-                            (thermalSimple_page_cursor_position == cursor_thermalSimplePage_timer));
+    display_headerAndFooter(thermalSimple_page_cursor_position == cursor_thermalSimplePage_timer);
 
-    // wind
-    u8g2.drawDisc(49, 25, 12);
-    u8g2.setDrawColor(0);
-    display_windSock(49, 25, 10, test_wind_angle);  // 0.78);
-    u8g2.setDrawColor(1);
+    
+    // Track/Heading/Wind in top center
+    uint8_t center_x = 53;
 
-    test_wind_angle += .1;
-    if (test_wind_angle > 2 * PI) test_wind_angle -= (2 * PI);
+    uint8_t heading_y = 10;
+    u8g2.setFont(leaf_7x10);
+    display_heading(center_x - 11, heading_y, true);
+
+    // wind & compass
+    uint8_t wind_y = 31;
+    uint8_t wind_radius = 12;
+    uint8_t pointer_size = 7;
+    display_windSockRing(center_x, wind_y, wind_radius, pointer_size);
+    
 
     // Main Info ****************************************************
-    uint8_t topOfFrame = 22;
+    uint8_t topOfFrame = 26; //22
     uint8_t varioBarWidth = 25;
     uint8_t varioBarHeight = 151;
 
@@ -68,7 +73,7 @@ void thermalSimplePage_draw() {
     display_varioBar(topOfFrame, varioBarHeight, varioBarWidth, baro.climbRateFiltered);
 
     // Altitude
-    uint8_t alt_y = 50;
+    uint8_t alt_y = 62; //58
     // Altitude header labels
     u8g2.setFont(leaf_labels);
     u8g2.setCursor(varioBarWidth + 52, alt_y);
@@ -88,8 +93,10 @@ void thermalSimplePage_draw() {
     }
 
     // Climb
-    display_climbRatePointerBox(varioBarWidth, 84, 76, 27, 13);  // x, y, w, h, triangle size
-    display_climbRate(20, 108, leaf_21h, baro.climbRateFiltered);
+    uint8_t climbBoxHeight = 27;
+    uint8_t climbBoxY = topOfFrame + varioBarHeight/2 - climbBoxHeight/2;
+    display_climbRatePointerBox(varioBarWidth, climbBoxY, 76, climbBoxHeight, 13);  // x, y, w, h, triangle size
+    display_climbRate(20, climbBoxY + 24, leaf_21h, baro.climbRateFiltered);
     u8g2.setDrawColor(0);
     u8g2.setFont(leaf_5h);
     u8g2.print(" ");  // put a space, but using a small font so the space isn't too wide
@@ -101,7 +108,8 @@ void thermalSimplePage_draw() {
     u8g2.setDrawColor(1);
 
     // Alt 2 (user alt field; above launch, etc)
-    display_altAboveLaunch(varioBarWidth + 4, 136, baro.altAboveLaunch);
+    uint8_t alt2y = climbBoxY + 53;
+    display_altAboveLaunch(varioBarWidth + 4, alt2y, baro.altAboveLaunch);
 
     /* if (selected) {
 u8g2.drawRFrame(cursor_x, cursor_y-16, 96-cursor_x, 18, 3);
@@ -109,7 +117,7 @@ u8g2.drawRFrame(cursor_x, cursor_y-16, 96-cursor_x, 18, 3);
     */
 
     // User Field ****************************************************
-    uint8_t userfield_y = 171;
+    uint8_t userfield_y = alt2y + 27;
     switch (THMSPG_USR1) {
       case static_cast<int>(ThermSimpPageUserField1::GLIDE):
         // Glide Ratio
