@@ -14,11 +14,15 @@
 #include "speaker.h"
 #include "string_utils.h"
 #include "tempRH.h"
+#include "wind_estimate/wind_estimate.h"
 
 
 // track if we're "flying" separate from if we're recording a log.  This allows us to enable
 // certain in-flight features (like vario quiet_mode) without having to be recording a log.
 bool weAreFlying = false; 
+bool getAreWeFlying() {
+  return weAreFlying;
+}
 
 // Local variables
 
@@ -53,8 +57,7 @@ void log_update() {
     }
   // Check auto-stop criteria if we ARE flying
   } else if (weAreFlying) {
-    if (flightTimer_autoStop()) {
-      weAreFlying = false; // stop flying so we can stop the vario beeps (if quiet-mode is on)
+    if (flightTimer_autoStop()) {      
       if (AUTO_STOP) flightTimer_stop();  // stop the log if auto-stop is on
     }
   }
@@ -229,6 +232,7 @@ void flightTimer_start() {
 // stop timer
 void flightTimer_stop() {
   weAreFlying = false;  // we're not "flying" when we stop a log
+  clearWindEstimate();  // clear the wind estimate when we stop a flight
   // Short Circuit, no need to do anything if there's no flight recording.
   if (flight == NULL) {
     return;

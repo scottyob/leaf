@@ -765,9 +765,7 @@ void display_windSockArrow(int16_t x, int16_t y, int16_t radius) {
 }
 
 // Wind Sock Ring Triangle
-uint8_t blinkCount = 0;
-bool blink = true;
-void display_windSockRing(int16_t x, int16_t y, int16_t radius, int16_t size) {
+void display_windSockRing(int16_t x, int16_t y, int16_t radius, int16_t size, bool showPointer) {
   float point_angle = 0.65; // half angle of the arrow pointer
   
   WindEstimate windEstimate = getWindEstimate();
@@ -778,15 +776,7 @@ void display_windSockRing(int16_t x, int16_t y, int16_t radius, int16_t size) {
 
   u8g2.setDrawColor(0);
 
-    blinkCount++;
-    if (blinkCount >= 10) {
-      if (blink) blink = false;
-      else blink = true;
-      blinkCount = 0;
-    }
-
-
-  if (blink) { //!windEstimate.validEstimate) {
+  if (!windEstimate.validEstimate) {
     // just show generic wind icon if no wind estimate
     u8g2.setFont(wind_logo);
     u8g2.setFontMode(1);    
@@ -795,15 +785,15 @@ void display_windSockRing(int16_t x, int16_t y, int16_t radius, int16_t size) {
     u8g2.setFontMode(0);
   } else {
     // wind pointer inside
-    float wind_angle = windEstimate.windDirectionTrue;
+    float windDisplayAngle = windEstimate.windDirectionFrom - gps.course.deg() * DEG_TO_RAD;
 
-    uint16_t tip_x = + sin(wind_angle) * (radius - size + 2) + 1 + x;
-    uint16_t tip_y = - cos(wind_angle) * (radius - size + 2) + 1 + y;
+    uint16_t tip_x = + sin(windDisplayAngle) * (radius - size + 2) + 1 + x;
+    uint16_t tip_y = - cos(windDisplayAngle) * (radius - size + 2) + 1 + y;
 
-    uint16_t tail_1_x = tip_x + sin(wind_angle + point_angle) * size;
-    uint16_t tail_1_y = tip_y - cos(wind_angle + point_angle) * size;
-    uint16_t tail_2_x = tip_x + sin(wind_angle - point_angle) * size;
-    uint16_t tail_2_y = tip_y - cos(wind_angle - point_angle) * size;
+    uint16_t tail_1_x = tip_x + sin(windDisplayAngle + point_angle) * size;
+    uint16_t tail_1_y = tip_y - cos(windDisplayAngle + point_angle) * size;
+    uint16_t tail_2_x = tip_x + sin(windDisplayAngle - point_angle) * size;
+    uint16_t tail_2_y = tip_y - cos(windDisplayAngle - point_angle) * size;
 
     u8g2.drawTriangle(tip_x, tip_y, tail_1_x, tail_1_y, tail_2_x, tail_2_y);
     u8g2.drawLine(tip_x, tip_y, tail_1_x, tail_1_y);
@@ -812,8 +802,8 @@ void display_windSockRing(int16_t x, int16_t y, int16_t radius, int16_t size) {
 
     // now print wind speed, but offset from pointer
     uint8_t speed_radius = size / 2;
-    uint8_t speed_x = x - sin(wind_angle) * speed_radius;
-    uint8_t speed_y = y + cos(wind_angle) * speed_radius;
+    uint8_t speed_x = x - sin(windDisplayAngle) * speed_radius;
+    uint8_t speed_y = y + cos(windDisplayAngle) * speed_radius;
     display_windSpeedCentered(speed_x-6, speed_y+7, leaf_6x12);
     u8g2.setDrawColor(1);
 
@@ -821,46 +811,48 @@ void display_windSockRing(int16_t x, int16_t y, int16_t radius, int16_t size) {
   }
   
   // Heading pointer
-    u8g2.setDrawColor(1);
-    u8g2.drawTriangle(x, y - radius - size, x + size - 2, y - radius - 1, x - size + 2, y - radius - 1);
+    if (showPointer) {
+      u8g2.setDrawColor(1);
+      u8g2.drawTriangle(x, y - radius - size, x + size - 2, y - radius - 1, x - size + 2, y - radius - 1);
+    }
   
   // compass major directions
     uint8_t compassRadius = radius + 6;
     float displayCourse = -1 * gps.course.deg() * DEG_TO_RAD;
-    uint8_t compassN_x = x + sin(displayCourse) * compassRadius;
-    uint8_t compassN_y = y - cos(displayCourse) * compassRadius;
-    uint8_t compassE_x = x + sin(displayCourse + PI / 2) * compassRadius;
-    uint8_t compassE_y = y - cos(displayCourse + PI / 2) * compassRadius;
-    uint8_t compassS_x = x + sin(displayCourse + PI) * compassRadius;
-    uint8_t compassS_y = y - cos(displayCourse + PI) * compassRadius;
-    uint8_t compassW_x = x + sin(displayCourse + 3 * PI / 2) * compassRadius;
-    uint8_t compassW_y = y - cos(displayCourse + 3 * PI / 2) * compassRadius;
+    uint8_t compassN_x = x + 0.5f + sin(displayCourse) * compassRadius;
+    uint8_t compassN_y = y + 0.5f - cos(displayCourse) * compassRadius;
+    uint8_t compassE_x = x + 0.5f + sin(displayCourse + PI / 2) * compassRadius;
+    uint8_t compassE_y = y + 0.5f - cos(displayCourse + PI / 2) * compassRadius;
+    uint8_t compassS_x = x + 0.5f + sin(displayCourse + PI) * compassRadius;
+    uint8_t compassS_y = y + 0.5f - cos(displayCourse + PI) * compassRadius;
+    uint8_t compassW_x = x + 0.5f + sin(displayCourse + 3 * PI / 2) * compassRadius;
+    uint8_t compassW_y = y + 0.5f - cos(displayCourse + 3 * PI / 2) * compassRadius;
 
     uint8_t fontOffsetH = 2;
     uint8_t fontOffsetV = 4;
 
-    //cutoff top most value if near the pointer arrow
-    uint8_t cutoff_y = y - compassRadius + 1;
+    //cutoff top most value if near the pointer arrow (if there is a pointer arrow)
+      uint8_t cutoff_y = y - compassRadius + 1;
 
-    u8g2.setFont(leaf_compass);
-    u8g2.setDrawColor(2);
-    u8g2.setFontMode(1);
-    if (compassN_y > cutoff_y) {
-      u8g2.setCursor(compassN_x - fontOffsetH, compassN_y + fontOffsetV);
-      u8g2.print("N");
-    }
-    if (compassE_y > cutoff_y) {
-    u8g2.setCursor(compassE_x - fontOffsetH, compassE_y + fontOffsetV);
-    u8g2.print("E");
-    }
-    if (compassS_y > cutoff_y) {
-      u8g2.setCursor(compassS_x - fontOffsetH, compassS_y + fontOffsetV);
-      u8g2.print("S");
-    }
-    if (compassW_y > cutoff_y) {
-      u8g2.setCursor(compassW_x - fontOffsetH, compassW_y + fontOffsetV);
-      u8g2.print("W");
-    }
+      u8g2.setFont(leaf_compass);
+      u8g2.setDrawColor(2);
+      u8g2.setFontMode(1);
+      if (!showPointer || compassN_y > cutoff_y) {
+        u8g2.setCursor(compassN_x - fontOffsetH, compassN_y + fontOffsetV);
+        u8g2.print("N");
+      }
+      if (!showPointer || compassE_y > cutoff_y) {
+      u8g2.setCursor(compassE_x - fontOffsetH, compassE_y + fontOffsetV);
+      u8g2.print("E");
+      }
+      if (!showPointer || compassS_y > cutoff_y) {
+        u8g2.setCursor(compassS_x - fontOffsetH, compassS_y + fontOffsetV);
+        u8g2.print("S");
+      }
+      if (!showPointer || compassW_y > cutoff_y) {
+        u8g2.setCursor(compassW_x - fontOffsetH, compassW_y + fontOffsetV);
+        u8g2.print("W");
+      }
     u8g2.setFontMode(0);
     u8g2.setDrawColor(1);
   
@@ -895,6 +887,35 @@ void display_windSpeedCentered(uint8_t x, uint8_t y, const uint8_t *font) {
   }
 }
 
+void displayWaypointDropletPointer(uint8_t centerX, uint8_t centerY, uint8_t pointRadius, float direction) {
+  uint8_t dropRadius = 5;
+  uint8_t dropLength = 8;
+
+  float dropCenterX = centerX + sin(direction) * (pointRadius - dropLength);
+  float dropCenterY = centerY - cos(direction) * ( pointRadius - dropLength);
+  uint8_t dropTipX = centerX + sin(direction) * pointRadius;
+  uint8_t dropTipY = centerY - cos(direction) * pointRadius;
+
+  float dropShoulderAngle = acos((float)dropRadius/dropLength);
+  uint8_t dropShoulder1X = dropCenterX + sin(direction - dropShoulderAngle) * dropRadius;
+  uint8_t dropShoulder1Y = dropCenterY - cos(direction - dropShoulderAngle) * dropRadius;
+  uint8_t dropShoulder2X = dropCenterX + sin(direction + dropShoulderAngle) * dropRadius;
+  uint8_t dropShoulder2Y = dropCenterY - cos(direction + dropShoulderAngle) * dropRadius;
+
+  u8g2.drawDisc((uint8_t)dropCenterX, (uint8_t)dropCenterY, dropRadius);
+  u8g2.drawTriangle(dropTipX, dropTipY, dropShoulder1X, dropShoulder1Y, dropShoulder2X, dropShoulder2Y);
+  u8g2.drawLine(dropShoulder1X, dropShoulder1Y, dropTipX, dropTipY);
+  u8g2.drawLine(dropShoulder2X, dropShoulder2Y, dropTipX, dropTipY);
+
+  // marker icon
+  u8g2.setDrawColor(0);
+  u8g2.drawDisc((uint8_t)dropCenterX, (uint8_t)dropCenterY, dropRadius-2);
+  u8g2.setDrawColor(1);
+  u8g2.setFont(leaf_5h);
+  u8g2.setCursor((uint8_t)dropCenterX-2, (uint8_t)dropCenterY+3);
+  //u8g2.print("&");
+}
+
 
 // END OF COMPONENT DISPLAY FUNCTIONS //
 /********************************************************************************************/
@@ -912,7 +933,7 @@ void display_headerAndFooter(bool timerSelected) {
     u8g2.setFont(leaf_8x14);
     display_speed(70, 14);
     u8g2.setFont(leaf_5h);
-    u8g2.setCursor(82, 21);
+    u8g2.setCursor(82, 20);
     if (UNITS_speed)
       u8g2.print("MPH");
     else
@@ -935,7 +956,7 @@ void display_headerAndFooter(bool timerSelected) {
     // Vario Beep Volume icon
     u8g2.setCursor(37, 191);
     u8g2.setFont(leaf_icons);
-    if (QUIET_MODE && !flightTimer_isRunning()) {      
+    if (QUIET_MODE && !flightTimer_isRunning() && VOLUME_VARIO != 0) {      
       u8g2.print((char)('I' + 4));
     } else {
       u8g2.print((char)('I' + VOLUME_VARIO));
