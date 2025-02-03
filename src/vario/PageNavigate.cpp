@@ -133,7 +133,6 @@ void navigatePage_draw() {
         uint8_t varioBarBottomHeight = 45;
         uint8_t varioBarHeight = varioBarTopHeight + varioBarBottomHeight + 1;
         uint8_t varioBarMidpoint = topOfFrame + varioBarTopHeight;
-        uint8_t climbTriangleWidth = 9;
         uint8_t varioBoxHeight = 18;
 
     //////////////////////
@@ -190,13 +189,11 @@ void navigatePage_draw() {
                     pointer_y + pointer_h + shaft_h);
         
 
-    // Waypoint Drop Shape
-      if (gpxNav.navigating) {
-        displayWaypointDropletPointer(nav_x, nav_y, nav_r-1, gpxNav.turnToActive * DEG_TO_RAD + PI / 2);
-      }
+    // Waypoint Drop Shape Placemark Icon
+      // just testing options here:
+      //displayWaypointDropletPointer(nav_x, nav_y, nav_r, gpxNav.turnToActive * DEG_TO_RAD + PI / 2);
       
-    // Waypoint Pointer
-    
+    // Waypoint Pointer    
       if (gpxNav.navigating) {
         uint8_t waypoint_tip_r = nav_r - 1;
         uint8_t waypoint_shaft_r = waypoint_tip_r - 3;
@@ -246,13 +243,30 @@ void navigatePage_draw() {
     // Vario Info *************************************
 
       // Vario Bar
-        display_varioBar(topOfFrame, varioBarHeight, varioBarWidth, baro.climbRateFiltered);
+        display_varioBar(topOfFrame, 
+                         varioBarTopHeight,
+                         varioBarBottomHeight,
+                         varioBarWidth,
+                         baro.climbRateFiltered);
 
       // Climb
         // Climb Triangle
-          u8g2.drawTriangle(varioBarWidth - climbTriangleWidth - 1, topOfFrame + varioBarTopHeight,  // left
-                            varioBarWidth - 1, topOfFrame + varioBarTopHeight - climbTriangleWidth,  // top
-                            varioBarWidth - 1, topOfFrame + varioBarTopHeight + climbTriangleWidth);  // bottom
+          uint8_t climbTriangleWidth = 9;
+          uint8_t triLeftX = varioBarWidth - climbTriangleWidth - 1;
+          uint8_t triLeftY = topOfFrame + varioBarTopHeight;
+          uint8_t triRightX = varioBarWidth - 1;
+          uint8_t triTopY = topOfFrame + varioBarTopHeight - climbTriangleWidth;          
+          uint8_t triBotY = topOfFrame + varioBarTopHeight + climbTriangleWidth;
+          u8g2.drawTriangle(triLeftX, triLeftY,  // left
+                            triRightX, triTopY,  // top
+                            triRightX, triBotY);  // bottom
+          // now erase a gap between the triangle and the fill of the vario bar
+            u8g2.setDrawColor(0);
+            u8g2.drawLine(triLeftX-1, triLeftY, triRightX-1, triTopY);
+            u8g2.drawLine(triLeftX-1, triLeftY - 1, triRightX-1, triTopY - 1);
+            u8g2.drawLine(triLeftX-1, triLeftY, triRightX-1, triBotY);
+            u8g2.drawLine(triLeftX-1, triLeftY + 1, triRightX-1, triBotY + 1);
+            u8g2.setDrawColor(1);
 
         // climb background
           u8g2.drawBox(varioBarWidth, topOfFrame + 2 * nav_r + 4, 30, 17);
@@ -317,46 +331,48 @@ void navigatePage_draw() {
 
     ///////////////////////////////////////////////////
     // Waypoint Info **********************************
-      // Name
-      u8g2.setCursor(varioBarWidth + 2, topOfFrame + varioBarHeight - 8);
-      u8g2.setFont(u8g2_font_12x6LED_tf);
+      // Waypoint Name
+        uint8_t waypointNameY = topOfFrame + varioBarHeight - 9;    
+        u8g2.setCursor(varioBarWidth + 2, waypointNameY);
+        u8g2.setFont(u8g2_font_12x6LED_tf);
 
-      String defaultWaypointString = "<Select Dest>";
-      if (gpxData.totalRoutes <= 0 && gpxData.totalWaypoints <= 0) {
-        defaultWaypointString = "No Waypoints!";
-      }
-
-      // if the cursor is here, write the waypoint/route name of where the selection index is, rather
-      // than the active waypoint).
-      if (navigatePage_cursorPosition == cursor_navigatePage_waypoint) {
-        u8g2.setCursor(u8g2.getCursorX() + 6,
-                      u8g2.getCursorY());  // Also scoot the string over a few pixels to make room
-                                            // for selection box
-        if (destination_selection_index == 0) {
-          u8g2.print(defaultWaypointString);
-        } else {
-          if (destination_selection_routes_vs_waypoints) {
-            u8g2.setFont(leaf_icons);
-            u8g2.print('R');
-            u8g2.setFont(u8g2_font_12x6LED_tf);
-            u8g2.print(gpxData.routes[destination_selection_index].name);
-          } else {
-            u8g2.print(gpxData.waypoints[destination_selection_index].name);
-          }
+        String defaultWaypointString = "<Select Dest>";
+        if (gpxData.totalRoutes <= 0 && gpxData.totalWaypoints <= 0) {
+          defaultWaypointString = "No Waypoints!";
         }
-      } else {
-        if (gpxNav.navigating)
-          u8g2.print(gpxNav.activePoint.name.c_str());
-        else
-          u8g2.print(defaultWaypointString);
-        u8g2.setFont(leaf_6x12);
-      }
+
+        // if the cursor is here, write the waypoint/route name of where the selection index is, rather
+        // than the active waypoint).
+        if (navigatePage_cursorPosition == cursor_navigatePage_waypoint) {
+          u8g2.setCursor(u8g2.getCursorX() + 6,
+                        u8g2.getCursorY());  // Also scoot the string over a few pixels to make room
+                                              // for selection box
+          if (destination_selection_index == 0) {
+            u8g2.print(defaultWaypointString);
+          } else {
+            if (destination_selection_routes_vs_waypoints) {
+              u8g2.setFont(leaf_icons);
+              u8g2.print('R');
+              u8g2.setFont(u8g2_font_12x6LED_tf);
+              u8g2.print(gpxData.routes[destination_selection_index].name);
+            } else {
+              u8g2.print(gpxData.waypoints[destination_selection_index].name);
+            }
+          }
+        } else {
+          if (gpxNav.navigating)
+            u8g2.print(gpxNav.activePoint.name.c_str());
+          else
+            u8g2.print(defaultWaypointString);
+          u8g2.setFont(leaf_6x12);
+        }
 
       // selection box
-      if (navigatePage_cursorPosition == cursor_navigatePage_waypoint) {
-        display_selectionBox(
-            varioBarWidth + 1, topOfFrame + varioBarHeight - 23, 96 - varioBarWidth - 1, 19, 5);
-      }
+        if (navigatePage_cursorPosition == cursor_navigatePage_waypoint) {
+          uint8_t selectionBoxHeight = 18;
+          display_selectionBox(
+              varioBarWidth + 1, waypointNameY - 14, 96 - varioBarWidth - 1, selectionBoxHeight, 5);
+        }
 
       // Progress Bar
         float percent_progress;

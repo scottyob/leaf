@@ -60,12 +60,15 @@ void thermalSimplePage_draw() {
     
 
     // Main Info ****************************************************
-    uint8_t topOfFrame = 26; //22
-    uint8_t varioBarWidth = 25;
-    uint8_t varioBarHeight = 151;
-
+    
     // Vario Bar
-    display_varioBar(topOfFrame, varioBarHeight, varioBarWidth, baro.climbRateFiltered);
+      uint8_t topOfFrame = 26; //22
+      uint8_t varioBarWidth = 25;
+      uint8_t varioBarClimbHeight = 75;
+      uint8_t varioBarSinkHeight = varioBarClimbHeight;
+          
+      display_varioBar(topOfFrame, varioBarClimbHeight, varioBarSinkHeight, varioBarWidth, baro.climbRateFiltered);
+
 
     // Altitude
     uint8_t alt_y = 62; //58
@@ -89,7 +92,7 @@ void thermalSimplePage_draw() {
 
     // Climb
     uint8_t climbBoxHeight = 27;
-    uint8_t climbBoxY = topOfFrame + varioBarHeight/2 - climbBoxHeight/2;
+    uint8_t climbBoxY = topOfFrame + varioBarClimbHeight - climbBoxHeight/2;
     display_climbRatePointerBox(varioBarWidth, climbBoxY, 76, climbBoxHeight, 13);  // x, y, w, h, triangle size
     display_climbRate(20, climbBoxY + 24, leaf_21h, baro.climbRateFiltered);
     u8g2.setDrawColor(0);

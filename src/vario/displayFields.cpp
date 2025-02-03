@@ -344,86 +344,94 @@ void print_alt_label(uint8_t altType) {
   }
 }
 
-void display_varioBar(uint8_t varioBarFrame_top,
-                      uint8_t varioBarFrame_length,
-                      uint8_t varioBarFrame_width,
-                      int32_t displayBarClimbRate) {
-  int16_t varioBar_climbRateMax = 500;   // this is the bar height, but because we can fill then
-                                         // empty the bar, we can show twice this climb value
-  int16_t varioBar_climbRateMin = -500;  // again, bar height, so we can show twice this sink value
+void display_varioBar(uint8_t barTop,
+                      uint8_t barClimbHeight,
+                      uint8_t barSinkHeight,
+                      uint8_t barWidth,
+                      int32_t displayClimbRate) {
 
-  uint8_t varioBarFrame_mid = varioBarFrame_top + varioBarFrame_length / 2;
+  // climb rate (+climb) that will max-fill the bar upwards (note: because we can then start 
+  // un-filling) the bar from the middle, we'll be able to graphically display 2x this value
+  int16_t varioBarClimbRateMax = 500;   
 
-  u8g2.drawFrame(0, varioBarFrame_top, varioBarFrame_width, varioBarFrame_length);
+  // sink rate (-climb) that will max-fill the bar downwards (note: because we can then start 
+  // un-filling) the bar from the middle, we'll be able to graphically display 2x this value
+  int16_t varioBarSinkRateMax = -500;
+
+  // Draw overall outline frame
+  u8g2.drawFrame(0, barTop, barWidth, barClimbHeight + barSinkHeight + 1);
 
   // u8g2.setDrawColor(0);
   // u8g2.drawBox(1, varioBarFrame_top+1, varioBarFrame_length-2, varioBarFrame_width-2);    //only
   // needed if varioBar overlaps something else u8g2.setDrawColor(1);
 
   // Fill varioBar
-  uint8_t varioBarFill_top = varioBarFrame_top + 1;
-  uint8_t varioBarFill_bot = varioBarFrame_top + varioBarFrame_length - 2;
-  uint8_t varioBarFill_top_length = varioBarFrame_mid - varioBarFill_top + 1;
-  uint8_t varioBarFill_bot_length = varioBarFill_bot - varioBarFrame_mid + 1;
+    uint8_t barMid = barTop + barClimbHeight;
+    uint8_t barFillTop = barTop + 1;
+    uint8_t barFillBot = barTop + barClimbHeight + barSinkHeight - 1;
+    uint8_t fillTopLength = barMid - barFillTop + 1;
+    uint8_t fillBotLength = barFillBot - barMid + 1;
 
-  int16_t varioBarFill_pixels = 0;
-  uint8_t varioBarFill_start = 1;
-  uint8_t varioBarFill_end = 1;
+    int16_t barFillPixels = 0; // height of pixels of bar's filled section
+    uint8_t barFillStart = 1;  // y-coordinate of start of fill
+    uint8_t barFillEnd = 1;    // y-coordinate of end of fill
 
-  if (displayBarClimbRate > 2 * varioBar_climbRateMax ||
-      displayBarClimbRate < 2 * varioBar_climbRateMin) {
-    // do nothing, the bar is maxxed out which looks empty
+    // calculate start and end levels for filling in the Vario Bar
+      if (displayClimbRate > 2 * varioBarClimbRateMax ||
+          displayClimbRate < 2 * varioBarSinkRateMax) {
+        // do nothing, the bar is maxxed out which looks empty
 
-  } else if (displayBarClimbRate > varioBar_climbRateMax) {
-    // fill top half inverted
-    varioBarFill_pixels = varioBarFill_top_length * (displayBarClimbRate - varioBar_climbRateMax) /
-                          varioBar_climbRateMax;
-    varioBarFill_start = varioBarFill_top;
-    varioBarFill_end = varioBarFrame_mid - varioBarFill_pixels;
+      } else if (displayClimbRate > varioBarClimbRateMax) {
+        // fill top half inverted (from climb value up to top of bar)
+        barFillPixels = fillTopLength * (displayClimbRate - varioBarClimbRateMax) /
+                              varioBarClimbRateMax;
+        barFillStart = barFillTop;
+        barFillEnd = barMid - barFillPixels;
 
-  } else if (displayBarClimbRate < varioBar_climbRateMin) {
-    // fill bottom half inverted
-    varioBarFill_pixels = varioBarFill_bot_length * (displayBarClimbRate - varioBar_climbRateMin) /
-                          varioBar_climbRateMin;
-    varioBarFill_start = varioBarFrame_mid + varioBarFill_pixels;
-    varioBarFill_end = varioBarFill_bot;
+      } else if (displayClimbRate < varioBarSinkRateMax) {
+        // fill bottom half inverted (from sink value down to bottom of bar)
+        barFillPixels = fillBotLength * (displayClimbRate - varioBarSinkRateMax) /
+                              varioBarSinkRateMax;
+        barFillStart = barMid + barFillPixels;
+        barFillEnd = barFillBot;
 
-  } else if (displayBarClimbRate < 0) {
-    // fill bottom half positive
-    varioBarFill_pixels = varioBarFill_bot_length * (displayBarClimbRate) / varioBar_climbRateMin;
-    varioBarFill_start = varioBarFrame_mid;
-    varioBarFill_end = varioBarFrame_mid + varioBarFill_pixels;
+      } else if (displayClimbRate < 0) {
+        // fill bottom half positive (from mid point down to sink value)
+        barFillPixels = fillBotLength * (displayClimbRate) / varioBarSinkRateMax;
+        barFillStart = barMid;
+        barFillEnd = barMid + barFillPixels;
 
-  } else {
-    // fill top half positive
-    varioBarFill_pixels = varioBarFill_top_length * (displayBarClimbRate) / varioBar_climbRateMax;
-    varioBarFill_start = varioBarFrame_mid - varioBarFill_pixels;
-    varioBarFill_end = varioBarFrame_mid;
-  }
+      } else {
+        // fill top half positive (from mid pointup to climb value)
+        barFillPixels = fillTopLength * (displayClimbRate) / varioBarClimbRateMax;
+        barFillStart = barMid - barFillPixels;
+        barFillEnd = barMid;
+      }
 
-  u8g2.drawBox(
-      1, varioBarFill_start, varioBarFrame_width - 2, varioBarFill_end - varioBarFill_start + 1);
+    // Now actually draw the fill box  (x, y, width, height)
+      u8g2.drawBox(1, barFillStart, 
+                   barWidth - 2, barFillEnd - barFillStart + 1);
 
   // Tick marks on varioBar
-  uint8_t tickSpacing = varioBarFill_top_length / 5;  // start with top half tick spacing
-  uint8_t line_y = varioBarFrame_top;
+    uint8_t tickSpacing = fillTopLength / 5;  // start with top half tick spacing
+    uint8_t line_y = barTop;
 
-  for (int i = 1; i <= 9; i++) {
-    if (i == 5) {
-      // at midpoint, switch to bottom half
-      line_y = varioBarFrame_mid;
-      tickSpacing = varioBarFill_bot_length / 5;
-    } else {
-      // draw a tick-mark line
-      line_y += tickSpacing;
-      if (line_y >= varioBarFill_start && line_y <= varioBarFill_end) {
-        u8g2.setDrawColor(0);
+    for (int i = 1; i <= 9; i++) {
+      if (i == 5) {
+        // at midpoint, switch to bottom half
+        line_y = barMid;
+        tickSpacing = fillBotLength / 5;
       } else {
-        u8g2.setDrawColor(1);
+        // draw a tick-mark line
+        line_y += tickSpacing;
+        if (line_y >= barFillStart && line_y <= barFillEnd) {
+          u8g2.setDrawColor(0);
+        } else {
+          u8g2.setDrawColor(1);
+        }
+        u8g2.drawLine(1, line_y, barWidth / 2 - 1, line_y);
       }
-      u8g2.drawLine(1, line_y, varioBarFrame_width / 2 - 1, line_y);
     }
-  }
 }
 
 void display_climbRatePointerBox(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t triSize) {
@@ -938,8 +946,8 @@ void display_windSpeedCentered(uint8_t x, uint8_t y, const uint8_t *font) {
 }
 
 void displayWaypointDropletPointer(uint8_t centerX, uint8_t centerY, uint8_t pointRadius, float direction) {
-  uint8_t dropRadius = 5;
-  uint8_t dropLength = 8;
+  uint8_t dropRadius = 6;
+  uint8_t dropLength = 9;
 
   float dropCenterX = centerX + sin(direction) * (pointRadius - dropLength);
   float dropCenterY = centerY - cos(direction) * ( pointRadius - dropLength);

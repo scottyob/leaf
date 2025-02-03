@@ -33,10 +33,13 @@ enum altTypes {
   altType_AGL
 };
 
-void display_varioBar(uint8_t varioBarFrame_top,
-                      uint8_t varioBarFrame_length,
-                      uint8_t varioBarFrame_width,
-                      int32_t displayBarClimbRate);
+// The vertical bar graph of climb/sink rate.
+// Different Climb & Sink heights allow the bar to be asymmetric
+void display_varioBar(uint8_t varioBarTop,
+                      uint8_t varioBarClimbHeight,
+                      uint8_t varioBarSinkHeight,
+                      uint8_t varioBarWidth,
+                      int32_t displayClimbRate);
 
 // black box with left-facing arrow pointing at vario bar
 void display_climbRatePointerBox(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t triSize);
