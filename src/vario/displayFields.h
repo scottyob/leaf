@@ -37,8 +37,13 @@ void display_varioBar(uint8_t varioBarFrame_top,
                       uint8_t varioBarFrame_length,
                       uint8_t varioBarFrame_width,
                       int32_t displayBarClimbRate);
+
+// black box with left-facing arrow pointing at vario bar
 void display_climbRatePointerBox(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t triSize);
+// print climb rate in negative color with +/- sign
 void display_climbRate(uint8_t x, uint8_t y, const uint8_t *font, int16_t displayClimbRate);
+// print climb rate in negative color without +/- sign, and adjust font size to fit in small box (for nav page)
+void display_unsignedClimbRate_short(uint8_t x, uint8_t y, int16_t displayClimbRate);
 
 void display_accel(uint8_t x, uint8_t y, float accel);
 void display_glide(uint8_t x, uint8_t y, float glide);
@@ -55,7 +60,7 @@ void display_windSpeedCentered(uint8_t x, uint8_t y, const uint8_t *font);
 void displayWaypointDropletPointer(uint8_t centerX, uint8_t centerY, uint8_t pointRadius, float direction);
 
 
-void display_headerAndFooter(bool timerSelected);
+void display_headerAndFooter(bool timerSelected, bool showTurnArrows);
 
 void display_off_splash(void);
 void display_on_splash(void);

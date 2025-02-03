@@ -119,18 +119,18 @@ void display_speed(uint8_t cursor_x, uint8_t cursor_y) {
   // Get speed in proper units and put into int for display purposes
   uint16_t displaySpeed;
   if (UNITS_speed)
-    displaySpeed = gps.speed.mph() +
-                   0.5;  // add half so we effectively round when truncating from float to int.
+    // add half so we effectively round when truncating from float to int.
+    displaySpeed = gps.speed.mph() + 0.5f;  
   else
-    displaySpeed = gps.speed.kmph() + 0.5;
+    displaySpeed = gps.speed.kmph() + 0.5f;
 
-  if (displaySpeed >= 1000) displaySpeed = 999;  // cap display value at 3 digits
+  if (displaySpeed >= 100) displaySpeed = 99;  // cap display value at 3 digits
 
   u8g2.setCursor(cursor_x, cursor_y);
-  if (displaySpeed < 10) u8g2.print(" ");   // leave a space if needed
-  if (displaySpeed < 100) u8g2.print(" ");  // leave a space if needed
-  u8g2.print(displaySpeed, 1);
+  if (displaySpeed < 10) u8g2.print(" ");   // leave a space if needed  
+  u8g2.print(displaySpeed);
 }
+
 void display_speed(uint8_t x, uint8_t y, const uint8_t* font) {
   u8g2.setFont(font);
   display_speed(x, y);
@@ -481,8 +481,58 @@ void display_climbRate(uint8_t x, uint8_t y, const uint8_t* font, int16_t displa
     }
     */
   }
-  u8g2.setDrawColor(1);  // always set back to 1 if we've been using 0, just in case the next draw
-                         // function forgets to set to 1
+  // always set back to 1 if we've been using 0, just in case
+  u8g2.setDrawColor(1);  
+                         
+}
+
+void display_unsignedClimbRate_short(uint8_t x, uint8_t y, int16_t displayClimbRate) {
+  u8g2.setCursor(x, y);  
+  u8g2.setDrawColor(0);
+
+  float climbInMS = 0;
+
+  if (displayClimbRate < 0) {
+    displayClimbRate *= -1;  // keep positive (si)
+  }
+
+  // if in fpm units
+  if (UNITS_climb) {
+    // convert from cm/s to fpm (lose one significant digit)
+    displayClimbRate = displayClimbRate * 197 / 1000 * 10;
+    if (displayClimbRate >= 1000) {  // print 4 digits, 2 large 2 small
+      u8g2.setFont(leaf_8x14);
+      u8g2.print(displayClimbRate / 100);      
+      u8g2.setCursor(u8g2.getCursorX(), u8g2.getCursorY() - 2);
+      u8g2.setFont(leaf_6x12);
+      u8g2.print(displayClimbRate % 100);
+    } else {  // print 3, 2, or 1 large digit(s)
+      u8g2.setFont(leaf_8x14);
+      u8g2.setCursor(u8g2.getCursorX()+1, u8g2.getCursorY());
+      if (displayClimbRate < 100) u8g2.print(" ");
+      if (displayClimbRate < 10) u8g2.print(" ");
+      u8g2.print(displayClimbRate);
+    }
+  // if in mps units
+  } else {
+    // lose one decimal place and round off in the process
+    displayClimbRate = (displayClimbRate + 5) / 10;
+    // convert to float for ease of printing with the decimal in place
+    climbInMS = (float)displayClimbRate / 10;  
+    
+    u8g2.setFont(leaf_8x14);
+    if (climbInMS >= 10) { // print three large digits XX.X
+      u8g2.setFont(leaf_8x14);
+      u8g2.print(climbInMS, 1);  
+    } else { // print two giant digits X.X
+      u8g2.setFont(leaf_10x17);
+      u8g2.setCursor(u8g2.getCursorX()+1, u8g2.getCursorY());
+      u8g2.print(climbInMS, 1);      
+    }    
+  }
+  // always set back to 1 if we've been using 0, just in case
+  u8g2.setDrawColor(1);  
+                         
 }
 
 void display_altAboveLaunch(uint8_t x, uint8_t y, int32_t aboveLaunchAlt) {
@@ -923,21 +973,36 @@ void displayWaypointDropletPointer(uint8_t centerX, uint8_t centerY, uint8_t poi
 // Full Screen Display Functions
 
 // Header and Footer Items to show on ALL pages
-void display_headerAndFooter(bool timerSelected) {
+void display_headerAndFooter(bool timerSelected, bool showTurnArrows) {
   // Header--------------------------------
     // clock time
-    u8g2.setFont(leaf_6x10);
-    display_clockTime(0, 10, false);
+      u8g2.setFont(leaf_6x10);
+      display_clockTime(0, 10, false);
+
+    // Track/Heading top center    
+      uint8_t heading_y = 10;
+      uint8_t heading_x = 37;
+      u8g2.setFont(leaf_7x10);
+      if (showTurnArrows) {        
+        display_headingTurn(heading_x, heading_y);
+      } else {
+        display_heading(heading_x + 8, heading_y, true);
+      }
 
     // Speed in upper right corner
-    u8g2.setFont(leaf_8x14);
-    display_speed(70, 14);
-    u8g2.setFont(leaf_5h);
-    u8g2.setCursor(82, 20);
-    if (UNITS_speed)
-      u8g2.print("MPH");
-    else
-      u8g2.print("KPH");
+      u8g2.setFont(leaf_8x14);
+      display_speed(78, 14);
+      u8g2.setFont(leaf_5h);
+      u8g2.setCursor(82, 21);
+      if (display_getPage() == page_nav) {
+        u8g2.setDrawColor(0); // draw white on black for nav page
+      }
+      if (UNITS_speed)
+        u8g2.print("MPH");
+      else
+        u8g2.print("KPH");
+
+      u8g2.setDrawColor(1);
 
   // FOOTER_________________________
     // battery

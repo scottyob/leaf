@@ -47,17 +47,11 @@ void thermalSimplePage_draw() {
   u8g2.firstPage();
   do {
     // draw all status icons, clock, timer, etc (and pass along if timer is selected)
-    display_headerAndFooter(thermalSimple_page_cursor_position == cursor_thermalSimplePage_timer);
-
+    bool showHeadingTurnArrows = false;
+    display_headerAndFooter(thermalSimple_page_cursor_position == cursor_thermalSimplePage_timer, showHeadingTurnArrows);
     
-    // Track/Heading/Wind in top center
-    uint8_t center_x = 53;
-
-    uint8_t heading_y = 10;
-    u8g2.setFont(leaf_7x10);
-    display_heading(center_x - 11, heading_y, true);
-
     // wind & compass
+    uint8_t center_x = 57;
     uint8_t wind_y = 31;
     uint8_t wind_radius = 12;
     uint8_t pointer_size = 7;
@@ -79,7 +73,7 @@ void thermalSimplePage_draw() {
     u8g2.setFont(leaf_labels);
     u8g2.setCursor(varioBarWidth + 52, alt_y);
     print_alt_label(THMPG_ALT_TYP);
-    u8g2.setCursor(varioBarWidth + 40, alt_y);
+    u8g2.setCursor(varioBarWidth + 60, alt_y - 8);
     if (UNITS_alt)
       u8g2.print("ft");
     else
@@ -124,7 +118,7 @@ u8g2.drawRFrame(cursor_x, cursor_y-16, 96-cursor_x, 18, 3);
         // Glide Ratio
         u8g2.setCursor(varioBarWidth + 4, userfield_y - 14);
         u8g2.setFont(leaf_5h);
-        u8g2.print("GLIDE");
+        u8g2.print("` GLIDE");
         display_glide(varioBarWidth + 24, userfield_y, gps_getGlideRatio());
         break;
       case static_cast<int>(ThermSimpPageUserField1::TEMP):

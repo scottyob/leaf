@@ -117,172 +117,201 @@ void navigatePage_draw() {
   }
 
   u8g2.firstPage();
-  do {
-    // draw all status icons, clock, timer, etc (and pass along if timer is selected)
-    display_headerAndFooter(navigatePage_cursorPosition == cursor_navigatePage_timer);
-
-    // Track/Heading Top Center
-    uint8_t heading_x = 38;
-    uint8_t heading_y = 10;
-    u8g2.setFont(leaf_7x10);
-    display_headingTurn(heading_x, heading_y);
-
-
-
-    ///////////////////////////////////////////////////
-    // Nav Circle
-
+  do {        
+    ///////////////////////////////
+    // Main Layout Definitions
+    
       // Nav Circles Locations
-      uint8_t nav_x = 57;
-      uint8_t nav_y = 50;
-      uint8_t nav_r = 37;
-      uint8_t wind_r = 8;
+        uint8_t nav_x = 56;
+        uint8_t nav_y = 52;
+        uint8_t nav_r = 38;
 
-      u8g2.drawCircle(nav_x, nav_y, nav_r);
-      u8g2.drawCircle(nav_x, nav_y, nav_r + 1);
+      // Vario Bar 
+        uint8_t topOfFrame = 13;
+        uint8_t varioBarWidth = 18;        
+        uint8_t varioBarTopHeight = 75;
+        uint8_t varioBarBottomHeight = 45;
+        uint8_t varioBarHeight = varioBarTopHeight + varioBarBottomHeight + 1;
+        uint8_t varioBarMidpoint = topOfFrame + varioBarTopHeight;
+        uint8_t climbTriangleWidth = 9;
+        uint8_t varioBoxHeight = 18;
 
-      // Arrow Point - Direction of Travel
-        uint8_t pointer_w = 5;  // half width of arrowhead
-        uint8_t pointer_h = 9;  // full height of arrowhead
-        uint8_t shaft_h = 6;  // height of arrow shaft
-        uint8_t pointer_x = nav_x;
-        uint8_t pointer_y = nav_y - nav_r - 2;  // tip of arrow
-
-        u8g2.setDrawColor(0);
-        u8g2.drawBox(nav_x - (pointer_w) / 2, nav_y - nav_r, pointer_w, 2);
-        u8g2.setDrawColor(1);
-        // arrow point
-        u8g2.drawLine(pointer_x - pointer_w, pointer_y + pointer_h, pointer_x, pointer_y);
-        u8g2.drawLine(pointer_x + pointer_w, pointer_y + pointer_h, pointer_x, pointer_y);
-        u8g2.drawLine(pointer_x - pointer_w - 1, pointer_y + pointer_h, pointer_x - 1, pointer_y);
-        u8g2.drawLine(pointer_x + pointer_w + 1, pointer_y + pointer_h, pointer_x + 1, pointer_y);
-        // arrow flats
-        u8g2.drawLine(pointer_x - pointer_w,
-                      pointer_y + pointer_h,
-                      pointer_x - pointer_w / 2,
-                      pointer_y + pointer_h);
-        u8g2.drawLine(pointer_x + pointer_w,
-                      pointer_y + pointer_h,
-                      pointer_x + pointer_w / 2,
-                      pointer_y + pointer_h);
-        // arrow shaft
-        u8g2.drawLine(pointer_x - pointer_w / 2,
-                      pointer_y + pointer_h,
-                      pointer_x - pointer_w / 2,
-                      pointer_y + pointer_h + shaft_h);
-        u8g2.drawLine(pointer_x + pointer_w / 2,
-                      pointer_y + pointer_h,
-                      pointer_x + pointer_w / 2,
-                      pointer_y + pointer_h + shaft_h);
-        
-
-      // Waypoint Drop Shape
-        if (gpxNav.navigating) {
-          // displayWaypointDropletPointer(nav_x, nav_y, nav_r-1, gpxNav.turnToActive * DEG_TO_RAD + PI / 2) {
-        }
-      
-      // Waypoint Pointer
-      
-        if (gpxNav.navigating) {
-          uint8_t waypoint_tip_r = nav_r - 1;
-          uint8_t waypoint_shaft_r = waypoint_tip_r - 3;
-          uint8_t waypoint_shaft_length = 9;
-          uint8_t waypoint_tail_r = waypoint_tip_r - 5;
-          float waypoint_arrow_angle = 0.15;  // 0.205;
-
-          float directionToWaypoint = gpxNav.turnToActive * DEG_TO_RAD;
-
-          int8_t waypoint_tip_x = nav_x + sin(directionToWaypoint) * waypoint_tip_r;
-          int8_t waypoint_tip_y = nav_y - cos(directionToWaypoint) * waypoint_tip_r;
-          int8_t waypoint_shaft_x = nav_x + sin(directionToWaypoint) * waypoint_shaft_r;
-          int8_t waypoint_shaft_y = nav_y - cos(directionToWaypoint) * waypoint_shaft_r;
-          int8_t waypoint_root_x = nav_x + sin(directionToWaypoint) * (waypoint_shaft_r - waypoint_shaft_length);
-          int8_t waypoint_root_y = nav_y - cos(directionToWaypoint) * (waypoint_shaft_r - waypoint_shaft_length);
-
-          // draw the line plus 4 others slightly offset, to "fatten" the line a bit
-          u8g2.drawLine(waypoint_root_x + 1, waypoint_root_y, waypoint_shaft_x + 1, waypoint_shaft_y);
-          u8g2.drawLine(waypoint_root_x, waypoint_root_y + 1, waypoint_shaft_x, waypoint_shaft_y + 1);
-          u8g2.drawLine(waypoint_root_x, waypoint_root_y, waypoint_shaft_x, waypoint_shaft_y); // the center;
-          u8g2.drawLine(waypoint_root_x - 1, waypoint_root_y, waypoint_shaft_x - 1, waypoint_shaft_y);
-          u8g2.drawLine(waypoint_root_x, waypoint_root_y - 1, waypoint_shaft_x, waypoint_shaft_y - 1);
-
-          int8_t tail_left_x =
-              sin(directionToWaypoint - waypoint_arrow_angle) * (waypoint_tail_r) + nav_x;
-          int8_t tail_left_y =
-              nav_y - cos(directionToWaypoint - waypoint_arrow_angle) * (waypoint_tail_r);
-          int8_t tail_right_x =
-              sin(directionToWaypoint + waypoint_arrow_angle) * (waypoint_tail_r) + nav_x;
-          int8_t tail_right_y =
-              nav_y - cos(directionToWaypoint + waypoint_arrow_angle) * (waypoint_tail_r);
-
-          u8g2.drawLine(tail_left_x, tail_left_y, waypoint_tip_x, waypoint_tip_y);
-          u8g2.drawLine(tail_right_x, tail_right_y, waypoint_tip_x, waypoint_tip_y);
-          u8g2.drawLine(tail_right_x, tail_right_y, tail_left_x, tail_left_y);
-          u8g2.drawTriangle(
-              tail_left_x, tail_left_y, waypoint_tip_x, waypoint_tip_y, tail_right_x, tail_right_y);
-        }
-        
-
-      // Wind sock 
-      /*
-      WindEstimate windEstimate = getWindEstimate();
-      u8g2.drawDisc(nav_x, nav_y, wind_r + 2);
-      u8g2.setDrawColor(0);
-      display_windSockArrow(nav_x, nav_y, wind_r);  // 0.78);
+    //////////////////////
+    // Draw Nav Box/Circle  -- do this first so then we can draw the header info on top of it
       u8g2.setDrawColor(1);
-      */
+      u8g2.drawBox(varioBarWidth, topOfFrame, 96 - varioBarWidth, nav_r * 2+4);
+      u8g2.setDrawColor(0);
+      u8g2.drawDisc(nav_x, nav_y, nav_r);
+      u8g2.setDrawColor(1);
+   
+    // notch out the box for speed digits
+      u8g2.setDrawColor(0);
+      u8g2.drawBox(68, topOfFrame, 96 - 68, 2);
+      u8g2.drawHLine(64, topOfFrame, 4);
+      
+    ///////////////////
+    // Draw Header Info    
+      bool showHeadingTurnArrows = true;
+      display_headerAndFooter(navigatePage_cursorPosition == cursor_navigatePage_timer, showHeadingTurnArrows);
+      
+    // Arrow Point - Direction of Travel
+      uint8_t pointer_w = 5;  // half width of arrowhead
+      uint8_t pointer_h = 9;  // full height of arrowhead
+      uint8_t shaft_h = 6;  // height of arrow shaft
+      uint8_t pointer_x = nav_x;
+      uint8_t pointer_y = nav_y - nav_r - 3;  // tip of arrow
 
-      // wind & compass      
-        uint8_t wind_radius = 12;
-        uint8_t pointer_size = 7;
-        bool showPointer = false;
-        display_windSockRing(nav_x, nav_y, wind_radius, pointer_size, showPointer);
+      // erase top of circle so pointer arrow can poke through
+      u8g2.setDrawColor(0);
+      u8g2.drawBox(nav_x - pointer_w / 2, nav_y - nav_r-2, pointer_w, 4);
+      u8g2.setDrawColor(1);
+      // arrow point
+      u8g2.drawLine(pointer_x - pointer_w, pointer_y + pointer_h, pointer_x, pointer_y);
+      u8g2.drawLine(pointer_x + pointer_w, pointer_y + pointer_h, pointer_x, pointer_y);
+      u8g2.drawLine(pointer_x - pointer_w - 1, pointer_y + pointer_h, pointer_x - 1, pointer_y);
+      u8g2.drawLine(pointer_x + pointer_w + 1, pointer_y + pointer_h, pointer_x + 1, pointer_y);
+      // arrow flats
+      u8g2.drawLine(pointer_x - pointer_w,
+                    pointer_y + pointer_h,
+                    pointer_x - pointer_w / 2,
+                    pointer_y + pointer_h);
+      u8g2.drawLine(pointer_x + pointer_w,
+                    pointer_y + pointer_h,
+                    pointer_x + pointer_w / 2,
+                    pointer_y + pointer_h);
+      // arrow shaft
+      u8g2.drawLine(pointer_x - pointer_w / 2,
+                    pointer_y + pointer_h,
+                    pointer_x - pointer_w / 2,
+                    pointer_y + pointer_h + shaft_h);
+      u8g2.drawLine(pointer_x + pointer_w / 2,
+                    pointer_y + pointer_h,
+                    pointer_x + pointer_w / 2,
+                    pointer_y + pointer_h + shaft_h);
+        
+
+    // Waypoint Drop Shape
+      if (gpxNav.navigating) {
+        displayWaypointDropletPointer(nav_x, nav_y, nav_r-1, gpxNav.turnToActive * DEG_TO_RAD + PI / 2);
+      }
+      
+    // Waypoint Pointer
+    
+      if (gpxNav.navigating) {
+        uint8_t waypoint_tip_r = nav_r - 1;
+        uint8_t waypoint_shaft_r = waypoint_tip_r - 3;
+        uint8_t waypoint_shaft_length = 9;
+        uint8_t waypoint_tail_r = waypoint_tip_r - 5;
+        float waypoint_arrow_angle = 0.15;  // 0.205;
+
+        float directionToWaypoint = gpxNav.turnToActive * DEG_TO_RAD;
+
+        int8_t waypoint_tip_x = nav_x + sin(directionToWaypoint) * waypoint_tip_r;
+        int8_t waypoint_tip_y = nav_y - cos(directionToWaypoint) * waypoint_tip_r;
+        int8_t waypoint_shaft_x = nav_x + sin(directionToWaypoint) * waypoint_shaft_r;
+        int8_t waypoint_shaft_y = nav_y - cos(directionToWaypoint) * waypoint_shaft_r;
+        int8_t waypoint_root_x = nav_x + sin(directionToWaypoint) * (waypoint_shaft_r - waypoint_shaft_length);
+        int8_t waypoint_root_y = nav_y - cos(directionToWaypoint) * (waypoint_shaft_r - waypoint_shaft_length);
+
+        // draw the line plus 4 others slightly offset, to "fatten" the line a bit
+        u8g2.drawLine(waypoint_root_x + 1, waypoint_root_y, waypoint_shaft_x + 1, waypoint_shaft_y);
+        u8g2.drawLine(waypoint_root_x, waypoint_root_y + 1, waypoint_shaft_x, waypoint_shaft_y + 1);
+        u8g2.drawLine(waypoint_root_x, waypoint_root_y, waypoint_shaft_x, waypoint_shaft_y); // the center;
+        u8g2.drawLine(waypoint_root_x - 1, waypoint_root_y, waypoint_shaft_x - 1, waypoint_shaft_y);
+        u8g2.drawLine(waypoint_root_x, waypoint_root_y - 1, waypoint_shaft_x, waypoint_shaft_y - 1);
+
+        int8_t tail_left_x =
+            sin(directionToWaypoint - waypoint_arrow_angle) * (waypoint_tail_r) + nav_x;
+        int8_t tail_left_y =
+            nav_y - cos(directionToWaypoint - waypoint_arrow_angle) * (waypoint_tail_r);
+        int8_t tail_right_x =
+            sin(directionToWaypoint + waypoint_arrow_angle) * (waypoint_tail_r) + nav_x;
+        int8_t tail_right_y =
+            nav_y - cos(directionToWaypoint + waypoint_arrow_angle) * (waypoint_tail_r);
+
+        u8g2.drawLine(tail_left_x, tail_left_y, waypoint_tip_x, waypoint_tip_y);
+        u8g2.drawLine(tail_right_x, tail_right_y, waypoint_tip_x, waypoint_tip_y);
+        u8g2.drawLine(tail_right_x, tail_right_y, tail_left_x, tail_left_y);
+        u8g2.drawTriangle(
+            tail_left_x, tail_left_y, waypoint_tip_x, waypoint_tip_y, tail_right_x, tail_right_y);
+      }
+    // wind & compass      
+      uint8_t wind_radius = 12;
+      uint8_t pointer_size = 7;
+      bool showPointer = false;
+      display_windSockRing(nav_x, nav_y, wind_radius, pointer_size, showPointer);
 
 
     ///////////////////////////////////////////////////
     // Vario Info *************************************
-      uint8_t topOfFrame = 34;
-       uint8_t varioBarWidth = 20;
-      uint8_t varioBarHeight = 101;
-      uint8_t varioBoxHeight = 18;
-
-      // blank out the bottom bit of the nav circle (to make room for climb rate and altitude and
-      // other fields etc)
-      u8g2.setDrawColor(0);
-      u8g2.drawBox(varioBarWidth, topOfFrame + varioBarHeight / 2 + varioBoxHeight / 2, 76, 5);
-      u8g2.setDrawColor(1);
 
       // Vario Bar
-      display_varioBar(topOfFrame, varioBarHeight, varioBarWidth, baro.climbRateFiltered);
+        display_varioBar(topOfFrame, varioBarHeight, varioBarWidth, baro.climbRateFiltered);
 
-      // climb
-      
-      display_climbRatePointerBox(varioBarWidth,
-                                  topOfFrame + varioBarHeight / 2 - varioBoxHeight / 2,
-                                  96 - varioBarWidth,
-                                  varioBoxHeight,
-                                  10);  // x, y, w, h, triangle size
-      display_climbRate(varioBarWidth,
-                        topOfFrame + varioBarHeight / 2 - varioBoxHeight / 2 + 16,
-                        leaf_8x14,
-                        baro.climbRateFiltered);
-      
+      // Climb
+        // Climb Triangle
+          u8g2.drawTriangle(varioBarWidth - climbTriangleWidth - 1, topOfFrame + varioBarTopHeight,  // left
+                            varioBarWidth - 1, topOfFrame + varioBarTopHeight - climbTriangleWidth,  // top
+                            varioBarWidth - 1, topOfFrame + varioBarTopHeight + climbTriangleWidth);  // bottom
+
+        // climb background
+          u8g2.drawBox(varioBarWidth, topOfFrame + 2 * nav_r + 4, 30, 17);
+
+        // climb units
+          u8g2.setFont(leaf_labels);
+          u8g2.setDrawColor(0);
+          u8g2.setFontMode(1);
+          if (UNITS_climb) {  // FPM units
+            u8g2.setCursor(varioBarWidth, varioBarMidpoint - 5);
+            u8g2.print('f');
+            u8g2.setCursor(u8g2.getCursorX() - 1, u8g2.getCursorY() + 3);
+            u8g2.print('p');
+            u8g2.setCursor(u8g2.getCursorX() - 1, u8g2.getCursorY() + 5);
+            u8g2.print('m');
+          } else {  // M/S units
+            u8g2.setCursor(varioBarWidth+1, varioBarMidpoint - 5);
+            u8g2.print('m');
+            uint8_t lineX1 = u8g2.getCursorX() - 5;
+            uint8_t lineY1 = u8g2.getCursorY() + 3;
+            uint8_t lineX2 = lineX1 + 5;
+            uint8_t lineY2 = lineY1 - 5;
+            u8g2.drawLine(lineX1, lineY1, lineX2, lineY2);
+            u8g2.drawLine(lineX1+1, lineY1, lineX2+1, lineY2);
+            u8g2.setCursor(u8g2.getCursorX(), u8g2.getCursorY() + 8);
+            u8g2.print('s');
+            
+          }
+          u8g2.setFontMode(0);
+          
+
+        // climb sign
+          u8g2.setCursor(varioBarWidth - 6, varioBarMidpoint + 6);
+          u8g2.setFont(leaf_8x14);
+          u8g2.setDrawColor(0);
+          if (baro.climbRateFiltered >= 0)
+            u8g2.print("+");
+          else
+            u8g2.print("-");
+          
+        // climb value
+          display_unsignedClimbRate_short(varioBarWidth + 1, varioBarMidpoint + 20, baro.climbRateFiltered);
 
       // alt
-      display_alt_type(22, 111, leaf_8x14, NAVPG_ALT_TYP);
+        display_alt_type(49, 109, leaf_8x14, NAVPG_ALT_TYP);
       // alt label
-      uint8_t label_y = u8g2.getCursorY();
-      u8g2.setCursor(77, label_y + 2);
-      print_alt_label(NAVPG_ALT_TYP);
-      u8g2.setCursor(85, label_y - 6);
-      if (UNITS_alt)
-        u8g2.print("ft");
-      else
-        u8g2.print("m");
+        u8g2.setDrawColor(0);    
+        u8g2.setCursor(78, topOfFrame + 2 * nav_r + 5);
+        print_alt_label(NAVPG_ALT_TYP);
+        u8g2.setCursor(86, topOfFrame + 2 * nav_r - 3);
+        if (UNITS_alt)
+          u8g2.print("ft");
+        else
+          u8g2.print("m");
+        u8g2.setDrawColor(1);   
 
       // selection box
       if (navigatePage_cursorPosition == cursor_navigatePage_alt1) {
-        display_selectionBox(21, 95, 96 - 21, 18, 5);
+        display_selectionBox(49, 94, 96 - 49, 17, 5);
       }
       // display_altAboveLaunch(24, 129, baro.altAboveLaunch);
 
@@ -330,59 +359,53 @@ void navigatePage_draw() {
       }
 
       // Progress Bar
-      float percent_progress;
-      if (gpxNav.navigating) {
-        percent_progress = 1 - gpxNav.pointDistanceRemaining / gpxNav.segmentDistance;
-        if (percent_progress < 0) percent_progress = 0;
-      } else {
-        percent_progress = 0;
-      }
-      u8g2.drawFrame(varioBarWidth-1, topOfFrame + varioBarHeight - 4, 96 - varioBarWidth, 4);
-      u8g2.drawBox(varioBarWidth, topOfFrame + varioBarHeight - 3, percent_progress * (96-varioBarWidth), 2);
+        float percent_progress;
+        if (gpxNav.navigating) {
+          percent_progress = 1 - gpxNav.pointDistanceRemaining / gpxNav.segmentDistance;
+          if (percent_progress < 0) percent_progress = 0;
+        } else {
+          percent_progress = 0;
+        }
+        u8g2.drawFrame(varioBarWidth-1, topOfFrame + varioBarHeight - 4, 96 - varioBarWidth + 1, 4);
+        u8g2.drawBox(varioBarWidth, topOfFrame + varioBarHeight - 3, percent_progress * (96-varioBarWidth), 2);
 
     // User Fields ****************************************************
 
       // Layout
-      uint8_t userFieldsTop = topOfFrame + varioBarHeight - 1;
-      uint8_t userFieldsHeight = 21;
-      uint8_t userFieldsMid = userFieldsTop + userFieldsHeight;
-      uint8_t userFieldsBottom = userFieldsMid + userFieldsHeight;
-      uint8_t userSecondColumn = 48;
-
-      // u8g2.drawHLine(varioBarWidth-1, userFieldsTop, 96-varioBarWidth+1);
-      // u8g2.drawHLine(0, userFieldsMid, 96);
-      // u8g2.drawHLine(0, userFieldsBottom, 96);
-      // u8g2.drawVLine(userSecondColumn, userFieldsTop, userFieldsHeight*2);
-
+      uint8_t userFieldsRow1Y = topOfFrame + varioBarHeight;
+      uint8_t userFieldsRow2Y = 20 + userFieldsRow1Y;
+      uint8_t userFieldsCol1X = 3;
+      uint8_t userFieldsCol2X = 52;
+      
       //  1 | 2
       // ---|---
       //  3 | 4
 
       // User Field 1 -- Time to waypoint
-      display_waypointTimeRemaining(5, userFieldsMid - 1, leaf_6x12);
+      display_waypointTimeRemaining(userFieldsCol1X + 5, userFieldsRow1Y + 20, leaf_6x12);
       u8g2.setFont(leaf_5h);
-      u8g2.setCursor(0, userFieldsMid - 14);
+      u8g2.setCursor(userFieldsCol1X, userFieldsRow1Y + 7);
       u8g2.print("TIME>&");
       u8g2.setFont(leaf_6x12);
 
       // User Field 2  -- Dist to waypoint
-      display_distance(userSecondColumn + 4, userFieldsMid - 1, gpxNav.pointDistanceRemaining);
+      display_distance(userFieldsCol2X + 5, userFieldsRow1Y + 20, gpxNav.pointDistanceRemaining);
       u8g2.setFont(leaf_5h);
-      u8g2.setCursor(userSecondColumn + 2, userFieldsMid - 14);
+      u8g2.setCursor(userFieldsCol2X, userFieldsRow1Y + 7);
       u8g2.print("DIST>&");
       u8g2.setFont(leaf_6x12);
 
       // User Field 3 -- Glide Ratio
-      display_glide(5, userFieldsBottom - 1, gps_getGlideRatio());
+      display_glide(userFieldsCol1X + 5, userFieldsRow2Y + 20, gps_getGlideRatio());
       u8g2.setFont(leaf_5h);
-      u8g2.setCursor(0, userFieldsBottom - 14);
-      u8g2.print("GLIDE`");
+      u8g2.setCursor(userFieldsCol1X, userFieldsRow2Y + 7);
+      u8g2.print("`GLIDE");
       u8g2.setFont(leaf_6x12);
 
       // User Field 4	-- Glide Ratio to Waypoint
-      display_glide(userSecondColumn + 4, userFieldsBottom - 1, gpxNav.glideToActive);
+      display_glide(userFieldsCol2X + 5, userFieldsRow2Y + 20, gpxNav.glideToActive);
       u8g2.setFont(leaf_5h);
-      u8g2.setCursor(userSecondColumn + 2, userFieldsBottom - 14);
+      u8g2.setCursor(userFieldsCol2X, userFieldsRow2Y + 7);
       u8g2.print("`>&");
       u8g2.setFont(leaf_6x12);
 
