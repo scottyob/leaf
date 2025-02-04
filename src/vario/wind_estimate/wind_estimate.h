@@ -3,8 +3,8 @@
 #include "gps.h"
 
 // bin definitions for storing sample points
-const uint8_t binCount = 12;
-const uint8_t samplesPerBin = 3;
+const uint8_t binCount = 8;
+const uint8_t samplesPerBin = 6;
 
 const float STANDARD_AIRSPEED = 10;  // 10 m/s typical airspeed used as a starting point for wind estimate
 
