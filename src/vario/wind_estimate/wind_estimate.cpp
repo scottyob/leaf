@@ -1,7 +1,11 @@
 
-#include "wind_estimate.h"
+
 #include <limits>
+#include <Arduino.h>
+
+#include "wind_estimate.h"
 #include "log.h"
+
 
 bool DEBUG_WIND_ESTIMATE = false;	// enable for verbose serial printing
 
@@ -285,11 +289,19 @@ void estimateWind() {
 }
 
 void clearWindEstimate(void) {
+  // clear the estimate
   windEstimate.validEstimate = false;
   windEstimate.windSpeed = 0;
   windEstimate.windDirectionTrue = 0;
   windEstimate.airspeed = STANDARD_AIRSPEED;
   windEstimate.error = std::numeric_limits<float>::max();
+
+  // clear the sample points
+  // (we don't need to actually erase them; just set indices and count to 0)
+  for (int b = 0; b < binCount; b++) {
+    totalSamples.bin[b].index = 0;
+    totalSamples.bin[b].sampleCount = 0;
+  }
 }
 
 // ingest a sample groundVelocity and store it in the appropriate bin
@@ -317,7 +329,7 @@ void submitVelocityForWindEstimate(GroundVelocity groundVelocity) {
   float binAngleSpan = 2 * PI / binCount;
   for (int b = 0; b < binCount; b++) {
     if (relativeAngle < (b + 1) * binAngleSpan) {
-      totalSamples.bin[b].angle[totalSamples.bin[b].index] = relativeAngle;
+      totalSamples.bin[b].angle[totalSamples.bin[b].index] = groundVelocity.trackAngle;
       totalSamples.bin[b].speed[totalSamples.bin[b].index] = groundVelocity.speed;
       totalSamples.bin[b].index++;
       totalSamples.bin[b].sampleCount++;
