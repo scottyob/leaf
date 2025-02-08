@@ -41,6 +41,10 @@ struct WindEstimate {
 	// error of estimate
 	float error;
 
+  // most recent bin to receive a sample point (used mostly for debugging)
+  int8_t recentBin = -1;    
+
+  // flag if estimate currently holds a valid estimate or not
   bool validEstimate = false;
 };
 

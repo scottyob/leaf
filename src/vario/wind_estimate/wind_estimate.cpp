@@ -295,6 +295,7 @@ void clearWindEstimate(void) {
   windEstimate.windDirectionTrue = 0;
   windEstimate.airspeed = STANDARD_AIRSPEED;
   windEstimate.error = std::numeric_limits<float>::max();
+  windEstimate.recentBin = -1;
 
   // clear the sample points
   // (we don't need to actually erase them; just set indices and count to 0)
@@ -307,20 +308,23 @@ void clearWindEstimate(void) {
 // ingest a sample groundVelocity and store it in the appropriate bin
 void submitVelocityForWindEstimate(GroundVelocity groundVelocity) {
   
-	// get GroundVelocity track relative to current wind estimate (if Valid)
-	// (the center of the pie moves with the wind, and we want 
-	// bins relative to the center of the pie)
-	float relativeAngle = groundVelocity.trackAngle; // start with existing track angle
+	// GroundVelocity track relative to current wind estimate (as the wind center moves, we
+  //   want to move the bins, too, so that we can good sampling all around the circle)
+    float relativeAngle = groundVelocity.trackAngle; // start with existing track angle
 
-	if (windEstimate.validEstimate) {									// adjust for wind if estimate is valid
-		float dx = cos(groundVelocity.trackAngle);
-		float dy = sin(groundVelocity.trackAngle);
-		float wx = dxOf(windEstimate.windDirectionTrue, windEstimate.windSpeed);
-		float wy = dyOf(windEstimate.windDirectionTrue, windEstimate.windSpeed);
-		relativeAngle = directionOf(dx - wx, dy - wy);
-	}
+  // if we have a valid Wind Estimate, calculate the sample point relative to wind-center
+  // ..actually though we'll only use 1/2 of the wind speed, so the estimate can't really 
+  //   explode and prevent future sample points from registering properly
+    if (windEstimate.validEstimate) {
+      float dx = dxOf(groundVelocity.trackAngle, groundVelocity.speed);
+      float dy = dyOf(groundVelocity.trackAngle, groundVelocity.speed);
+      float wx = dxOf(windEstimate.windDirectionTrue, windEstimate.windSpeed/2);
+      float wy = dyOf(windEstimate.windDirectionTrue, windEstimate.windSpeed/2);
+      relativeAngle = directionOf(dx - wx, dy - wy);
+    }
 		
 	// stay positive, since we'll search bins from 0 to 2*PI
+  // (if wind estimate is not yet valid, relativeAngle will just be the original ground track angle)
 	if (relativeAngle < 0) {
 		relativeAngle += 2 * PI;
 	}
@@ -333,12 +337,18 @@ void submitVelocityForWindEstimate(GroundVelocity groundVelocity) {
       totalSamples.bin[b].speed[totalSamples.bin[b].index] = groundVelocity.speed;
       totalSamples.bin[b].index++;
       totalSamples.bin[b].sampleCount++;
+
+      windEstimate.recentBin = b;
+
+      // track index and count
       if (totalSamples.bin[b].sampleCount > samplesPerBin) {
         totalSamples.bin[b].sampleCount = samplesPerBin;
       }
       if (totalSamples.bin[b].index >= samplesPerBin) {
         totalSamples.bin[b].index = 0;
       }
+
+
       break;
     }
   }

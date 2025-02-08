@@ -117,11 +117,15 @@ void display_setPage(uint8_t targetPage) {
   if (display_page != tempPage) display_page_prior = tempPage;
 }
 
-uint8_t display_getPage() { return display_page; }
+uint8_t display_getPage() {
+  return display_page;
+}
 
 uint8_t showSplashScreenFrames = 0;
 
-void display_showOnSplash() { showSplashScreenFrames = 3; }
+void display_showOnSplash() {
+  showSplashScreenFrames = 3;
+}
 
 //*********************************************************************
 // MAIN DISPLAY UPDATE FUNCTION
@@ -164,7 +168,9 @@ void display_update() {
   }
 }
 
-void display_clear() { u8g2.clear(); }
+void display_clear() {
+  u8g2.clear();
+}
 
 void GLCD_inst(byte data) {
   digitalWrite(LCD_RS, LOW);
@@ -321,9 +327,9 @@ void display_page_debug() {
     u8g2.print('%');
     u8g2.setCursor(x, y += 6);
     u8g2.setFont(leaf_5h);
-    u8g2.print((float)battMV/1000, 2);
+    u8g2.print((float)battMV / 1000, 2);
     u8g2.print("v");
-    
+
     // Altimeter Setting
     u8g2.setCursor(65, 26);
     u8g2.setFont(leaf_5h);
@@ -347,121 +353,118 @@ void display_page_debug() {
     u8g2.print(gpsFixInfo.numberOfSats);
     */
 
-
     //////////////////////////////////
     // Wind Estimate Debugging
+    // get current wind estimate to use in display
 
+    WindEstimate displayEstimate = getWindEstimate();
 
-      // Display Sample Counts
-      int numOfBins = getBinCount();
-      uint8_t pieX = 48;
-      uint8_t pieY = 136;
-      uint8_t pieR = 41;      
-      float binAngle = 2 * PI / numOfBins;
+    // Display Sample Counts
+    int numOfBins = getBinCount();
+    uint8_t pieX = 48;
+    uint8_t pieY = 136;
+    uint8_t pieR = 41;
+    float binAngle = 2 * PI / numOfBins;
 
-      for (int bin = 0; bin < numOfBins; bin++) {
-        float a = binAngle * bin + binAngle / 2;
-        int x0 = pieX + sin(a) * (pieR + 5);
-        int y0 = pieY - cos(a) * (pieR + 5);
+    for (int bin = 0; bin < numOfBins; bin++) {
+      float a = binAngle * bin + binAngle / 2;
+      int x0 = pieX + sin(a) * (pieR + 5);
+      int y0 = pieY - cos(a) * (pieR + 5);
 
-        u8g2.setCursor(x0-3, y0+4);
-        u8g2.setFont(leaf_5x8);
-        u8g2.print(totalSamples.bin[bin].sampleCount);
+      u8g2.setCursor(x0 - 2, y0 + 4);
+      // highlihght the bin that is currently reciving a point
+      if (bin == displayEstimate.recentBin) {
+        u8g2.drawDisc(x0, y0, 6);
+        u8g2.setDrawColor(0);
       }
-
-      // coordinate system center lines and axes
-      u8g2.drawHLine(pieX-pieR, pieY, pieR*2);
-      u8g2.drawVLine(pieX, pieY - pieR, pieR*2);
-      u8g2.setFont(leaf_5h);
-      u8g2.setCursor(pieX - 1, pieY - pieR);      
-      u8g2.print("N");
-      u8g2.setCursor(pieX - 1, pieY + pieR + 6);      
-      u8g2.print("S"); 
-      u8g2.setCursor(pieX - pieR - 6, pieY + 3);      
-      u8g2.print("W");
-      u8g2.setCursor(pieX + pieR + 1, pieY + 3);      
-      u8g2.print("E");
       u8g2.setFont(leaf_5x8);
+      u8g2.print(totalSamples.bin[bin].sampleCount);
+      u8g2.setDrawColor(1);
+    }
 
+    // coordinate system center lines and axes
+    u8g2.drawHLine(pieX - pieR, pieY, pieR * 2);
+    u8g2.drawVLine(pieX, pieY - pieR, pieR * 2);
+    u8g2.setFont(leaf_5h);
+    u8g2.setCursor(pieX - 1, pieY - pieR);
+    u8g2.print("N");
+    u8g2.setCursor(pieX - 1, pieY + pieR + 6);
+    u8g2.print("S");
+    u8g2.setCursor(pieX - pieR - 6, pieY + 3);
+    u8g2.print("W");
+    u8g2.setCursor(pieX + pieR + 1, pieY + 3);
+    u8g2.print("E");
+    u8g2.setFont(leaf_5x8);
 
-      // draw sample points
+    // draw sample points
 
-      // find scale factor to fit the wind estimate on-screen
-        float maxGroundSpeed = 1;
-        for (int bin = 0; bin < numOfBins; bin++) {
-          for (int s = 0; s < totalSamples.bin[bin].sampleCount; s++) {
-            if (totalSamples.bin[bin].speed[s] > maxGroundSpeed) maxGroundSpeed = totalSamples.bin[bin].speed[s];
-          }
-        }
-        float scaleFactor = pieR / maxGroundSpeed;
-
-
-      u8g2.setFont(leaf_5h);
-      u8g2.setFontMode(1);
-      for (int bin = 0; bin < numOfBins; bin++) {
-        for (int s = 0; s < totalSamples.bin[bin].sampleCount; s++) {
-          int x0 = pieX + totalSamples.bin[bin].dy[s] * scaleFactor;          
-          int y0 = pieY - totalSamples.bin[bin].dx[s] * scaleFactor;
-          u8g2.setCursor(x0-2, y0+2);          
-          u8g2.print("+");          
-        }
+    // find scale factor to fit the wind estimate on-screen
+    float maxGroundSpeed = 1;
+    for (int bin = 0; bin < numOfBins; bin++) {
+      for (int s = 0; s < totalSamples.bin[bin].sampleCount; s++) {
+        if (totalSamples.bin[bin].speed[s] > maxGroundSpeed)
+          maxGroundSpeed = totalSamples.bin[bin].speed[s];
       }
-      u8g2.setFontMode(0);
+    }
+    float scaleFactor = pieR / maxGroundSpeed;
 
-      // draw the wind estimate
-        WindEstimate displayEstimate = getWindEstimate();
+    u8g2.setFont(leaf_5h);
+    u8g2.setFontMode(1);
+    for (int bin = 0; bin < numOfBins; bin++) {
+      for (int s = 0; s < totalSamples.bin[bin].sampleCount; s++) {
+        int x0 = pieX + totalSamples.bin[bin].dy[s] * scaleFactor;
+        int y0 = pieY - totalSamples.bin[bin].dx[s] * scaleFactor;
+        u8g2.setCursor(x0 - 2, y0 + 2);
+        u8g2.print("+");
+      }
+    }
+    u8g2.setFontMode(0);
 
-        uint8_t estX = pieX + (sin(displayEstimate.windDirectionTrue) * displayEstimate.windSpeed * scaleFactor);
-        uint8_t estY = pieY - (cos(displayEstimate.windDirectionTrue) * displayEstimate.windSpeed * scaleFactor);
-        uint8_t estR = displayEstimate.airspeed * scaleFactor;
+    // draw the wind estimate
+    uint8_t estX =
+        pieX + (sin(displayEstimate.windDirectionTrue) * displayEstimate.windSpeed * scaleFactor);
+    uint8_t estY =
+        pieY - (cos(displayEstimate.windDirectionTrue) * displayEstimate.windSpeed * scaleFactor);
+    uint8_t estR = displayEstimate.airspeed * scaleFactor;
 
-        // circle center point (the wind estimate)
-        u8g2.setCursor(estX-2, estY+3);
-        u8g2.print("&");
+    // circle center point (the wind estimate)
+    u8g2.setCursor(estX - 2, estY + 3);
+    u8g2.print("&");
 
-        // airspeed circle (the circle fit)
-        u8g2.drawCircle(estX, estY, estR);
+    // airspeed circle (the circle fit)
+    u8g2.drawCircle(estX, estY, estR);
 
+    // update cycles
+    pieX = 5;
+    pieY = pieY - pieR - 20;
+    u8g2.setCursor(pieX, pieY);
+    u8g2.print("upd: ");
+    u8g2.setCursor(pieX, pieY += 6);
+    u8g2.print(getUpdateCount());
+    u8g2.setCursor(pieX, pieY += 8);
+    u8g2.print("bet: ");
+    u8g2.setCursor(pieX, pieY += 6);
+    u8g2.print(getBetterCount());
 
-      // update cycles      
-        pieX = 5;
-        pieY = pieY - pieR-20;
-        u8g2.setCursor(pieX, pieY);
-        u8g2.print("upd: ");
-        u8g2.setCursor(pieX, pieY+=6);
-        u8g2.print(getUpdateCount());
-        u8g2.setCursor(pieX, pieY+=8);
-        u8g2.print("bet: ");
-        u8g2.setCursor(pieX, pieY+=6);
-        u8g2.print(getBetterCount());
+    x = 48;
+    y = 64;
+    u8g2.setCursor(x, y);
+    u8g2.setFont(leaf_5h);
+    u8g2.print("WindEst:");
+    u8g2.setCursor(x, y += 9);
+    u8g2.setFont(leaf_5x8);
+    int16_t windDeg = ((int)(RAD_TO_DEG * displayEstimate.windDirectionTrue + 360)) % 360;
+    u8g2.print(windDeg);
+    u8g2.print("@");
+    u8g2.print(displayEstimate.windSpeed);
 
+    u8g2.setCursor(x = 65, y += 6);
+    u8g2.setFont(leaf_5h);
+    u8g2.print("EstErr:");
+    u8g2.setFont(leaf_5x8);
+    u8g2.setCursor(x, y += 9);
+    u8g2.print(displayEstimate.error);
 
-
-
-      x=48;
-      y=64;
-      u8g2.setCursor(x,y);
-      u8g2.setFont(leaf_5h);    
-      u8g2.print("WindEst:");
-      u8g2.setCursor(x,y+=9);
-      u8g2.setFont(leaf_5x8);      
-      int16_t windDeg =  ((int)(RAD_TO_DEG * displayEstimate.windDirectionTrue + 360))%360;
-      u8g2.print(windDeg);
-      u8g2.print("@");
-      u8g2.print(displayEstimate.windSpeed);
-      
-      u8g2.setCursor(x=65,y+=6);
-      u8g2.setFont(leaf_5h);    
-      u8g2.print("EstErr:");
-      u8g2.setFont(leaf_5x8);      
-      u8g2.setCursor(x,y+=9); 
-      u8g2.print(displayEstimate.error);
-    
-
-
-
-
-    
     ////////////////////////
     // glide ratio debugging
     /*
@@ -487,34 +490,32 @@ void display_page_debug() {
     u8g2.print(gpxNav.pointDistanceRemaining / gps.speed.mps());
     */
 
-
     //////////////////////////
     // GPS FIX and SATELLITES DEBUGGING
     /*
     u8g2.setCursor(x=52,y=104);
-    u8g2.setFont(leaf_5h);    
+    u8g2.setFont(leaf_5h);
     u8g2.print("TotErr:");
     u8g2.setCursor(x,y+=13);
-    u8g2.setFont(leaf_6x12);    
+    u8g2.setFont(leaf_6x12);
     u8g2.print(gpsFixInfo.error);
-  
+
     u8g2.setCursor(x,y+=6);
-    u8g2.setFont(leaf_5h);    
+    u8g2.setFont(leaf_5h);
     u8g2.print("HDOP:");
     u8g2.setCursor(x,y+=13);
-    u8g2.setFont(leaf_6x12);    
+    u8g2.setFont(leaf_6x12);
     u8g2.print(gps.hdop.value());
-    
+
     u8g2.setCursor(x,y+=6);
-    u8g2.setFont(leaf_5h);    
+    u8g2.setFont(leaf_5h);
     u8g2.print("PosErr:");
     u8g2.setCursor(x,y+=13);
-    u8g2.setFont(leaf_6x12);    
+    u8g2.setFont(leaf_6x12);
     u8g2.print(gpsFixInfo.error);
 
     gpsMenuPage.drawConstellation(0, 106, 63);
     */
-    
 
   } while (u8g2.nextPage());
 }
