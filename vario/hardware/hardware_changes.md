@@ -13,13 +13,14 @@ Brief summary of hardware changes
 + Fix: insufficient current to power GPS backup supply from USB cable (when no battery attached)
 + Fix: silkscreen errors
 ### v3.2.3
-+ Superior 12-pin LCD display (192x96px)
-+ Add I2C expansion connector
-+ Add Temp/Humidty sensor
++ Change to superior 12-pin LCD display (192x96px)
 + Add additional "eye-spi" LCD connector for any AdaFruit and other 3rd party displays
-+ Boot/Reset switches moved underneath speaker grille
++ improved header pins along edges and added notches for backlight version of LCD
 ### v3.2.2
 + 14-pin 96px wide LCD display
++ Add I2C expansion connector
++ Add Temp/Humidty sensor
++ Boot/Reset switches moved underneath speaker grille
 ### v3.2.0
 + First version with new ESP32 S3 processor
 + 10-pin 64px wide LCD display

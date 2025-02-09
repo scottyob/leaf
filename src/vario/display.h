@@ -8,7 +8,8 @@
 
 #include <U8g2lib.h>
 
-extern U8G2_ST75256_JLX19296_F_4W_HW_SPI u8g2;  // Leaf 3.2.2    Alice Green HW
+extern U8G2_ST75256_JLX19296_F_4W_HW_SPI u8g2;  // Leaf 3.2.3    Alice Green HW
+//extern U8G2_ST75256_WO256X128_F_4W_HW_SPI u8g2;  // Leaf 3.2.2 June Hung
 
 #define LCD_BACKLIGHT 21  // can be used for backlight if desired (also broken out to header)
 #define LCD_RS 17         // 16 on old V3.2.0
