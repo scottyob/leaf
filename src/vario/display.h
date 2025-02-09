@@ -1,15 +1,17 @@
-/*
- * display.h
- *
- */
-
 #ifndef display_h
 #define display_h
 
 #include <U8g2lib.h>
 
-extern U8G2_ST75256_JLX19296_F_4W_HW_SPI u8g2;  // Leaf 3.2.3    Alice Green HW
-//extern U8G2_ST75256_WO256X128_F_4W_HW_SPI u8g2;  // Leaf 3.2.2 June Hung
+// Uncomment the following line to use the older display hardware
+// #define V322  // older version of hardware with different display
+
+
+#ifndef V322  // if not old hardare, use the latest:
+  extern U8G2_ST75256_JLX19296_F_4W_HW_SPI u8g2;   // Leaf 3.2.3+  Alice Green HW
+#else // otherwise use the old hardware settings from v3.2.2:
+  extern U8G2_ST75256_WO256X128_F_4W_HW_SPI u8g2;  // Leaf 3.2.2 June Hung
+#endif
 
 #define LCD_BACKLIGHT 21  // can be used for backlight if desired (also broken out to header)
 #define LCD_RS 17         // 16 on old V3.2.0
