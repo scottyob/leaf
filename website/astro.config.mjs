@@ -62,7 +62,7 @@ function getMarkdownItems(dir) {
 
 // https://astro.build/config
 export default defineConfig({
-    base: 'leaf',
+   
     integrations: [starlight({
         title: 'Leaf',
         social: {
