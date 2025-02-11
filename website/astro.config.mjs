@@ -96,6 +96,9 @@ export default defineConfig({
                 "github",
                 "opensourcehardware",
                 "bluetooth",
+                "gmail",
+                "youtube",
+                "instagram",
             ],
             "material-symbols": [
                 "bluetooth",
