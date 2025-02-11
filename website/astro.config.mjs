@@ -66,7 +66,7 @@ export default defineConfig({
         title: 'Leaf',
         social: {
             youtube: 'https://www.youtube.com/channel/UCbwWXjxFitbefeKqzAKa94Q',
-            instagram: 'https://www.instagram.com/leaf.vario',
+            instagram: 'https://www.instagram.com/leafvario',
             github: 'https://github.com/DangerMonkeys/leaf',
             discord: 'https://discord.com/channels/1325634753663209472/1325634753663209476',
         },
