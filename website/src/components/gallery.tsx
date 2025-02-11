@@ -7,20 +7,20 @@ const images = [
     thumbnail: "/photos/leaf-with-logo.png",
   },
   {
-    original: "/photos/flight-deck.png",
-    thumbnail: "/photos/flight-deck.png",
+    original: "/photos/flight-deck-2.png",
+    thumbnail: "/photos/flight-deck-2.png",
+  },
+  {
+    original: "/photos/leaf-package.png",
+    thumbnail: "/photos/leaf-package.png",
+  },
+  {
+    original: "/photos/mounting-options.png",
+    thumbnail: "/photos/mounting-options.png",
   },
   {
     original: "/photos/riser.png",
     thumbnail: "/photos/riser.png",
-  },
-  {
-    original: "/photos/caddy.png",
-    thumbnail: "/photos/caddy.png",
-  },
-  {
-    original: "/photos/hardware.png",
-    thumbnail: "/photos/hardware.png",
   },
 
 ];
