@@ -69,10 +69,6 @@ char taskman_tempRH = 1;   // (1) trigger temp & humidity measurements, (2) proc
 char taskman_SDCard = 1;   // check if SD card state has changed and attempt remount if needed
 char taskman_estimateWind = 1;  // estimate wind speed and direction
 
-// track current power on state to detect changes (if user turns device on or off while USB is
-// plugged in, device can still run even when "off")
-uint8_t currentPowerOnState = POWER_OFF;
-
 // temp testing stuff
 // uint8_t display_page = 0;
 uint8_t display_do_tracker = 1;
@@ -175,11 +171,9 @@ void loop() {
     webserver_loop();
   #endif
   
-  if (TESTING_LOOP)
-    main_loop_test();
-  else if (powerOnState == POWER_ON)
+  if (power.onState == POWER_ON)
     main_ON_loop();
-  else if (powerOnState == POWER_OFF_USB)
+  else if (power.onState == POWER_OFF_USB)
     main_CHARGE_loop();
   else
     Serial.print("FAILED MAIN LOOP HANDLER");
@@ -207,10 +201,13 @@ void main_CHARGE_loop() {
     // Check SD Card State and remount if card was inserted
     SDcard_update();
 
+    // update battery level and charge state 
+    power_readBatteryState();
+
     // Check Buttons
     auto buttonPushed =
         buttons_update();  // check Button for any presses (user can turn ON from charging state)
-
+ 
     // Prep to end this cycle and sleep
     chargeman_doTasks = 0;  // done with tasks this timer cycle
     if (buttonPushed == Button::NONE)
@@ -431,76 +428,4 @@ void taskManager(void) {
     Serial.print(" taskTime: ");
     Serial.println(taskman_timeStamp);
   }
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void main_loop_test() {
-  auto button = buttons_check();
-  uint8_t button_state = buttons_get_state();
-
-  /*
-    if (button_state == PRESSED) {
-      if (button == LEFT || button == Button::UP) {
-        if (display_page > 0) display_page--;
-      } else if (button == Button::RIGHT || button == Button::DOWN || button == Button::DOWN) {
-        display_page++;
-        if (display_page > 12) display_page = 12;
-      }
-      display_do_tracker = 1;
-      Serial.print("Going to page: ");
-      Serial.println(display_page);
-    }
-
-    switch (display_page) {
-      case 0:
-        //full_system_test();
-        //gps_test_sats();
-        gps_test();
-        break;
-      case 1:
-
-        //display_test_bat_icon();
-        //display_test();
-        //power_test();
-        if (display_do_tracker) {
-          full_system_test();
-          //display_test_real_3();
-          //SDcard_test();
-          //display_do_tracker = 0;
-        }
-        break;
-      case 2:
-        speaker_TEST();
-        break;
-      case 3:
-        //baro_test();
-        break;
-      case 4:
-        imu_test();
-        break;
-      case 5:
-        display_test_big(1);
-        break;
-      case 6:
-        display_test_big(2);
-        break;
-      case 7:
-        display_test_big(3);
-        break;
-      case 8:
-        display_test_big(4);
-        break;
-      case 9:
-        display_test_big(5);
-        break;
-      case 12:
-        speaker_playSound(fx_exit);
-        delay(2000);
-        power_turn_off();
-        break;
-    }
-    */
 }
