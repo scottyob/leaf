@@ -5,7 +5,7 @@ Leaf is designed as an open source vario for paragliding.  The vision: a device 
 
 ![Paragliding Sunset](https://static.vecteezy.com/system/resources/thumbnails/027/380/958/small/vintage-colored-paraglide-silhouette-above-misty-crimea-valley-at-sunrise-photo.jpg)
 
-### See more here: [www.leafvario.com](www.leafvario.com) 
+### See more here: [www.leafvario.com](https://leafvario.com) 
 
 However, because Leaf is small, portable, battery-powered, and packed full of sensors and computational power, it also can be a great development platform for other uses besides paragliding.  The PCB was designed with flexibility and expansion in mind.
 
