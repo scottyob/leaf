@@ -14,6 +14,7 @@
 #include "PageNavigate.h"
 #include "PageThermal.h"
 #include "PageThermalSimple.h"
+#include "PageWarning.h"
 #include "baro.h"
 #include "display.h"
 #include "menu_page.h"
@@ -127,6 +128,11 @@ Button buttons_update(void) {
         }
         break;
     }
+    return which_button;
+  }
+  if (displayingWarning()) {
+    warningPage_button(which_button, buttons_get_state(), buttons_get_hold_count());
+    display_update();
     return which_button;
   }
 
