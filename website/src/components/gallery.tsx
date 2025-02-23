@@ -23,8 +23,8 @@ const images = [
     thumbnail: "/photos/LeafDisplayScreens.png",
   },
   {
-    original: "/photos/riser.png",
-    thumbnail: "/photos/riser.png",
+    original: "/photos/riser-2.png",
+    thumbnail: "/photos/riser-2.png",
   },
 
 ];
