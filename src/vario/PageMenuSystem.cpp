@@ -8,6 +8,8 @@
 #include "display.h"
 #include "displayFields.h"
 #include "fonts.h"
+#include "page_fanet.h"
+#include "page_message.h"
 #include "pages.h"
 #include "power.h"
 #include "settings.h"
@@ -19,7 +21,7 @@ enum system_menu_items {
   cursor_system_volume,
   cursor_system_poweroff,
   cursor_system_showWarning,
-  cursor_system_ecomode,
+  cursor_system_fanet,
   cursor_system_wifi,
   cursor_system_bluetooth,
   cursor_system_about,
@@ -93,19 +95,23 @@ void SystemMenuPage::draw() {
           break;
 
         case cursor_system_showWarning:
-        u8g2.setCursor(setting_choice_x + 8, menu_items_y[i]);
-        if (SHOW_WARNING)
-          u8g2.print((char)125);
-        else
-          u8g2.print((char)123);
-        break;
-
-        case cursor_system_ecomode:
           u8g2.setCursor(setting_choice_x + 8, menu_items_y[i]);
-          if (ECO_MODE)
+          if (SHOW_WARNING)
             u8g2.print((char)125);
           else
             u8g2.print((char)123);
+          break;
+
+        case cursor_system_fanet:
+          u8g2.setCursor(setting_choice_x + 8, menu_items_y[i]);
+#ifndef FANET
+          // If Fanet is not supported, we should show a warning
+          u8g2.setFont(leaf_icons);
+          u8g2.print((char)0x22);
+          u8g2.setFont(leaf_6x12);
+          break;
+#endif
+          u8g2.print(FANET_region == FanetRadioRegion::OFF ? (String) "OFF" : (String)((char)126));
           break;
 
         case cursor_system_bluetooth:
@@ -161,10 +167,25 @@ void SystemMenuPage::setting_change(Button dir, ButtonState state, uint8_t count
       if (state == RELEASED) settings_toggleBoolOnOff(&AUTO_OFF);
       break;
     case cursor_system_showWarning:
-    if (state == RELEASED) settings_toggleBoolOnOff(&SHOW_WARNING);
+      if (state == RELEASED) settings_toggleBoolOnOff(&SHOW_WARNING);
       break;
-    case cursor_system_ecomode:
-      if (state == RELEASED) settings_toggleBoolOnOff(&ECO_MODE);
+    case cursor_system_fanet:
+      if (state != RELEASED) break;
+#ifndef FANET
+      PageMessage::show("Fanet",
+                        "UNSUPPORTED\n"
+                        "\n"
+                        "Fanet is not\n"
+                        "supported on\n"
+                        "this device.\n"
+                        "\n"
+                        "  Sorry!\n"
+                        "\n"
+                        "    :(\n");
+      break;
+#endif
+      // Show the Fanet setting page
+      PageFanet::show();
       break;
     case cursor_system_wifi:
       if (state != RELEASED) break;

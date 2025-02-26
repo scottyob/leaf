@@ -30,7 +30,8 @@
         "streambuf": "cpp",
         "regex": "cpp",
         "utility": "cpp",
-        "mutex": "cpp"
+        "mutex": "cpp",
+        "optional": "cpp"
     },
     "editor.formatOnSave": true,
     "[cpp]": {
@@ -40,5 +41,17 @@
         "editor.defaultFormatter": "ms-vscode.cpptools"
     },
     "C_Cpp.clang_format_style": "file",
-    "C_Cpp.clang_format_fallbackStyle": "none"
+    "C_Cpp.clang_format_fallbackStyle": "none",
+    "cSpell.words": [
+        "baro",
+        "efuse",
+        "Fanet",
+        "kmph",
+        "landedok",
+        "needride",
+        "RADIOLIB",
+        "RSSI",
+        "RXMIT",
+        "xorshift"
+    ]
 }
