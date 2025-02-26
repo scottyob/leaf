@@ -1,3 +1,8 @@
+---
+title: Fanet
+description: Structure of Fanet Support
+---
+
 ## Fanet Support
 
 The Leaf supports Fanet for the purposes of:
