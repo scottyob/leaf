@@ -9,13 +9,13 @@
 #include "baro.h"
 #include "ble.h"
 #include "buttons.h"
-#include "display.h"
 #include "gps.h"
 #include "log.h"
 #include "power.h"
 #include "settings.h"
 #include "speaker.h"
 #include "tempRH.h"
+#include "ui/display.h"
 #include "wind_estimate/wind_estimate.h"
 
 #ifdef MEMORY_PROFILING

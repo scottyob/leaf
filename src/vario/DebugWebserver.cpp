@@ -2,7 +2,7 @@
 #include <WiFi.h>
 #include "SDcard.h"
 #include "WebServer.h"
-#include "display.h"
+#include "ui/display.h"
 
 WebServer server;
 String send_buffer = "";

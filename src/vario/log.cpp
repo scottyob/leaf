@@ -11,11 +11,11 @@
 #include "logbook/flight.h"
 #include "logbook/igc.h"
 #include "logbook/kml.h"
-#include "page_fanet_stats.h"
 #include "settings.h"
 #include "speaker.h"
 #include "string_utils.h"
 #include "tempRH.h"
+#include "ui/page_fanet_stats.h"
 #include "wind_estimate/wind_estimate.h"
 
 // track if we're "flying" separate from if we're recording a log.  This allows us to enable

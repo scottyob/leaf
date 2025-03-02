@@ -1,5 +1,5 @@
 #pragma once
-#include "flight_stats.h"
+#include "logbook/flight_stats.h"
 #include "menu_page.h"
 
 class PageFlightSummary : public SimpleSettingsMenuPage {

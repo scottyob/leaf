@@ -6,9 +6,9 @@
 #include <nvs_flash.h>
 
 #include "baro.h"
-#include "display.h"
 #include "gps.h"
 #include "speaker.h"
+#include "ui/display.h"
 
 #define RW_MODE false
 #define RO_MODE true

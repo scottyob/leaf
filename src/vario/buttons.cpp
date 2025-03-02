@@ -11,17 +11,17 @@
 
 #include <Arduino.h>
 
-#include "PageNavigate.h"
-#include "PageThermal.h"
-#include "PageThermalSimple.h"
-#include "PageWarning.h"
 #include "baro.h"
-#include "display.h"
-#include "menu_page.h"
-#include "pages.h"
 #include "power.h"
 #include "settings.h"
 #include "speaker.h"
+#include "ui/PageNavigate.h"
+#include "ui/PageThermal.h"
+#include "ui/PageThermalSimple.h"
+#include "ui/PageWarning.h"
+#include "ui/display.h"
+#include "ui/menu_page.h"
+#include "ui/pages.h"
 
 // button debouncing
 Button button_debounce_last = Button::NONE;
@@ -63,8 +63,9 @@ Button buttons_init(void) {
 // persistent button press.
 bool centerHoldLockButtons = true;  // default to true, for the first turn on event
 
-// call this function after performing a center-hold button action if no additional center-hold actions 
-// should be taken until user lets go of the center button (example: resetting timer, then turning off)
+// call this function after performing a center-hold button action if no additional center-hold
+// actions should be taken until user lets go of the center button (example: resetting timer, then
+// turning off)
 void buttons_lockAfterHold() {
   centerHoldLockButtons = true;  // lock from further actions until user lets go of center button
 }
@@ -79,7 +80,7 @@ Button buttons_update(void) {
   // executed center-hold event.  This prevents multiple sequential actions being executed if user
   // keeps holding the center button (i.e., resetting timer, then turning off)
   if (centerHoldLockButtons && which_button == Button::CENTER) {
-    return which_button;    // return early without executing further tasks
+    return which_button;  // return early without executing further tasks
   } else {
     centerHoldLockButtons = false;  // user let go of center button, so we can reset the lock.
   }
@@ -224,9 +225,13 @@ Button buttons_update(void) {
   return which_button;
 }
 
-ButtonState buttons_get_state(void) { return button_state; }
+ButtonState buttons_get_state(void) {
+  return button_state;
+}
 
-uint16_t buttons_get_hold_count(void) { return button_hold_counter; }
+uint16_t buttons_get_hold_count(void) {
+  return button_hold_counter;
+}
 
 // the recurring call to see if user is pressing buttons.  Handles debounce and button state changes
 Button buttons_check(void) {

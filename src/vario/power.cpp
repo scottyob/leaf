@@ -8,14 +8,14 @@
 #include "baro.h"
 #include "buttons.h"
 #include "configuration.h"
-#include "display.h"
-#include "displayFields.h"
 #include "gps.h"
 #include "log.h"
 #include "power.h"
 #include "settings.h"
 #include "speaker.h"
 #include "tempRH.h"
+#include "ui/display.h"
+#include "ui/displayFields.h"
 
 POWER power;  // struct for battery-state and on-state variables
 
