@@ -15,7 +15,7 @@
 #define SPI_CLK 12
 #define SPI_MISO 13
 
-#define SPI_SS_LCD 15
+#define SPI_SS_LCD 10
 
 void spi_init(void);
 void spi_writeGLCD(byte data);
