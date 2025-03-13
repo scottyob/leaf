@@ -335,13 +335,13 @@ void setTasks(void) {
       break;
     case 2:
       // taskman_baro = 2;
+      taskman_imu = 1;  // update accel every 50ms during the 2nd & 7th blocks
       taskman_estimateWind = 1;  // estimate wind speed and direction
       break;
     case 3:
       // taskman_baro = 3;
       break;
-    case 4:
-      taskman_imu = 1;  // update accel every 100ms during the 4th block
+    case 4:      
       break;
     case 5:
       baro_startNewCycle = true;  // begin updating baro every 50ms on the 0th and 5th blocks
@@ -351,6 +351,7 @@ void setTasks(void) {
       // taskman_baro = 1;
       break;
     case 7:
+      taskman_imu = 1;  // update accel every 50ms during the 2nd & 7th blocks
       taskman_ble = 1;
       // taskman_baro = 2;
       break;
