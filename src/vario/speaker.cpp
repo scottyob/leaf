@@ -53,8 +53,6 @@ uint16_t single_note[] = {
     NOTE_END};  // this is to allow playing single notes by changing random_note[0], while still
                 // having a NOTE_END terminator following.
 
-hw_timer_t* speaker_timer = NULL;
-
 // volatile pointer to the sound sample to play
 volatile uint16_t* snd_index;
 
@@ -241,16 +239,9 @@ void speaker_updateVarioNote(int32_t verticalRate) {
     sound_varioNote = 0;
   }
 
-  // stop the timer to copy values, to ensure the ISR doesn't trigger in the middle of these steps
-  timerStop(speaker_timer);
-  // cli();
   sound_varioNote = sound_varioNoteTEMP;
   sound_vario_play_samples = sound_vario_play_samplesTEMP;
   sound_vario_rest_samples = sound_vario_rest_samplesTEMP;
-  // sei();
-  timerStart(speaker_timer);
-
-  // speaker_debugPrint();
 }
 
 int microsLast = 0;
