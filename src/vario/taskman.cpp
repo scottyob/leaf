@@ -1,7 +1,7 @@
-
 // includes
 #include <Arduino.h>
 #include <HardwareSerial.h>
+#include "task.h"
 
 #include "IMU.h"
 #include "Leaf_SPI.h"
@@ -26,6 +26,13 @@
 #include <WiFi.h>
 #include "DebugWebserver.h"
 #endif
+
+//*** Task Manager
+// This module is where the bulk of the task management work
+// happens.  We are slowly moving away from this into a
+// FreeRTOS task based scheduler, so, we expect this file to
+// shrink over time
+// ******
 
 // Bit of a hack for now as we don't have a good way to pass big chunks
 // of data around, so, we do it on the stack.  Default is 8KB
@@ -65,13 +72,13 @@ bool gps_is_quiet = 0;
 // Trackers for Task Manager Queue.  Default to tasks being needed, so they execute upon startup
 char taskman_setTasks = 1;  // the task of setting tasks -- usually set by timer-driven interrupt
 
-char taskman_buttons = 1;  // poll & process buttons
-char taskman_speakerTimer = 1; // adjust speaker notes
-char taskman_baro = 1;     // (1) preprocess on-chip ADC pressure, (2) read pressure and preprocess
+char taskman_buttons = 1;       // poll & process buttons
+char taskman_speakerTimer = 1;  // adjust speaker notes
+char taskman_baro = 1;  // (1) preprocess on-chip ADC pressure, (2) read pressure and preprocess
                         // on-chip ADC temperature, (3) read temp and calulate true Alt, (4) filter
                         // Alt, update climb, and store values etc
-char taskman_imu = 1;      // read sensors and update values
-char taskman_gps = 1;      // process any NMEA strings and update values
+char taskman_imu = 1;   // read sensors and update values
+char taskman_gps = 1;   // process any NMEA strings and update values
 char taskman_display = 1;  // update display
 char taskman_power = 1;    // check battery, check auto-turn-off, etc
 char taskman_log = 1;      // check auto-start, increment timers, update log file, etc
@@ -79,22 +86,23 @@ char taskman_tempRH = 1;   // (1) trigger temp & humidity measurements, (2) proc
 char taskman_SDCard = 1;   // check if SD card state has changed and attempt remount if needed
 char taskman_memory_stats = 1;  // Prints memory usage reports
 char taskman_estimateWind = 1;  // estimate wind speed and direction
-char taskman_ble = 1;           // post BLE notification
 
 // temp testing stuff
 // uint8_t display_page = 0;
 uint8_t display_do_tracker = 1;
 #define TESTING_LOOP false
 
+// Function Prototypes
+void taskManager(void);
+void main_ON_loop();
+void main_CHARGE_loop();
+void setTasks();
+void taskManager();
+
 /////////////////////////////////////////////////
 //             SETUP              ///////////////
 /////////////////////////////////////////////////
-void setup() {
-  // Start USB Serial Debugging Port
-  Serial.begin(115200);
-  delay(200);
-  Serial.println("Starting Setup");
-
+void taskmanSetup() {
 #ifdef DEBUG_WIFI
   // Start WiFi
   WiFi.begin();
@@ -134,11 +142,6 @@ void setup() {
              CHARGE_TIMER_LENGTH,
              true,
              0);  // auto reload timer ever time we've counted a sample length
-
-  // Start bluetooth on startup if setting enabled
-  if (BLUETOOTH_ON) {
-    BLE::get().setup();
-  }
 
   // All done!
   Serial.println("Finished Setup");
@@ -335,13 +338,13 @@ void setTasks(void) {
       break;
     case 2:
       // taskman_baro = 2;
-      taskman_imu = 1;  // update accel every 50ms during the 2nd & 7th blocks
+      taskman_imu = 1;           // update accel every 50ms during the 2nd & 7th blocks
       taskman_estimateWind = 1;  // estimate wind speed and direction
       break;
     case 3:
       // taskman_baro = 3;
       break;
-    case 4:      
+    case 4:
       break;
     case 5:
       baro_startNewCycle = true;  // begin updating baro every 50ms on the 0th and 5th blocks
@@ -352,7 +355,6 @@ void setTasks(void) {
       break;
     case 7:
       taskman_imu = 1;  // update accel every 50ms during the 2nd & 7th blocks
-      taskman_ble = 1;
       // taskman_baro = 2;
       break;
     case 8:
@@ -453,10 +455,6 @@ void taskManager(void) {
     taskman_memory_stats = 0;
   }
 #endif
-  if (taskman_ble) {
-    BLE::get().loop();
-    taskman_ble = 0;
-  }
 
   if (taskman_didSomeTasks && DEBUG_MAIN_LOOP) {
     taskman_didSomeTasks = 0;
