@@ -118,6 +118,7 @@ bool processQuaternion() {
 
       bool needComma = false;
       bool needNewline = false;
+      
 #ifdef SHOW_QUATERNION
       Serial.print(F("Qw:"));
       printFloat(qw);
@@ -129,6 +130,7 @@ bool processQuaternion() {
       printFloat(qz);
       needComma = true;
       needNewline = true;
+
 #endif
 
       double ax = ((double)data.Raw_Accel.Data.X) / 8192.0;
