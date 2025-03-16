@@ -130,6 +130,9 @@ void BLE::end() {
 }
 
 void BLE::on_receive(const GpsReading& msg) {
+  // Short circuit if not initialized
+  if (pServer == nullptr) return;
+
   // Only process GPS updates twice a second at most.
   if (millis() - lastGpsMs < 500) {
     return;
@@ -141,6 +144,9 @@ void BLE::on_receive(const GpsReading& msg) {
 }
 
 void BLE::on_receive(const FanetPacket& msg) {
+  // Short circuit if not initialized
+  if (pServer == nullptr) return;
+
   WakeupMessage message(WakeupMessage::Reason::FANET_RX, msg);
   xQueueSend(BLE::get().xQueue, &message, 0);
 }

@@ -1,9 +1,11 @@
 #include "PageMenuSystemWifi.h"
 
 #include "WiFi.h"
+#include "ble.h"
 #include "display.h"
 #include "fonts.h"
 #include "ota.h"
+#include "power.h"
 #include "version.h"
 
 /**************************
@@ -151,6 +153,10 @@ void PageMenuSystemWifiManualSetup::draw_extra() {
 void PageMenuSystemWifiUpdate::shown() {
   SimpleSettingsMenuPage::shown();
 
+  // Performing an OTA update check is super expensive.
+  // Unload BLE to do this check and reboot when done.
+  BLE::get().end();
+
   // Reset the WiFi module into a disconnected
   // TODO:  Only do this if not already connected
   WiFi.mode(WIFI_STA);
@@ -199,6 +205,7 @@ void PageMenuSystemWifiUpdate::loop() {
       }
       if (latest_version == TAG_VERSION) {
         log_lines.push_back("*YOU'RE UP TO DATE!");
+        log_lines.push_back("*REBOOT REQUIRED");
         *wifi_state = WifiState::OTA_UP_TO_DATE;
       } else {
         log_lines.push_back("*NEW VERSION AVAILABLE!");
@@ -221,4 +228,13 @@ void PageMenuSystemWifiUpdate::loop() {
       }
       break;
   }
+  SimpleSettingsMenuPage::loop();
+}
+
+void PageMenuSystemWifiUpdate::closed(bool removed_from_Stack) {
+  // When the page is closed, shut it down as we unloaded things
+  // that are loaded on startup like BLE.  Poor mans re-init
+  // approach
+  Serial.println("Powering off device");
+  power_latch_off();
 }
