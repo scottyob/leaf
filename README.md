@@ -39,10 +39,10 @@ Additional Features:
 ### For more info:
 
 - Check out the [GitHub Repo](https://github.com/DangerMonkeys/leaf)
-- Visit the website [www.leafvario.com](www.leafvario.com)
+- Visit the website [www.leafvario.com](https://www.leafvario.com)
 - Find us on [Discord](https://discord.gg/m7nC8Dgbu6)
 - [Email us!](mailto:leafvario@gmail.com)
-- Follow us on [Instagram](www.instagram.com/leafvario)
+- Follow us on [Instagram](https://www.instagram.com/leafvario)
 - Coming soon: some how-to videos on [YouTube](https://www.youtube.com/channel/UCbwWXjxFitbefeKqzAKa94Q)
 
 We'll continue updating documentation, firmware, and hardware as we go. Stay tuned!
