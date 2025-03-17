@@ -12,6 +12,7 @@
 #include "buttons.h"
 #include "flags_enum.h"
 #include "pressure_source.h"
+#include "units/pressure.h"
 
 #define FILTER_VALS_MAX 20  // total array size max;
 
@@ -27,8 +28,8 @@ class Barometer {
  public:
   Barometer(IPressureSource* pressureSource) : pressureSource_(pressureSource) {}
 
-  int32_t pressure;
-  int32_t pressureFiltered;
+  Pressure pressure;
+  Pressure pressureFiltered;
   float altimeterSetting = 29.921;
   // cm raw pressure altitude calculated off standard altimeter setting (29.92)
   int32_t alt;
