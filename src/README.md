@@ -30,6 +30,10 @@ To use [PlatformIO](https://platformio.org/) to develop this project:
         * Release boot button
     * Click the small rightward arrow in the PlatformIO toolbar to build and upload firmware
 
+### Testing
+
+* To ensure minimal functionality of new firmware, use this [basic test procedure](../docs/dev-references/testing/test_procedure.md)
+
 #### Formatting
 
 To auto-format all Leaf C++ files:
