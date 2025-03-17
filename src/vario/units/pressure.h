@@ -5,11 +5,46 @@
 
 #include "altitude.h"
 
+/// @brief Represents pressure (in 100ths of millibars hPa)
 struct Pressure {
   // Raw value in 100ths of millibars (hPa)
   int32_t raw_value;
 
   explicit Pressure(int32_t value) : raw_value(value) {}
+  explicit Pressure() : raw_value(0) {}
+
+  // Assignment operator to assign int32_t to Pressure
+  Pressure& operator=(int32_t value) {
+    raw_value = value;
+    return *this;
+  }
+
+  // Type conversion operator to convert Pressure to int32_t
+  operator int32_t() const { return raw_value; }
+
+  // Addition assignment operator
+  Pressure& operator+=(int32_t value) {
+    raw_value += value;
+    return *this;
+  }
+
+  // Subtraction assignment operator
+  Pressure& operator-=(int32_t value) {
+    raw_value -= value;
+    return *this;
+  }
+
+  // Multiplication assignment operator
+  Pressure& operator*=(int32_t value) {
+    raw_value *= value;
+    return *this;
+  }
+
+  // Division assignment operator
+  Pressure& operator/=(int32_t value) {
+    raw_value /= value;
+    return *this;
+  }
 
   /// @brief hPa
   /// @return

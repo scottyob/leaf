@@ -187,14 +187,14 @@ void BLE::sendVarioUpdate() {
            // See https://raw.githubusercontent.com/LK8000/LK8000/master/Docs/LK8EX1.txt
            ("$LK8EX1,"  // Type of update
             "%u,"       // raw pressure in hPascal
-            "99999,"  // altitude in meters, relative to QNH 1013.25. 99999 if not available/needed
-            "%d,"     // Climb rate in cm/s.  Can be 99999 if not available
-            "99,"     // Temperature in C.  If not available, send 99
+            "%u,"   // altitude in meters, relative to QNH 1013.25. 99999 if not available/needed
+            "%d,"   // Climb rate in cm/s.  Can be 99999 if not available
+            "99,"   // Temperature in C.  If not available, send 99
             "999,"  // Battery voltage OR percentage.  If percentage, add 1000 (if 1014 is 14%). 999
                     // if unavailable
             "*"     // Checksum to follow
             ),
-           baro.pressureFiltered, baro.climbRateFiltered);
+           baro.pressure, static_cast<uint>(baro.altF), baro.climbRateFiltered);
   // Add checksum and delimeter with newline
   snprintf(stringified + strlen(stringified), sizeof(stringified), "%02X\n", checksum(stringified));
   pCharacteristic->setValue((const uint8_t*)stringified, sizeof(stringified));
