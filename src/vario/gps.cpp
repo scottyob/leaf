@@ -144,8 +144,8 @@ void gps_init(void) {
   // Create the GPS Mutex for multi-threaded locking
   GpsLockGuard::mutex = xSemaphoreCreateMutex();
 
-  // init nav struct (TODO: may not need this here, just for testing at startup for ease)
-  gpx_initNav();
+  // init nav class (TODO: may not need this here, just for testing at startup for ease)
+  navigator.init();
 
   // Set pins
   Serial.print("GPS set pins... ");
@@ -224,7 +224,7 @@ void gps_calculateGlideRatio() {
     glideRatio = 0;
   } else {
     //             km per hour       / cm per sec * sec per hour / cm per km
-    glideRatio = gpxNav.averageSpeed /
+    glideRatio = navigator.averageSpeed /
                  (-1 * climb * 3600 /
                   100000);  // add -1 to invert climbrate because 'negative' is down (in climb), but
                             // we want a standard glide ratio (ie 'gliding down') to be positive
@@ -246,7 +246,7 @@ void gps_updateFixInfo() {
 
 void gps_update() {
   // update sats if we're tracking sat NMEA sentences
-  updateGPXnav();
+  navigator.update();
   gps_updateSatList();
   gps_updateFixInfo();
   gps_calculateGlideRatio();
