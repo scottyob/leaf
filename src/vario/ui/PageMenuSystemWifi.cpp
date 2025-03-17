@@ -6,6 +6,7 @@
 #include "fonts.h"
 #include "ota.h"
 #include "power.h"
+#include "settings.h"
 #include "version.h"
 
 /**************************
@@ -230,9 +231,11 @@ void PageMenuSystemWifiUpdate::loop() {
 }
 
 void PageMenuSystemWifiUpdate::closed(bool removed_from_Stack) {
-  // When the page is closed, shut it down as we unloaded things
+  // When the page is closed, perform reboot as we unloaded things
   // that are loaded on startup like BLE.  Poor mans re-init
   // approach
-  Serial.println("Powering off device");
-  power_latch_off();
+  Serial.println("Rebooting the device");
+  BOOT_TO_ON = true;  // restart into 'on' state on reboot
+  settings_save();
+  ESP.restart();
 }
