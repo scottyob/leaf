@@ -92,6 +92,7 @@ class PageMenuSystemWifiUpdate : public SimpleSettingsMenuPage {
   void shown() override;
   void draw_extra() override;
   void loop() override;
+  virtual void closed(bool removed_from_Stack) override;
 
  private:
   WifiState* wifi_state;

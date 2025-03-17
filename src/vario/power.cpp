@@ -198,7 +198,12 @@ void power_latch_on() { digitalWrite(POWER_LATCH, HIGH); }
 
 // If no USB power is available, systems will immediately lose
 // power and shut down (after user lets go of center button)
-void power_latch_off() { digitalWrite(POWER_LATCH, LOW); }
+void power_latch_off() {
+  digitalWrite(POWER_LATCH, LOW);
+  // In the case the device is charging, OR the user is holding
+  // down the center button, reboot
+  esp_restart();
+}
 
 void power_update() {
   // update battery state
