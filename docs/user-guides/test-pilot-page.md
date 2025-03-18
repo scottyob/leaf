@@ -7,7 +7,7 @@ description: Helpful links and resources for test pilots
 Thanks for being a test pilot!  Here are some helpful links:
 
 ## Leaf Manual
-[User Manual Available Here](https://leafvario.com/user-guides/manual/)
+[User Manual Available Here](https://leafvario.com/user-guides/vario-user-manual/)
 
 ## Feedback Form
 Let us know what you think! 
