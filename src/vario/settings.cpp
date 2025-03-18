@@ -119,6 +119,7 @@ void Settings::retrieve() {
   gpsMode = leafPrefs.getChar("GPS_SETTING");
   log_saveTrack = leafPrefs.getBool("TRACK_SAVE");
   log_autoStart = leafPrefs.getBool("AUTO_START");
+  log_autoStop = leafPrefs.getBool("AUTO_STOP");
   log_format = leafPrefs.getUChar("LOG_FORMAT");
 
   // System Settings
