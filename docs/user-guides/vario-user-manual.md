@@ -17,33 +17,28 @@ description: How to set up and use your Leaf Vario
 
 ## Getting Around
 Meet the Directional Pad. <br> 
-| <img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXeXsJX6Sjel-_dLFq504q7yAaVV8-6TCI4LknA79yLm2C4ZBjb3bayKaIV_1xfcLcYIJtO-fKRQgbgFnDBZscTVOW4Z42466m6fVToVTp8RRZOaxZ4ZSzmupUmPS9hTERUtRUplSw" alt="Button" width="100"/> | You control the Leaf with this 5-way switch by pressing <br> UP, DOWN, LEFT, RIGHT, and CENTER |
+|<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXeXsJX6Sjel-_dLFq504q7yAaVV8-6TCI4LknA79yLm2C4ZBjb3bayKaIV_1xfcLcYIJtO-fKRQgbgFnDBZscTVOW4Z42466m6fVToVTp8RRZOaxZ4ZSzmupUmPS9hTERUtRUplSw" alt="Button" width="100"/></center>| You control the Leaf with this 5-way switch by pressing <br> UP, DOWN, LEFT, RIGHT, and CENTER |
 |---|---|
-| <img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXcRpEpn-JO2rCSpA9sw9mig9YRUqxWoGJB0zdd-5tvztXy38VLVRYlOFSUjk5fzFs5XQNccJvUlCU38uEyF9pBkNTjPU1OfWPmy5_7_we7Ms3lpavRfP7ka3fOLdWhZ0oeYrb9YNw" alt="Button" width="100"/>| **Turn Leaf ON and OFF by holding CENTER**|
-|<img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXfk4E-nXyNuEVFwb5dSFf__UG6bmtHqjSGozENKftmF-LPdbWELIhJWSAP3P01pCtX-dUrzJKcX17pgsi3uZgKnKcFAW_mPy5B4Pomw5L3_r86rrV58W5gt0Fd_zYSu06_95SFhuw" alt="Leaf Vario" width="100"/>| **Use LEFT and RIGHT to scroll through the pages**|
-
-<center> </center> 
+|<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXcRpEpn-JO2rCSpA9sw9mig9YRUqxWoGJB0zdd-5tvztXy38VLVRYlOFSUjk5fzFs5XQNccJvUlCU38uEyF9pBkNTjPU1OfWPmy5_7_we7Ms3lpavRfP7ka3fOLdWhZ0oeYrb9YNw" alt="Button" width="100"/></center>| **Turn Leaf ON and OFF by holding CENTER**|
+|<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXfk4E-nXyNuEVFwb5dSFf__UG6bmtHqjSGozENKftmF-LPdbWELIhJWSAP3P01pCtX-dUrzJKcX17pgsi3uZgKnKcFAW_mPy5B4Pomw5L3_r86rrV58W5gt0Fd_zYSu06_95SFhuw" alt="Leaf Vario" width="100"/></center>| **Use LEFT and RIGHT to scroll through the pages**|
 
 All the way to the right you’ll find the MENU page: 
 
 <center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXetn9WW7OnT9mCnTAM6D4454IJ_ox0HR8n95gaBEq4iyeeUt16X6gFF_v1doTxvZFEYN2TXLnW8zzGROOTNM5brRmcmOQVuXeXU9MEl8pfyyPoyMoqCBNLtaLdCQTyIiW3mEfCY" alt="Leaf Pages"/> </center> 
 
-
-
 |<img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXdXjVYX7bcxOn8vy0Uo_en0e0vEbOJR74ib4Q2vrulqka73rhg14MyE39m95vPlq1gwMSeNfTIOWwGINHaxdJ8Pw6cqvTcPwOkXk66YH9wKC8ENC64VEOgRc92KE7qpDq5fdQoJ2g" alt="Leaf Vario" width="100"/>| Within a page, use UP and DOWN to scroll through the options |
 |---|---|
-|<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXegtH5Psy3_WQFYwnGZlf7vMBAuCAbbbq8nppk8toKN3ep9i5pUhn6r5ZKMgqrSANlJiXfqkhKWbbcrpg0k_odJZ4ipOJY6AaMhSEQl2VhjR5b02VG3FVj5qLc0CBlA9o3vuGBh4g" alt="Cursor" width="100"/>| **A cursor selection box will highlight adjustable fields** |
-|<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXcRpEpn-JO2rCSpA9sw9mig9YRUqxWoGJB0zdd-5tvztXy38VLVRYlOFSUjk5fzFs5XQNccJvUlCU38uEyF9pBkNTjPU1OfWPmy5_7_we7Ms3lpavRfP7ka3fOLdWhZ0oeYrb9YNw" alt="Button" width="100"/>| **When selected, press CENTER to select or adjust that option** |
+|<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXegtH5Psy3_WQFYwnGZlf7vMBAuCAbbbq8nppk8toKN3ep9i5pUhn6r5ZKMgqrSANlJiXfqkhKWbbcrpg0k_odJZ4ipOJY6AaMhSEQl2VhjR5b02VG3FVj5qLc0CBlA9o3vuGBh4g" alt="Cursor" width="100"/></center>| **A cursor selection box will highlight adjustable fields** |
+|<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXcRpEpn-JO2rCSpA9sw9mig9YRUqxWoGJB0zdd-5tvztXy38VLVRYlOFSUjk5fzFs5XQNccJvUlCU38uEyF9pBkNTjPU1OfWPmy5_7_we7Ms3lpavRfP7ka3fOLdWhZ0oeYrb9YNw" alt="Button" width="100"/></center>| **When selected, press CENTER to select or adjust that option** |
 | For Examples,<br>Press CENTER to: | * Start the timer (**HOLD** CENTER to stop) <br> * Cylce through display options in the Altitude or User fields |
 
-<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXeXUOgslOCgrlS5YccCOAkB2tYPkZbJkGMk_Ili9YuaveUQacC2-nabz5-9RjODVoSRR4Bw1plDXy3YDk9hrYGILdRHkCW9kDvkME2LbZupUmYR8Dk7tuFotgJ5n3iRm44IQ42k6w" alt="Leaf Vario" height="400"/>| 
-
+<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXeXUOgslOCgrlS5YccCOAkB2tYPkZbJkGMk_Ili9YuaveUQacC2-nabz5-9RjODVoSRR4Bw1plDXy3YDk9hrYGILdRHkCW9kDvkME2LbZupUmYR8Dk7tuFotgJ5n3iRm44IQ42k6w" alt="Leaf Vario" height="400"/></center>| 
 
 |<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXfk4E-nXyNuEVFwb5dSFf__UG6bmtHqjSGozENKftmF-LPdbWELIhJWSAP3P01pCtX-dUrzJKcX17pgsi3uZgKnKcFAW_mPy5B4Pomw5L3_r86rrV58W5gt0Fd_zYSu06_95SFhuw" alt="Leaf Vario" width="100"/> </center>|In a few cases, you can use LEFT and RIGHT on an option as well|
 |---|---|
 |For Examples,<br>Press L/R to:|* Adjust the barometric altimeter<br>* Scroll through waypoints and routes on the NAV page|
 
-> **Shortcut:** When MSL Altitude is selected, hold CENTER to sync the baro altitude to the GPS altitude .  This is useful if you don’t know the site altitude or current pressure setting.
+> **Shortcut:** When MSL Altitude is selected, hold CENTER to sync the baro altitude to the GPS altitude.  This is useful if you don’t know the site altitude or current pressure setting.
 
 
 ### Thermal Page
@@ -52,9 +47,6 @@ All the way to the right you’ll find the MENU page:
 ### Nav Page
   ![](https://lh7-rt.googleusercontent.com/docsz/AD_4nXeFEBhxACC8Zidtal9SkJOxlm_6nNiHpsHquwpE2sjeiHMH8jfu6SOlQQLTYnCgA5AEipcZHlE9CNNdtycT3TaRpBfo0Oc6Q8PCp5aNC12ozfZaWn7HsISTY_cOEHG6flgYRRcmMg?key=fSWNQYv3dFMS-wG0YRr7jQMt)
 
-  
-  
-  
   
 
 ## SD Card
