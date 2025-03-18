@@ -19,4 +19,9 @@ Fill out [this brief questionnaire](https://docs.google.com/forms/d/e/1FAIpQLScC
 
 Chat on our [Leaf Discord Server](https://discord.com/channels/1325634753663209472/1325634753663209476)
 
+## Leaf Vario Website
+
+[See more info here!](https://leafvario.com)
+
+
 ![Leaf Social Icon](https://lh3.googleusercontent.com/pw/AP1GczOIq7XNDGoQJ5ImR9xibVKUgIFGgMnSsrEO-Op2-C18yCq27tjvxlZKoIIx0Gb954ySACw5q7q4ma8bvbq-CHIPeTaxrlWYahvMafM1TEtGHP70U4K6JvgWHtwysqbeFgmqAcrQF2OVefaJwh9IVNfeSA=s300)
