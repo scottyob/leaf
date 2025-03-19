@@ -73,11 +73,10 @@ export default defineConfig({
         sidebar: [
             {
                 label: 'User Guides',
-                autogenerate: { directory: 'user-guides' },
-                // items: [
-                //     // Each item here is one entry in the navigation menu.
-                //     { label: 'Example Guide', slug: 'guides/example' },
-                // ],
+                // Use a custom ordering function to allow index files to be in their own directory                
+                // @ts-ignore
+                items: getMarkdownItems("../docs/user-guides"),
+                //autogenerate: { directory: 'user-guides' },
             },
             {
                 label: 'Developer Reference',
