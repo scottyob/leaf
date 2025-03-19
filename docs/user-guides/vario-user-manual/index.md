@@ -24,7 +24,9 @@ Meet the Directional Pad. <br>
 
 All the way to the right you’ll find the MENU page: 
 
-<center>![Leaf Pages](leaf-pages.png)</center> 
+![Leaf Pages](leaf-pages.png)
+
+<center><img src="leaf-pages.png" alt="Leaf Pages" width="80%"/></center>
 
 |<img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXf2q5P6y0i0SLoSST-TKZS41Tb2PAu-sXhjxCVVRKyCuYmPv6GzGijkaMZl0U98_tDBuZgmcmcND4UjNQ_jzV0bnSHf_3fJpy6EAEYAEMniV7xq-_PGclAd9pRvgPYh80MtfdfQ8Q?key=fSWNQYv3dFMS-wG0YRr7jQMt" alt="Up and Down" width="100"/>| Within a page, use UP and DOWN to scroll through the options |
 |---|---|
