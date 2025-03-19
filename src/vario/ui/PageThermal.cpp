@@ -200,13 +200,11 @@ void drawUserField(uint8_t x, uint8_t y, uint8_t field, bool selected) {
 void thermal_page_cursor_move(Button button) {
   if (button == Button::UP) {
     thermal_page_cursor_position--;
-    if (thermal_page_cursor_position < 0)
-      thermal_page_cursor_position = thermal_page_cursor_max;
+    if (thermal_page_cursor_position < 0) thermal_page_cursor_position = thermal_page_cursor_max;
   }
   if (button == Button::DOWN) {
     thermal_page_cursor_position++;
-    if (thermal_page_cursor_position > thermal_page_cursor_max)
-      thermal_page_cursor_position = 0;
+    if (thermal_page_cursor_position > thermal_page_cursor_max) thermal_page_cursor_position = 0;
   }
 }
 

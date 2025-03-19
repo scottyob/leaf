@@ -3,9 +3,9 @@ title: Vario User Manual
 description: How to set up and use your Leaf Vario
 ---
 
-<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXd2at1zGy3sIPvAjRdnwRZpBra2GjCS-wrUKtC3gwOG9wqKzVzXiRPpymI6OMFTHvL_hMfNCpxzzVv5E3BEKwe36G60muIhS47LBsJKpRAw-yXNcw_AKH06aZNTpzkekzuKcg6C" alt="logo" width="200" /> </center>
+<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXeVuKBMjBNPYFJluv8qIQCsKQSztjzMCcVPR7sgSU2ufUXFH2L69UWpBhanmhZJfwCPlRi5Yj_Z3ETCxe2oJm8Y_8ftfElfdwXZSVZTd0YuqQqCaMgNe0OkxNs3dDkn4jPFnVS_?key=fSWNQYv3dFMS-wG0YRr7jQMt" alt="logo" width="200" /> </center>
 
-<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXeUloMOdRDVQtaI9Dx-gwdXb3Ak_0TEogduRB5x8lh8In2ZpCfwUJ6OuV60OtL8Bt7W6HrktUrUPPsPP9l9Zx-RxXaU6LX_lkkNJ9J_ACr7nc1LWD57ucRJUSYFRUO-kDCmagNDdQ" alt="Leaf Vario" width="80%"/> </center>
+<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXfwoQfJW9nLioILjz-f2hCy8FBxamGMWa24TvhKK3Q7-52j_PDDMmRqU91T9JiHNRWIUVAM_sBm0QM0LQZ2xzdg1lJLPQyy3ZqmLO3lkjsygj3tEP6hqirliakwX-TN_P_XC3OWRQ?key=fSWNQYv3dFMS-wG0YRr7jQMt" alt="Leaf Vario" width="80%"/> </center>
 
 # Quick Start Guide
 
@@ -17,24 +17,24 @@ description: How to set up and use your Leaf Vario
 
 ## Getting Around
 Meet the Directional Pad. <br> 
-|<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXeXsJX6Sjel-_dLFq504q7yAaVV8-6TCI4LknA79yLm2C4ZBjb3bayKaIV_1xfcLcYIJtO-fKRQgbgFnDBZscTVOW4Z42466m6fVToVTp8RRZOaxZ4ZSzmupUmPS9hTERUtRUplSw" alt="Button" width="100"/></center>| You control the Leaf with this 5-way switch by pressing <br> UP, DOWN, LEFT, RIGHT, and CENTER |
+|<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXeVk2dFBTx0qnUmaehjwhow9OZMBjnm4mM72SY0735Un0MjDSXOO8WSp_tSsLLGtbJgFemozYqKJZOZA4kRYUWbPltSJVh2ocTl-pnGVqA0AHcqvoJgHNkFirQkFcCg5jnLlmybkw?key=fSWNQYv3dFMS-wG0YRr7jQMt" alt="Button" width="100"/></center>| You control the Leaf with this 5-way switch by pressing <br> UP, DOWN, LEFT, RIGHT, and CENTER |
 |---|---|
-|<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXcRpEpn-JO2rCSpA9sw9mig9YRUqxWoGJB0zdd-5tvztXy38VLVRYlOFSUjk5fzFs5XQNccJvUlCU38uEyF9pBkNTjPU1OfWPmy5_7_we7Ms3lpavRfP7ka3fOLdWhZ0oeYrb9YNw" alt="Button" width="100"/></center>| **Turn Leaf ON and OFF by holding CENTER**|
-|<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXfk4E-nXyNuEVFwb5dSFf__UG6bmtHqjSGozENKftmF-LPdbWELIhJWSAP3P01pCtX-dUrzJKcX17pgsi3uZgKnKcFAW_mPy5B4Pomw5L3_r86rrV58W5gt0Fd_zYSu06_95SFhuw" alt="Leaf Vario" width="100"/></center>| **Use LEFT and RIGHT to scroll through the pages**|
+|<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXc5ZHhHKQlbkvT1RJi1DKFZ-HjzeAkLYbSWkw90Wk8iCPP9T75DCVXfIRz5nzgG749chKU1uJ5_bGAeGHUhNuxzarJTPi-Lvfz19jQSiKU1jNapXIKOthntQAOfDp6D7DCtF-PKqw?key=fSWNQYv3dFMS-wG0YRr7jQMt" alt="Center Button" width="100"/></center>| **Turn Leaf ON and OFF by holding CENTER**|
+|<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXcaedx-4pybXzxuQMcf5ySu43s1NYBm0uQQUrVXqiFwz4bQeurNWIvoUXk4J5peVMpKtZ9m40HrsCDWIDuCEj2XQCxIwXGTBNO5jdAmUmoHMWJdAgQ9OMBynj3NxmxEvWLAzcSF6Q?key=fSWNQYv3dFMS-wG0YRr7jQMt" alt="left Right" width="100"/></center>| **Use LEFT and RIGHT to scroll through the pages**|
 
 All the way to the right you’ll find the MENU page: 
 
 <center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXetn9WW7OnT9mCnTAM6D4454IJ_ox0HR8n95gaBEq4iyeeUt16X6gFF_v1doTxvZFEYN2TXLnW8zzGROOTNM5brRmcmOQVuXeXU9MEl8pfyyPoyMoqCBNLtaLdCQTyIiW3mEfCY" alt="Leaf Pages"/> </center> 
 
-|<img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXdXjVYX7bcxOn8vy0Uo_en0e0vEbOJR74ib4Q2vrulqka73rhg14MyE39m95vPlq1gwMSeNfTIOWwGINHaxdJ8Pw6cqvTcPwOkXk66YH9wKC8ENC64VEOgRc92KE7qpDq5fdQoJ2g" alt="Leaf Vario" width="100"/>| Within a page, use UP and DOWN to scroll through the options |
+|<img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXf2q5P6y0i0SLoSST-TKZS41Tb2PAu-sXhjxCVVRKyCuYmPv6GzGijkaMZl0U98_tDBuZgmcmcND4UjNQ_jzV0bnSHf_3fJpy6EAEYAEMniV7xq-_PGclAd9pRvgPYh80MtfdfQ8Q?key=fSWNQYv3dFMS-wG0YRr7jQMt" alt="Up and Down" width="100"/>| Within a page, use UP and DOWN to scroll through the options |
 |---|---|
-|<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXegtH5Psy3_WQFYwnGZlf7vMBAuCAbbbq8nppk8toKN3ep9i5pUhn6r5ZKMgqrSANlJiXfqkhKWbbcrpg0k_odJZ4ipOJY6AaMhSEQl2VhjR5b02VG3FVj5qLc0CBlA9o3vuGBh4g" alt="Cursor" width="100"/></center>| **A cursor selection box will highlight adjustable fields** |
-|<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXcRpEpn-JO2rCSpA9sw9mig9YRUqxWoGJB0zdd-5tvztXy38VLVRYlOFSUjk5fzFs5XQNccJvUlCU38uEyF9pBkNTjPU1OfWPmy5_7_we7Ms3lpavRfP7ka3fOLdWhZ0oeYrb9YNw" alt="Button" width="100"/></center>| **When selected, press CENTER to select or adjust that option** |
+|<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXf9yiqnuT52rgrPteu7UNLGotm2cOYr1GoVwSuvE1Xk8mIeji-3l6GUCOLCySz9WTz66zzTGwvX35jyB6Om84YchVfPAx3gVQKxNswnkVjNbnKLYSSBo0WbGc0jH5rCPGkYQ8veDw?key=fSWNQYv3dFMS-wG0YRr7jQMt" alt="Cursor Box" width="100"/></center>| **A cursor selection box will highlight adjustable fields** |
+|<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXc5ZHhHKQlbkvT1RJi1DKFZ-HjzeAkLYbSWkw90Wk8iCPP9T75DCVXfIRz5nzgG749chKU1uJ5_bGAeGHUhNuxzarJTPi-Lvfz19jQSiKU1jNapXIKOthntQAOfDp6D7DCtF-PKqw?key=fSWNQYv3dFMS-wG0YRr7jQMt" alt="Center Button" width="100"/></center>| **When selected, press CENTER to select or adjust that option** |
 | For Examples,<br>Press CENTER to: | * Start the timer (**HOLD** CENTER to stop) <br> * Cylce through display options in the Altitude or User fields |
 
-<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXeXUOgslOCgrlS5YccCOAkB2tYPkZbJkGMk_Ili9YuaveUQacC2-nabz5-9RjODVoSRR4Bw1plDXy3YDk9hrYGILdRHkCW9kDvkME2LbZupUmYR8Dk7tuFotgJ5n3iRm44IQ42k6w" alt="Leaf Vario" height="400"/></center>| 
+<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXdm8Bcy0PtaWwXmXpVVBgrlXI-TtfTWwevP6VlfQDjCs5veg6naDBEUou1J4uBq1nt3tY3w0moeLox3giFsMmzwxCzbjUwP82nhrnu2nLq6bi7Ee-jPSCfhAFmfS-gS0H_znW9CsA?key=fSWNQYv3dFMS-wG0YRr7jQMt" alt="Leaf Vario" height="400"/></center>| 
 
-|<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXfk4E-nXyNuEVFwb5dSFf__UG6bmtHqjSGozENKftmF-LPdbWELIhJWSAP3P01pCtX-dUrzJKcX17pgsi3uZgKnKcFAW_mPy5B4Pomw5L3_r86rrV58W5gt0Fd_zYSu06_95SFhuw" alt="Leaf Vario" width="100"/> </center>|In a few cases, you can use LEFT and RIGHT on an option as well|
+|<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXcaedx-4pybXzxuQMcf5ySu43s1NYBm0uQQUrVXqiFwz4bQeurNWIvoUXk4J5peVMpKtZ9m40HrsCDWIDuCEj2XQCxIwXGTBNO5jdAmUmoHMWJdAgQ9OMBynj3NxmxEvWLAzcSF6Q?key=fSWNQYv3dFMS-wG0YRr7jQMt" alt="left Right" width="100"/> </center>|In a few cases, you can use LEFT and RIGHT on an option as well|
 |---|---|
 |For Examples,<br>Press L/R to:|* Adjust the barometric altimeter<br>* Scroll through waypoints and routes on the NAV page|
 
@@ -42,16 +42,16 @@ All the way to the right you’ll find the MENU page:
 
 
 ### Thermal Page
-![](https://lh7-rt.googleusercontent.com/docsz/AD_4nXdvQH6i9BsS7oL29wjajY1oObMAy1nyHvj7yy75xruiOK5aaHTXOpb6Oqz9htkBVME9k2o4YVL1cQM5PDMLg9wuD6IUS4PqRuQzyiE7fur1bH-iRoD7k_sthOuGFVCu8P3v8gh-ZQ?key=fSWNQYv3dFMS-wG0YRr7jQMt)
+<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXdvQH6i9BsS7oL29wjajY1oObMAy1nyHvj7yy75xruiOK5aaHTXOpb6Oqz9htkBVME9k2o4YVL1cQM5PDMLg9wuD6IUS4PqRuQzyiE7fur1bH-iRoD7k_sthOuGFVCu8P3v8gh-ZQ?key=fSWNQYv3dFMS-wG0YRr7jQMt" width="80%" /></center>
 
 ### Nav Page
-  ![](https://lh7-rt.googleusercontent.com/docsz/AD_4nXeFEBhxACC8Zidtal9SkJOxlm_6nNiHpsHquwpE2sjeiHMH8jfu6SOlQQLTYnCgA5AEipcZHlE9CNNdtycT3TaRpBfo0Oc6Q8PCp5aNC12ozfZaWn7HsISTY_cOEHG6flgYRRcmMg?key=fSWNQYv3dFMS-wG0YRr7jQMt)
+<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXeFEBhxACC8Zidtal9SkJOxlm_6nNiHpsHquwpE2sjeiHMH8jfu6SOlQQLTYnCgA5AEipcZHlE9CNNdtycT3TaRpBfo0Oc6Q8PCp5aNC12ozfZaWn7HsISTY_cOEHG6flgYRRcmMg?key=fSWNQYv3dFMS-wG0YRr7jQMt" width="80%" /></center>
 
   
 
 ## SD Card
 
-![](https://lh7-rt.googleusercontent.com/docsz/AD_4nXdD8bA_-ANqIRyjJvxx_6NOk6u-j-KpYbmJaQsqJKAIlw_SobGMzP8mB4hdPbEzkB2WGAPUcBvbsaGwJXp8zIAZeJHRuZCAdD-a5jHjNv-lYUOKUWaltgpt2VZoL-snBxnvccfI?key=fSWNQYv3dFMS-wG0YRr7jQMt)
+<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXdD8bA_-ANqIRyjJvxx_6NOk6u-j-KpYbmJaQsqJKAIlw_SobGMzP8mB4hdPbEzkB2WGAPUcBvbsaGwJXp8zIAZeJHRuZCAdD-a5jHjNv-lYUOKUWaltgpt2VZoL-snBxnvccfI?key=fSWNQYv3dFMS-wG0YRr7jQMt" width="80%" /></center>
 
 ### Saving Track Logs
 Flight logs will save to SD Card. Be sure to turn on the “Save Log” setting inside the Log Menu.
@@ -97,7 +97,7 @@ Leaf will then attempt to connect to your WiFi Network.  If successful, Leaf wil
 4.  Now click “update” on Leaf to automatically check for and download the latest firmware.  Leaf will restart when finished checking and/or updating.
     
 
-![](https://lh7-rt.googleusercontent.com/docsz/AD_4nXc9x_YBXhBj5VjKTochoaSu4pYeSNVAAHI8q54fUlXS6QQ2J6i7zZ1I2wCb17ZRonoaFduN_8rV244TKOG1n-0xLl7A0apOMCLHouYGe9H_fAU_VON1ryYUutLDozAOHYiM-tW1?key=fSWNQYv3dFMS-wG0YRr7jQMt)
+<center><img src="https://lh7-rt.googleusercontent.com/docsz/AD_4nXc9x_YBXhBj5VjKTochoaSu4pYeSNVAAHI8q54fUlXS6QQ2J6i7zZ1I2wCb17ZRonoaFduN_8rV244TKOG1n-0xLl7A0apOMCLHouYGe9H_fAU_VON1ryYUutLDozAOHYiM-tW1?key=fSWNQYv3dFMS-wG0YRr7jQMt" width="80%" /></center>
 
 ### NOTE: For Updates In-The-Field
 
