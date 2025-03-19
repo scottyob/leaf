@@ -133,7 +133,7 @@ void drawUserField(uint8_t x, uint8_t y, uint8_t field, bool selected) {
       u8g2.setCursor(x, y - 14);
       u8g2.setFont(leaf_5h);
       u8g2.print("` GLIDE");
-      display_glide(x + 20, y, gps_getGlideRatio());
+      display_glide(x + 20, y, gps.getGlideRatio());
       break;
     case static_cast<int>(ThermalPageUserFields::TEMP):
       // Temperature
