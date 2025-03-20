@@ -3,9 +3,9 @@
 #include <SD_MMC.h>
 
 #include "FS.h"
-#include "SDcard.h"
-#include "telemetry.h"
-#include "ui/page_flight_summary.h"
+#include "logging/telemetry.h"
+#include "storage/sd_card.h"
+#include "ui/display/pages/dialogs/page_flight_summary.h"
 
 bool Flight::startFlight() {
   // Short circuit if the card is not mounted or reading properly
