@@ -6,6 +6,59 @@ Brief summary of hardware changes
 3. [Battery](#battery)
 
 ## PCBA
+
+### v3.2.6
++ Added 10pin connector for Sharp Memory-in-Pixel display
++ IMU rotated 90deg clockwise (+X is "forward" now)
++ Removed 0-ohm configuration resistors not being used
++ Reposition LoRa module and I2C connector to make hand-soldering LoRa easier 
++ Remove ground plane contact from LoRa ground pins to reduce heat-sink effect when soldering
++ Scoot LoRa and I2C connectors further 'rearward' (versus 3.2.5); this brings the battery closer to the original 3.2.4 position; though battery is still a bit forward from 3.2.4.
++ Temp/Humidity "isolation slot" is shrunk toward rear slightly -- needs plastic case modification
++ Increased size of R21 (backlight LED resistor) to allow easier hand-solder replacement if user needs a different R-value
++ Added ISET, LED, and PWR_GOOD to ESP32
+++ ISET: Using ESP32 ADC, can read actual charging current from charger IC
+++ LED: ESP32 can now control green power LED (previously was on only when USB plugged in)
+++ PWR_GOOD allows ESP32 to measure presence of input power
+++ All of the above will allow more fine control over power supply modes and reactions
+
++ Significant Pin Changes to accommodate the above and also make full use of IO-expander
+
+#### ESP32 Pinout Changes
+| ESP32  | 3.2.6     | Prev 3.2.5 |    Prev 3.2.4    |
+|--------|-----------|------------|------------------|
+|GPIO  0 |LORA_RESET | <- same    | AVAIL_GPIO_0     |
+|GPIO  7 | ISET      | LORA_RF_SW | IMU_INT / GPIO_7 |
+|GPIO 15 |LORA_DIO1  | <- same    | SPKR_VOL_A       |
+|GPIO 16 |LORA_BUSY  | <- same    | SPKR_VOL_B       |
+|GPIO 39 |IO_EX_INT  | <- same    | AVAIL_GPIO_39    |
+|GPIO 46 |LORA_CS    | <- same    | GPS_1PPS         |
+|GPIO 26 |LORA_RFSW  | SD_DETECT  |   <- same        | 
+|GPIO 40 |GPS 1PPS   | GPS_BAK_EN |   <- same        |
+|GPIO 41 |EYESPI_BUSY| PWR_CHG_i1 |   <- same        |
+|GPIO 42 |EYESPI_INT | PWR_CHG_i2 |   <- same        |
+|GPIO 45 |EYESPI_SDCS| GPS_RESET  |   <- same        |
+
+|  IOEX  |    3.2.6   | Prev 3.2.5  |
+|--------|------------|-------------|
+| A0 P00 |EYESPI_MEM  | GPS_1PPS    |
+| A1 P01 |EYESPI_TOUCH| SPRK_VOLB   |
+| A2 P02 |EYESPI_GP1  | SPRK_VOLA   |
+| A3 P03 |EYESPI_GP2  | EYESPI_SDCS |
+| A4 P04 |SPKR_VOLB   | N/C         |
+| A5 P05 |SPKR_VOLA   | EYESPI_GP2  |
+| A6 P06 |IOEX_1      | EYESPI_GP1  |
+| A7 P07 |IOEX_2      | EYESPI_BUSY |
+| B0 P10 |CHG_GOOD    | EYESPI_INT  |
+| B1 P11 |PWR_GOOD    | EYESPI_MEM  |
+| B2 P12 |PWR_CHG_i1  | EYESPI_TOUCH|
+| B3 P13 |PWR_CHG_i2  | IMU_INT     |
+| B4 P14 |IMU_INT     | N/C         |
+| B5 P15 |SD_DETECT   | N/C         |
+| B6 P16 |GPS_RESET   | N/C         |
+| B7 P17 |GPS_BAK_EN  | N/C         |
+
+
 ### v3.2.5
 
 #### Changes
@@ -19,9 +72,9 @@ Brief summary of hardware changes
 
 
 #### ESP32 Pinout Changes
-| ESP32       |   3.2.5 Function   |     Previous 3.2.4 Function     |
+| ESP32  |   3.2.5   |   Prev 3.2.4    |
 |--------|-----------|-----------------|
-|GPIO   0|LORA_RESET |AVAIL_GPIO_0  (gone)   |
+|GPIO   0|LORA_RESET |AVAIL_GPIO_0     |
 |GPIO   7|LORA_RF_SW |IMU_INT / GPIO_7 |
 |GPIO  15|LORA_DIO1  |SPKR_VOL_A       |
 |GPIO  16|LORA_BUSY  |SPKR_VOL_B       |
@@ -75,6 +128,21 @@ Chip is configured with I2C address: 0x20
 + 10-pin 64px wide LCD display
 
 ## Plastic Case
+### v3.2.6
+(These are all still TODO items)
++ Shrink Temp/Humidity isolation slot
++ Add button-protecting ribs
++ Solidify decision on PCB thickness and adjust for it
++ Move battery ribs to new PCB_v3.2.6 position
++ Make version for both with and without antenna
++ Make version for Sharp Memory-in-pixel display
++ Increase caddy snap-angle to nearly 90deg
++ Adjust baseplate caddy for adjusted battery and slot positions
+
+### v3.2.5
++ Move battery ribs forward to allow more space in the rear for LoRa module
++ Add antenna exit and mount
++ Tweaks to certain elements to accomodate thinner PCB (1mm vs 1.6mm)
 ### v3.2.4
 + Increased 'flares' of main button for easier grip
 + Increased 'clip force' in baseplate
