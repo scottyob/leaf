@@ -2,9 +2,8 @@
 title: Test Pilot Page
 description: Helpful links and resources for test pilots
 ---
-<center>
+
 ![logo](vario-user-manual/leaf-logotype.png)
-</center>
 
 Thanks for being a test pilot!  Here are some helpful links:
 
