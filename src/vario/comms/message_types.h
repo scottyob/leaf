@@ -8,12 +8,15 @@
 
 #include "TinyGPSPlus.h"
 #include "etl/message.h"
+#include "etl/string.h"
 #include "fanet/packet.hpp"
 
 #define FANET_MAX_FRAME_SIZE 244  // Maximum size of a FANET frame
+using NMEAString = etl::string<128>;
 
 enum MessageType {
   GPS_UPDATE,
+  GPS_MESSAGE,
   FANET_PACKET,
 };
 
@@ -21,6 +24,15 @@ enum MessageType {
 struct GpsReading : public etl::message<GPS_UPDATE> {
   GpsReading(TinyGPSPlus reading) : gps(reading) {}
   TinyGPSPlus gps;
+};
+
+struct GpsMessage : public etl::message<GPS_MESSAGE> {
+  // A GPS message that is not a reading, but a raw NMEA sentence
+  // This is useful for when parts of the application need to log or
+  // process raw NMEA sentences
+  NMEAString nmea;
+
+  GpsMessage(NMEAString nmea) : nmea(nmea) {}
 };
 
 /// @brief A FANET packet received

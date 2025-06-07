@@ -6,7 +6,7 @@
 #include "etl/message_router.h"
 
 // FreeRTOS Task for handling Bluetooth Operations
-class BLE : public etl::message_router<BLE, GpsReading, FanetPacket> {
+class BLE : public etl::message_router<BLE, GpsMessage, FanetPacket> {
  public:
   static BLE& get();
 
@@ -23,7 +23,7 @@ class BLE : public etl::message_router<BLE, GpsReading, FanetPacket> {
   void end();
 
   // On Receive handlers for the message router.
-  void on_receive(const GpsReading& msg);
+  void on_receive(const GpsMessage& msg);
   void on_receive(const FanetPacket& msg);
 
   void on_receive_unknown(const etl::imessage& msg) {}
@@ -68,5 +68,7 @@ class BLE : public etl::message_router<BLE, GpsReading, FanetPacket> {
    */
   void addChecksumToNMEA(etl::istring& nmea);
 
-  long lastGpsMs = 0;
+  SemaphoreHandle_t gpsMutex;
+  unsigned long lastGpsGgaMs = 0;
+  unsigned long lastGpsGprmcMs = 0;
 };

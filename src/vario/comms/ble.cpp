@@ -10,20 +10,18 @@
 #include "etl/variant.h"
 #include "instruments/baro.h"
 #include "instruments/gps.h"
-
-using NMEAString = etl::string<84>;
+#include "utils/lock_guard.h"
 
 // These new unique UUIDs came from
 // https://www.uuidgenerator.net/
 
-#define LEAF_SERVICE_UUID "92b38cf3-4bd0-428c-aca4-ae6c3a586835"
-// LK8EX1 Telemetry notification
-#define LEAF_LK8EX1_UUID "583918da-fb9b-4645-bbaf-2db3b1a9c1b3"
+#define LEAF_SERVICE_UUID "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"  // SPP service
+#define LEAF_LK8EX1_UUID "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"   // SPP characteristic (TX/RX)
 
 /// @brief Internal struct to be passed in the message queues to wakup the BLE task
 struct WakeupMessage {
-  enum Reason { PERIODIC, GPS_RX, FANET_RX } reason;
-  using MessageVariant = etl::variant<TinyGPSPlus, FanetPacket>;
+  enum Reason { PERIODIC, FANET_RX, GPS_GPGGA, GPS_GPRMC } reason;
+  using MessageVariant = etl::variant<NMEAString, FanetPacket>;
   MessageVariant message;
 
   WakeupMessage(Reason reason, MessageVariant message) : reason(reason), message(message) {}
@@ -86,10 +84,10 @@ void BLE::setup() {
   pAdvertising->start();
 
   // Setup the FreeRTOS Tasks and Timers associated with this module
-  // Create a queue the size of two WakeupMessage length.
+  // Create a queue the size of a couple of WakeupMessage length.
   // If say a GPS and periodic send request comes in too close together
   // one of them may be dropped for this cycle.
-  xQueue = xQueueCreate(2, sizeof(WakeupMessage));
+  xQueue = xQueueCreate(4, sizeof(WakeupMessage));
 
   // Create the freeRTOS Task for handling Bluetooth low energy IO
   xTaskCreate(BLE::bleTask, "BLE", 10000, this, 9, &xTask);
@@ -133,18 +131,19 @@ void BLE::end() {
   pAdvertising = nullptr;
 }
 
-void BLE::on_receive(const GpsReading& msg) {
+void BLE::on_receive(const GpsMessage& msg) {
   // Short circuit if not initialized
   if (pServer == nullptr) return;
 
-  // Only process GPS updates twice a second at most.
-  if (millis() - lastGpsMs < 500) {
-    return;
+  // If the GPS message is a GPGGA or GPRMC, we store it in the buffers
+  // for the next periodic send.
+  if (msg.nmea.substr(0, 6) == "$GPGGA" || msg.nmea.substr(0, 6) == "$GNGGA") {
+    WakeupMessage message(WakeupMessage::Reason::GPS_GPGGA, msg.nmea);
+    xQueueSend(BLE::get().xQueue, &message, 0);
+  } else if (msg.nmea.substr(0, 6) == "$GPRMC" || msg.nmea.substr(0, 6) == "$GNRMC") {
+    WakeupMessage message(WakeupMessage::Reason::GPS_GPRMC, msg.nmea);
+    xQueueSend(BLE::get().xQueue, &message, 0);
   }
-  lastGpsMs = millis();
-
-  WakeupMessage message(WakeupMessage::Reason::GPS_RX, msg.gps);
-  xQueueSend(BLE::get().xQueue, &message, 0);
 }
 
 void BLE::on_receive(const FanetPacket& msg) {
@@ -167,13 +166,33 @@ void BLE::bleTask(void* args) {
         // Periodic wakeup to send out the last known Vario & Baro data.
         ble->sendVarioUpdate();
         break;
-      case WakeupMessage::Reason::GPS_RX:
-        // A GPS Position update to go out.
-        ble->sendGpsUpdate(etl::get<TinyGPSPlus>(message.message));
-        break;
       case WakeupMessage::Reason::FANET_RX:
         ble->sendFanetUpdate(etl::get<FanetPacket>(message.message));
         break;
+      case WakeupMessage::Reason::GPS_GPGGA: {
+        if (millis() - ble->lastGpsGgaMs < 500) {
+          // If we received a GPGGA too soon, skip it
+          return;
+        }
+        auto& gpsGpggaBuffer = etl::get<NMEAString>(message.message);
+        ble->pCharacteristic->setValue((const uint8_t*)gpsGpggaBuffer.c_str(),
+                                       gpsGpggaBuffer.size());
+        ble->pCharacteristic->notify();
+        ble->lastGpsGgaMs = millis();
+      } break;
+      case WakeupMessage::Reason::GPS_GPRMC: {
+        if (millis() - ble->lastGpsGprmcMs < 500) {
+          // If we received a GPRMC too soon, skip it
+          return;
+        }
+        auto& gpsGprmcBuffer = etl::get<NMEAString>(message.message);
+        ble->pCharacteristic->setValue((const uint8_t*)gpsGprmcBuffer.c_str(),
+                                       gpsGprmcBuffer.size());
+        ble->pCharacteristic->notify();
+
+        ble->lastGpsGprmcMs = millis();
+        break;
+      }
     }
   }
 }
@@ -188,59 +207,14 @@ void BLE::timerCallback(TimerHandle_t timer) {
 void BLE::sendVarioUpdate() {
   NMEAString nmea;
   etl::string_stream stream(nmea);
-  stream << "$LK8EX1," << baro.pressure << "," << static_cast<uint>(baro.altF) << ","
-         << baro.climbRateFiltered << ","
-         << "99,999,*";  // Temperature in C.  If not available, send 99
-                         // Battery voltage OR percentage.  If percentage, add 1000 (if 1014 is
-                         // 14%). 999
+  stream << "$LK8EX1," << static_cast<int32_t>(baro.pressure) << "," << static_cast<uint>(baro.altF)
+         << "," << baro.climbRateFiltered << ","
+         << "99,999,";  // Temperature in C.  If not available, send 99
+                        // Battery voltage OR percentage.  If percentage, add 1000 (if 1014 is
+                        // 14%). 999
+
   addChecksumToNMEA(nmea);
   pCharacteristic->setValue((const uint8_t*)nmea.c_str(), nmea.size());
-  pCharacteristic->notify();
-}
-
-String formatLatitude(double latitude) {
-  char buffer[10];
-  char latDir = (latitude >= 0) ? 'N' : 'S';
-  latitude = abs(latitude);
-
-  int degrees = (int)latitude;
-  double minutes = (latitude - degrees) * 60;
-
-  snprintf(buffer, sizeof(buffer), "%02d%05.2f", degrees, minutes);
-
-  return String(buffer) + "," + latDir;
-}
-
-String formatLongitude(double longitude) {
-  char buffer[11];
-  char lonDir = (longitude >= 0) ? 'E' : 'W';
-  longitude = abs(longitude);
-
-  int degrees = (int)longitude;
-  double minutes = (longitude - degrees) * 60;
-
-  snprintf(buffer, sizeof(buffer), "%03d%05.2f", degrees, minutes);
-
-  return String(buffer) + "," + lonDir;
-}
-
-void BLE::sendGpsUpdate(TinyGPSPlus& gps) {
-  // Sends out a GPS update string.  The example is:
-  // $GPRMC,161229.487,A,3723.2475,N,12158.3416,W,0.13,309.62,120598, ,*10
-  char stringified[100];
-
-  snprintf(stringified, sizeof(stringified),
-           "$GPRMC,%02d%02d%02d.%03d,A,%s,%s,%.2f,%.2f,%02d%02d%02d,,*", gps.time.hour(),
-           gps.time.minute(), gps.time.second(),
-           gps.time.centisecond() / 10,  // Adjust if needed
-           formatLatitude(gps.location.lat()), formatLongitude(gps.location.lng()),
-           gps.speed.knots(), gps.course.deg(), gps.date.day(), gps.date.month(),
-           gps.date.year() % 100);
-
-  snprintf(stringified + strlen(stringified), sizeof(stringified) - strlen(stringified), "%02X\n",
-           checksum(stringified));
-  Serial.println(stringified);
-  pCharacteristic->setValue((const uint8_t*)stringified, strlen(stringified));
   pCharacteristic->notify();
 }
 
