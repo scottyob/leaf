@@ -122,6 +122,9 @@ class LeafGPS : public TinyGPSPlus {
   etl::imessage_bus* bus_ = nullptr;
 
   float glideRatio;
+
+  char nmeaBuffer[3000] = {'\0'};  // buffer for reading NMEA sentences
+  int nmeaBufferIndex = 0;         // index into the buffer currently writing to
 };
 extern LeafGPS gps;
 

@@ -143,12 +143,12 @@ bool flightTimer_autoStart() {
     Serial.println("****************************** autoStart TRUE via alt");
   }
 
-  Serial.print("S T A R T   Counter: ");
-  Serial.print(autoStartCounter);
-  Serial.print("   Alt Diff: ");
-  Serial.print(altDifference);
-  Serial.print("  StartTheTimer? : ");
-  Serial.println(startTheTimer);
+  // Serial.print("S T A R T   Counter: ");
+  // Serial.print(autoStartCounter);
+  // Serial.print("   Alt Diff: ");
+  // Serial.print(altDifference);
+  // Serial.print("  StartTheTimer? : ");
+  // Serial.println(startTheTimer);
 
   if (startTheTimer) {
     autoStartCounter = 0;
