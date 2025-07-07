@@ -305,6 +305,9 @@ void FanetRadio::begin(const FanetRadioRegion& region) {
     case FanetRadioRegion::US:
       radioInitState = radio->begin(920.800f, 500.0f, 7U, 5U, 0xF1, 22U, 8U, 1.8f, false);
       break;
+    case FanetRadioRegion::EUROPE:
+      radioInitState = radio->begin(868.200f, 250.0f, 7U, 5U, 0xF1, 22U, 8U, 1.8f, false);
+      break;
   }
 
   if (radioInitState != RADIOLIB_ERR_NONE) {
