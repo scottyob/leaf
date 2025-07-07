@@ -85,7 +85,7 @@ void FanetRadio::processRxPacket() {
 
   int16_t rxState;
   size_t length;
-  if (SpiLockGuard()) {
+  if (auto lockGuard = SpiLockGuard()) {
     length = radio.getPacketLength();
 
     // If a 0 length packet is here, I'm guessing the "done" DIO pin was fired
