@@ -323,7 +323,7 @@ void log_checkMinMaxValues() {
   // accumulate distance flown
   logbook.distanceFlown += gps.speed.mps();
 
-  time = micros() - time;
-  Serial.print("checkMinMax: ");
-  Serial.println(time);
+  // time = micros() - time;
+  // Serial.print("checkMinMax: ");
+  // Serial.println(time);
 }

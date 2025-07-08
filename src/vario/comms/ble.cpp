@@ -321,8 +321,9 @@ void BLE::sendFanetUpdate(FanetPacket& msg) {
             "%.2f*\n"  // RSSI
             ),
            (int)northOffset, (int)eastOffset, payload.altitude() - (int)gpsAltitude,
-           FanetAddressToString(packet.source()), payload.groundTrack(), payload.speed() / 3.6,
-           payload.climbRate(), aircraftType, payload.tracking() ? 0 : 1, msg.rssi);
+           FanetAddressToString(packet.source()), static_cast<int>(payload.groundTrack()),
+           payload.speed() / 3.6, payload.climbRate(), aircraftType, payload.tracking() ? 0 : 1,
+           msg.rssi);
 
   Serial.println(stringified);
   pCharacteristic->setValue((const uint8_t*)stringified, strlen(stringified));

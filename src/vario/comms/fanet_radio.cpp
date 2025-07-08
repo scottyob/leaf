@@ -195,12 +195,6 @@ bool FanetRadio::fanet_sendFrame(uint8_t codingRate, etl::span<const uint8_t> da
     return false;
   }
 
-  // If we got here, the frame was sent successfully.
-  Serial.println("[FanetRadio] Frame sent to lib successfully: " + String(txResult));
-
-  // Flag the frame as sending... Not sure why this isn't being cleared by the interrupt now
-  // frameSending = true;
-
   return txResult == RADIOLIB_ERR_NONE;
 }
 
@@ -388,6 +382,7 @@ void FanetRadio::setCurrentLocation(const float& lat, const float& lon, const ui
       // Build a Tracking packet
       FANET::TrackingPayload trackingPayload;
       trackingPayload.aircraftType(FANET::TrackingPayload::AircraftType::PARAGLIDER)
+          .tracking(true)
           .latitude(lat)
           .longitude(lon)
           .altitude(alt)
