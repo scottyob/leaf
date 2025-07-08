@@ -18,6 +18,7 @@
 #define gps_h
 
 #include <TinyGPSPlus.h>
+#include "comms/message_types.h"
 #include "etl/message_bus.h"
 #include "time.h"
 #include "utils/lock_guard.h"
@@ -123,7 +124,7 @@ class LeafGPS : public TinyGPSPlus {
 
   float glideRatio;
 
-  char nmeaBuffer[3000] = {'\0'};  // buffer for reading NMEA sentences
+  NMEAString nmeaBuffer = {'\0'};  // buffer for reading NMEA sentences
   int nmeaBufferIndex = 0;         // index into the buffer currently writing to
 };
 extern LeafGPS gps;

@@ -12,7 +12,8 @@
 #include "fanet/packet.hpp"
 
 #define FANET_MAX_FRAME_SIZE 244  // Maximum size of a FANET frame
-using NMEAString = etl::string<128>;
+// NMEAString is 82 characters per standard + 2 for \r\n + 1 for null terminator
+using NMEAString = etl::string<85>;
 
 enum MessageType {
   GPS_UPDATE,
