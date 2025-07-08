@@ -23,6 +23,8 @@
 #define IOEX_REG_CONFIG_PORT0 0b10000001  // P00 and P07 are inputs; others outputs
 #define IOEX_REG_CONFIG_PORT1 0b10010000  // P10 and P13 are inputs; others outputs
 
+#define IOEX_INTERRUPT_PIN 39  // P.39 is the interrupt pin for the IO Expander
+
 /*
 |IOEX Pin# |Function
 |-----|--------|

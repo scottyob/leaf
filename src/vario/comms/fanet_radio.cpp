@@ -7,6 +7,7 @@
 #include "fanet/name.hpp"
 #include "fanet/packetParser.hpp"
 #include "fanet/tracking.hpp"
+#include "flarm_radio.h"
 #include "hardware/Leaf_SPI.h"
 #include "hardware/configuration.h"
 #include "instruments/baro.h"
@@ -393,6 +394,9 @@ void FanetRadio::setCurrentLocation(const float& lat, const float& lon, const ui
           .climbRate(climbRate)
           .speed(speedKmh);
       trackingPacket.payload(trackingPayload);
+
+      // Send this packet out using Flarm as well!
+      sendUsingFlarm(trackingPayload, protocol->ownAddress().asUint(), radio);
     }
 
     protocol->sendPacket(trackingPacket);

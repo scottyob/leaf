@@ -3,6 +3,7 @@
 #include <Wire.h>
 
 // First try to load up any config from variants
+#include "io_pins.h"
 #include "variant.h"
 
 // Pin configuration for the IO Expander (0=output 1=input)
@@ -13,6 +14,8 @@
 #ifndef IOEX_REG_CONFIG_PORT1
 #define IOEX_REG_CONFIG_PORT1 0b11111111  // default all inputs
 #endif
+
+volatile unsigned long ioexLastInterruptMicros = 0;
 
 // Create IO Expander
 TCA9535 IOEX(IOEX_ADDR);
@@ -30,6 +33,9 @@ void ioexInit() {
   IOEX.pinMode8(1, IOEX_REG_CONFIG_PORT1);
   Serial.print("IOEX.pinModeP1 succes: ");
   Serial.println(result);
+
+  // Attach the interrupt handler for the IO Expander
+  attachInterrupt(IOEX_INTERRUPT_PIN, onIoexInterrupt, RISING);
 }
 
 void ioexDigitalWrite(bool onIOEX, uint8_t pin, uint8_t value) {
@@ -40,3 +46,10 @@ void ioexDigitalWrite(bool onIOEX, uint8_t pin, uint8_t value) {
     digitalWrite(pin, value);
   }
 }
+
+unsigned long ioexLastInterruptMs() {
+  // Return the last time the IO Expander was interrupted
+  return micros() - ioexLastInterruptMicros / 1000;  // Convert to milliseconds
+}
+
+void IRAM_ATTR onIoexInterrupt() { ioexLastInterruptMicros = micros(); }

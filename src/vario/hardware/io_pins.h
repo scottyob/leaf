@@ -9,6 +9,12 @@ Chip is configured with I2C address: 0x20
 
 #define IOEX_ADDR 0x20
 
+extern volatile unsigned long ioexLastInterruptMicros;
+
+void onIoexInterrupt();
+
 void ioexInit();
 
 void ioexDigitalWrite(bool onIOEX, uint8_t pin, uint8_t value);
+
+unsigned long ioexLastInterruptMs();
