@@ -68,7 +68,6 @@ class BLE : public etl::message_router<BLE, GpsMessage, FanetPacket> {
    */
   void addChecksumToNMEA(etl::istring& nmea);
 
-  SemaphoreHandle_t gpsMutex;
   unsigned long lastGpsGgaMs = 0;
   unsigned long lastGpsGprmcMs = 0;
 };

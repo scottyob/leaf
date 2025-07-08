@@ -12,9 +12,9 @@
 #include "instruments/gps.h"
 #include "utils/lock_guard.h"
 
-// These new unique UUIDs came from
-// https://www.uuidgenerator.net/
-
+// These UUIDs are for BLE UART services and characteristics.
+// This is required to be UART due to a requirement for
+// compatibility with SeeYou Navigator.
 #define LEAF_SERVICE_UUID "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"  // SPP service
 #define LEAF_LK8EX1_UUID "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"   // SPP characteristic (TX/RX)
 

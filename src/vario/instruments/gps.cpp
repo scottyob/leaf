@@ -277,6 +277,7 @@ bool LeafGPS::readBufferOnce() {
         // If we reach the end of a sentence, null-terminate it
         nmeaBuffer[nmeaBufferIndex++] = '\n';
         nmeaBuffer[nmeaBufferIndex] = '\0';
+
         bus_->receive(GpsMessage(nmeaBuffer));  // Send the complete NMEA sentence to the bus
         nmeaBufferIndex = 0;                    // reset the index for next sentence
         nmeaBuffer[0] = '\0';                   // null-terminate the string
