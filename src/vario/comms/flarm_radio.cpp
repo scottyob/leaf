@@ -1,6 +1,6 @@
 #include "flarm_radio.h"
 #include <instruments/gps.h>
-#include "../../libraries/FLARM/include/flarm/flarm2024packet.hpp"
+#include "flarm/flarm2024packet.hpp"
 
 void sendUsingFlarm(FANET::TrackingPayload payload, uint32_t fanetAddress, SX1262* radio) {
   // Build a Flarm tracking payload
