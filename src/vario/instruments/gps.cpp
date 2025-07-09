@@ -8,7 +8,9 @@
 #include <Arduino.h>
 #include <TinyGPSPlus.h>
 
+#include <hardware/io_pins.h>
 #include "comms/message_types.h"
+#include "gps.h"
 #include "instruments/baro.h"
 #include "logging/log.h"
 #include "logging/telemetry.h"
@@ -156,6 +158,17 @@ void LeafGPS::init(void) {
     snr[i].begin(gps, "GPGSV", 7 + 4 * i);        // offsets 7, 11, 15, 19
   }
 
+  // Setup the GPS PPS signal ISR
+  Serial.print("GPS setup PPS ISR... ");
+
+#ifdef GPS_PPS_IOEX
+  // Use the IO Expander for the GPS PPS signal
+
+  // Attach the interrupt handler for the IO Expander
+  pinMode(IOEX_INTERRUPT_PIN, INPUT_PULLUP);  // Set the interrupt pin as input with pull-up
+  attachInterrupt(IOEX_INTERRUPT_PIN, LeafGPS::GpsPPSIsr, FALLING);
+#endif
+
   Serial.print("GPS initialize done... ");
 
   // Serial.println("Setting GPS messages");
@@ -240,6 +253,9 @@ void LeafGPS::update() {
                           ',' + String(gps.speed.mps()) + ',' + String(gps.course.deg());
 
   Telemetry.writeText(gpsEntryString);
+
+  // Useful for debugging GPS PPS.
+  // Serial.printf("msSinceLastSecond: %u\n", msPastSecond());
 
   /*
 
@@ -432,6 +448,14 @@ void LeafGPS::testSats() {
   }
 }
 
+void IRAM_ATTR LeafGPS::GpsPPSIsr(void) {
+  // This is the GPS 1PPS signal ISR handler
+  // It is called every second when the GPS PPS signal is received
+  // We can use this to update the msPastSecond value
+  // Note: this is called from an interrupt, so keep it short and simple
+  gps.ioexLastInterruptMicros = micros();  // store the time of the last interrupt
+}
+
 bool LeafGPS::getUtcDateTime(tm& cal) {
   if (!gps.time.isValid()) {
     return false;
@@ -458,4 +482,13 @@ bool LeafGPS::getLocalDateTime(tm& cal) {
   cal = *localtime(&rawTime);
 
   return true;
+}
+
+unsigned short LeafGPS::msPastSecond() {
+  // This relies on the GPS 1PPS signal being received for it to be accurate.
+  unsigned long now = micros();
+  unsigned long elapsed = now - gps.ioexLastInterruptMicros;
+
+  // Return the milliseconds past the last second change
+  return static_cast<unsigned short>(elapsed / 1000);
 }

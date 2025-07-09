@@ -65,6 +65,11 @@ class LeafGPS : public TinyGPSPlus {
   // like getUtcDateTime, but has the timezone offset applied.
   bool getLocalDateTime(tm& cal);
 
+  // Gets the current milliseconds since the last second change
+  // This relies on the GPS 1PPS signal being received for it
+  // to be accurate.
+  unsigned short msPastSecond();
+
   void wake(void);
   void sleep(void);
 
@@ -126,6 +131,12 @@ class LeafGPS : public TinyGPSPlus {
 
   NMEAString nmeaBuffer = {'\0'};  // buffer for reading NMEA sentences
   int nmeaBufferIndex = 0;         // index into the buffer currently writing to
+
+  // ISR handler for GPS PPS signal
+  static void GpsPPSIsr(void);
+
+  // Micros when the last GPS PPS signal was received
+  volatile unsigned long ioexLastInterruptMicros;
 };
 extern LeafGPS gps;
 
