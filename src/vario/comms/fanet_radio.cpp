@@ -7,6 +7,8 @@
 #include "fanet/name.hpp"
 #include "fanet/packetParser.hpp"
 #include "fanet/tracking.hpp"
+#include "fanet_radio.h"
+#include "flarm_message.h"
 #include "hardware/Leaf_SPI.h"
 #include "hardware/configuration.h"
 #include "instruments/baro.h"
@@ -32,7 +34,8 @@ ICACHE_RAM_ATTR void FanetRadio::onRxIsr() {
 
   // Interrupt that a packet has been received.  Notify the RadioRx task
   // that we have packet(s) to handle.
-  xTaskNotifyFromISR(fanet.x_fanet_rx_task, 0, eNoAction, &xHigherPriorityTaskWoken);
+  xTaskNotifyFromISR(fanet.x_fanet_rx_task, FANET_SEND_MESSAGE_FANET, eSetBits,
+                     &xHigherPriorityTaskWoken);
 
   // Optionally, perform a context switch if a higher-priority task was woken
   portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
@@ -71,7 +74,7 @@ void FanetRadio::taskRadioRx(void* pvParameters) {
       fanet.processRxPacket();
 
       // Notify the Tx task that there *may* be packets to process from the manager
-      xTaskNotify(fanet.x_fanet_tx_task, 0, eNoAction);
+      xTaskNotify(fanet.x_fanet_tx_task, FANET_SEND_MESSAGE_FANET, eSetBits);
     }
 
     // Release the lock & Wait for the next notification of there being a packet
@@ -142,12 +145,18 @@ void FanetRadio::taskRadioTx(void* pvParameters) {
   // auto& manager = *fanetRadio.manager;
   auto& radio = *fanetRadio.radio;
 
+  // By default, we don't have a message to send
+  FanetSendMessageType sendType = FANET_SEND_MESSAGE_NONE;
+
+  // When we're due to send a FLARM message
+  unsigned long nextFlarmDue = 0;
+
   while (true) {
     // Process sending a packet.  Sleep for the alloted time
 
     if (!(fanetRadio.state == FanetRadioState::RUNNING)) {
       // Wait for two seconds and try again later.
-      ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(2000));
+      sendType = (FanetSendMessageType)ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(2000));
       continue;
     }
 
@@ -158,15 +167,28 @@ void FanetRadio::taskRadioTx(void* pvParameters) {
     if (auto spiLock = SpiLockGuard()) {
       LockGuard lock(fanetRadio.x_fanet_manager_mutex);
 
-      // Process a TX.
-      // auto currentTime = millis();
-      sleepMs = fanetRadio.protocol->handleTx() - millis();
+      // Process FLARM first due to the strict timing requirements
+      if (sendType & FANET_SEND_MESSAGE_FLARM || millis() > nextFlarmDue) {
+        // We're overdue to send a FLARM message.
+        auto nextFlarmInMs = flarmMessage.sendFlarmMessage(
+            fanetRadio.random, fanetRadio.protocol->ownAddress(), radio);
 
-      radio.startReceive();  // Put the radio back into a receive state
+        nextFlarmDue = millis() + nextFlarmInMs;
+        sleepMs = nextFlarmInMs;
+
+        // Put the radio back into a FANET mode and receive state
+        fanetRadio.setRadioToFanet();
+      }
+
+      if (!sendType || sendType & FANET_SEND_MESSAGE_FANET) {
+        // Process a FANET TX.
+        sleepMs = min(fanetRadio.protocol->handleTx() - millis(), sleepMs);
+        radio.startReceive();  // Put the radio back into a receive state
+      }
     }
 
     // Sleep until the next due TX time.
-    ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(sleepMs));
+    sendType = (FanetSendMessageType)ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(sleepMs));
   }
 }
 
@@ -178,8 +200,6 @@ bool FanetRadio::fanet_sendFrame(uint8_t codingRate, etl::span<const uint8_t> da
   }
 
   // Locks are already acquired by the taskRadioTx Task.
-
-  // TODO:  Check if a frame is currently receiving
 
   // Requested coding rate
   // if (!radio->setCodingRate(codingRate)) {
@@ -212,6 +232,33 @@ void FanetRadio::setupFanetHandler() {
   // Set our own address in the protocol handler.
   FANET::Address srcAddress(addressBytes[0], (addressBytes[1] << 8) | addressBytes[2]);
   protocol->ownAddress(srcAddress);
+}
+
+void FanetRadio::setRadioToFanet() {
+  int16_t radioInitState = RADIOLIB_ERR_UNKNOWN;
+  auto region = settings.fanet_region;
+
+  switch (region) {
+    case FanetRadioRegion::US:
+      radioInitState = radio->begin(920.800f, 500.0f, 7U, 5U, 0xF1, 22U, 8U, 1.8f, false);
+      break;
+    case FanetRadioRegion::EUROPE:
+      radioInitState = radio->begin(868.200f, 250.0f, 7U, 5U, 0xF1, 22U, 8U, 1.8f, false);
+      break;
+  }
+
+  if (radioInitState != RADIOLIB_ERR_NONE) {
+    Serial.printf("[FanetRadio] Module initialization failed: %d\n", radioInitState);
+    state = FanetRadioState::FAILED_RADIO_INIT;
+    return;
+  }
+
+  auto rxState = radio->startReceive();
+  if (rxState != RADIOLIB_ERR_NONE) {
+    Serial.println("[FanetRadio] Radio->startReceive failed");
+    state = FanetRadioState::FAILED_RADIO_INIT;
+    return;
+  }
 }
 
 void FanetRadio::setup(etl::imessage_bus* bus) {
@@ -291,7 +338,6 @@ void FanetRadio::begin(const FanetRadioRegion& region) {
   random.initialise(millis());
 
   state = FanetRadioState::INITIALIZING;
-  int16_t radioInitState = RADIOLIB_ERR_UNKNOWN;
   // Always take the SPI lock out before the Fanet Manager lock
   // to avoid deadlocks with janky display modules locking the SPI
   // bus and making Fanet state changes or requests after.
@@ -299,31 +345,11 @@ void FanetRadio::begin(const FanetRadioRegion& region) {
   LockGuard lock(x_fanet_manager_mutex);
 
   Serial.println("[FanetRadio] Initializing");
-  // Initialize the radio for the settings of the given region
 
-  switch (region) {
-    case FanetRadioRegion::US:
-      radioInitState = radio->begin(920.800f, 500.0f, 7U, 5U, 0xF1, 22U, 8U, 1.8f, false);
-      break;
-    case FanetRadioRegion::EUROPE:
-      radioInitState = radio->begin(868.200f, 250.0f, 7U, 5U, 0xF1, 22U, 8U, 1.8f, false);
-      break;
-  }
-
-  if (radioInitState != RADIOLIB_ERR_NONE) {
-    Serial.printf("[FanetRadio] Module initialization failed: %d\n", radioInitState);
-    state = FanetRadioState::FAILED_RADIO_INIT;
-    return;
-  }
+  // Begin the radio in FANET mode
+  setRadioToFanet();
 
   Serial.println("[FanetRadio] Initialized");
-
-  auto rxState = radio->startReceive();
-  if (rxState != RADIOLIB_ERR_NONE) {
-    Serial.println("[FanetRadio] Radio->startReceive failed");
-    state = FanetRadioState::FAILED_RADIO_INIT;
-    return;
-  }
 
 #ifdef LORA_SX1262
   // 1262 radio is different from the WaveShare breadboard modules.
@@ -409,7 +435,7 @@ void FanetRadio::setCurrentLocation(const float& lat, const float& lon, const ui
       ms + offset + floor((protocol->neighborTable().size() / 10.0f + 1) + 5000);
 
   // Notify the Tx task that there *may* be packets to process from the manager
-  xTaskNotify(x_fanet_tx_task, 0, eNoAction);
+  xTaskNotify(x_fanet_tx_task, FANET_SEND_MESSAGE_FANET, eSetBits);
 }
 
 const FANET::Protocol::Stats FanetRadio::getStats() const {
@@ -459,6 +485,8 @@ String FanetRadio::getAddress() {
   }
   return settings.fanet_address;
 }
+
+FANET::Address FanetRadio::getFanetAddress() { return protocol->ownAddress(); }
 
 void FanetRadio::setGroundTrackingMode(const FANET::GroundTrackingPayload::TrackingType& mode) {
   if (state != FanetRadioState::RUNNING) {

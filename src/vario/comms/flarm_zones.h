@@ -26,7 +26,7 @@ struct FlarmZone {
   ETL_ENUM_TYPE(ZONE5, "Zone5")
   ETL_ENUM_TYPE(ZONE6, "Zone6")
   ETL_END_ENUM_TYPE
-
+ public:
   static FlarmZone zoneFor(float lat, float lon) {
     if (34.0f <= lon && lon <= 54.0f && 29.25f <= lat && lat <= 33.5f) {
       return ZONE5;  // Zone 5: Israel (34E to 54E and 29.25N to 33.5N)

@@ -20,6 +20,13 @@
 // Helper function to convert an Address to a string
 String FanetAddressToString(FANET::Address address);
 
+/// @brief Type of message requesting to send.
+enum FanetSendMessageType : uint32_t {
+  FANET_SEND_MESSAGE_NONE = 0,   // No message to send
+  FANET_SEND_MESSAGE_FANET = 1,  // A generic FANET message
+  FANET_SEND_MESSAGE_FLARM = 2,  // A FLARM message
+};
+
 /// @brief Fanet radio module singleton class.
 // This class will handle the radio module, and will be responsible for
 // initializing, sending, and receiving messages. It will also handle the
@@ -60,6 +67,9 @@ class FanetRadio : public etl::message_router<FanetRadio, GpsReading>, public FA
 
   // Gets the current radio ID
   static String getAddress();
+
+  // Gets the current radio ID as as an address
+  FANET::Address getFanetAddress();
 
   /// @brief Gets a copy of the neighbor table
   const FanetNeighbors::NeighborMap& getNeighborTable() const;
@@ -116,6 +126,9 @@ class FanetRadio : public etl::message_router<FanetRadio, GpsReading>, public FA
 
   /// @brief Setup of the Fanet Packet Handler
   void setupFanetHandler();
+
+  /// @brief Sets the radio module to a FANET mode
+  void setRadioToFanet();
 
   /// @brief Message bus to write events onto
   etl::imessage_bus* bus = nullptr;

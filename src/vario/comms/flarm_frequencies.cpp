@@ -11,14 +11,19 @@ const FlarmCountryRegulations::ProtocolTimeSlot& FlarmCountryRegulations::getSlo
   return protocolTimings[0];  // Not found
 }
 
-uint32_t FlarmCountryRegulations::getFrequency(const Frequency& frequency, Channel channel) {
+uint32_t FlarmCountryRegulations::getFrequency(const ProtocolTimeSlot& timeSlot,
+                                               unsigned short msPastSecond) {
+  // Get the channel from the current ms past the second
+  auto channel = timeSlot.timing[msPastSecond / SLOT_MS];
+  auto const& frequency = timeSlot.frequency;
+
   switch (channel) {
     case Channel::CH0:
       return frequency.baseFrequency + (frequency.channelSeparation * 0);
     case Channel::CH1:
       return frequency.baseFrequency + (frequency.channelSeparation * 1);
     default:
-      return frequency.baseFrequency;  // NOP
+      return 0;  // NOP
   }
 }
 

@@ -84,7 +84,7 @@ class FlarmCountryRegulations {
    * @param channel
    * @return uint32_t frequency in Hz
    */
-  static uint32_t getFrequency(const Frequency& frequency, Channel channel);
+  static uint32_t getFrequency(const ProtocolTimeSlot& timeSlot, const unsigned short msPastSecond = 0);
 
   /**
    * @brief Get the next random time for this protocol that falls within the timeslot
