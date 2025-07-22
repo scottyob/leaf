@@ -17,6 +17,9 @@
 #include "fanet/protocol.hpp"
 #include "ui/settings/settings.h"
 
+// detect phyiscal presence of the FANET (LoRa SX1262) module
+bool detectFanet(void);
+
 // Helper function to convert an Address to a string
 String FanetAddressToString(FANET::Address address);
 

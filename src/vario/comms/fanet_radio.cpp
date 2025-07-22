@@ -13,6 +13,15 @@
 #include "logging/log.h"
 #include "utils/lock_guard.h"
 
+// Initial detection of Fanet module (hw3.2.6+)
+bool detectFanet() {
+  // Auto-Detect FANET LoRa module
+  pinMode(SX1262_BUSY, INPUT_PULLUP);  // chip select for the FANET module (SX1262_NSS pin)
+  delay(100);                          // wait for module to boot/initialize
+  bool modulePresent = !digitalRead(SX1262_BUSY);  // if low, chip is present
+  return modulePresent;
+}
+
 // Static initializers
 volatile bool FanetRadio::frameSending = false;
 
