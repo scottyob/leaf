@@ -28,12 +28,8 @@ void setup() {
   spi_init();
   Serial.println(" - Finished SPI");
 
-#ifdef HAS_FANET
-  // first, auto-detect the Fanet/LoRa module, and only initialize if present
-  if (detectFanet()) {
-    // Initialize the Fanet Radio module.  Subscribe them for bus updates
-    FanetRadio::getInstance().setup(&bus);
-  }
+#ifdef FANET_CAPABLE
+  FanetRadio::getInstance().setup(&bus);
 #endif
 
   // Initialize anything left over on the Task Manager System
