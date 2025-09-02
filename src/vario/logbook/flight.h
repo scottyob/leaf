@@ -2,6 +2,7 @@
 
 #include "Arduino.h"
 #include "FS.h"
+#include "dispatch/message_source.h"
 #include "flight_stats.h"
 
 class Flight {
@@ -16,6 +17,10 @@ class Flight {
 
   bool started();
 
+  // Similar to IMessageSource (but static)
+  static void publishTo(etl::imessage_bus* bus) { bus_ = bus; }
+  static void stopPublishing() { bus_ = nullptr; }
+
  protected:
   // eg. igc, kml
   virtual const String fileNameSuffix() const = 0;
@@ -29,4 +34,6 @@ class Flight {
   virtual const String desiredFilePath() const { return "/tracks"; }
 
   File file;
+
+  static etl::imessage_bus* bus_;  // For writing to bus events
 };

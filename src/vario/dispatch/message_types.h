@@ -28,6 +28,7 @@ enum MessageType : etl::message_id_t {
   PRESSURE_UPDATE,
   BUTTON_EVENT,
   COMMENT_MESSAGE,
+  SD_WRITE_MESSAGE,
 };
 
 /// @brief A GPS update received
@@ -63,7 +64,12 @@ struct AmbientUpdate : public etl::message<AMBIENT_UPDATE> {
   // Relative humidity in percent
   float relativeHumidity;
 
+  // Time taken to read sensor, in microseconds
+  uint32_t timeTakenUs = 0;
+
   AmbientUpdate(float temp, float relRH) : temperature(temp), relativeHumidity(relRH) {}
+  AmbientUpdate(float temp, float relRH, uint32_t timeTakenUs)
+      : temperature(temp), relativeHumidity(relRH), timeTakenUs(timeTakenUs) {}
 };
 
 /// @brief Update regarding motion
@@ -117,4 +123,12 @@ struct CommentMessage : public etl::message<COMMENT_MESSAGE> {
 
   CommentMessage(const char* message) : message(message) {}
   CommentMessage(String message) : message(message.c_str()) {}
+};
+
+/// @brief Message indicating that data has been written to the SD card
+struct SDCardWriteMessage : public etl::message<SD_WRITE_MESSAGE> {
+  // Time taken to write data, in microseconds
+  unsigned long timeTakenUs;
+
+  SDCardWriteMessage(unsigned long timeTakenUs = 0) : timeTakenUs(timeTakenUs) {}
 };

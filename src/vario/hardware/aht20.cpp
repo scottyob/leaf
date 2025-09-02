@@ -83,6 +83,7 @@ void AHT20::update() {
     measurementInitiated_ = millis();
     currentlyMeasuring_ = true;
   } else if (millis() - measurementInitiated_ > MEASUREMENT_PERIOD_MS && !isBusy()) {
+    auto timeTaken = micros();
     readData();
     float temperature = ((float)sensorData_.temperature / 1048576) * 200 - 50;
     temperature += TEMP_OFFSET;
@@ -96,7 +97,7 @@ void AHT20::update() {
     }
     etl::imessage_bus* bus = bus_;
     if (bus) {
-      bus->receive(AmbientUpdate(temperature, rh));
+      bus->receive(AmbientUpdate(temperature, rh, micros() - timeTaken));
     }
   } else {
     if (DEBUG_TEMPRH) Serial.println("Temp_RH - missed values due to sensor busy");

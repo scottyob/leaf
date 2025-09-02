@@ -7,7 +7,7 @@
 
 // Logger that records messages sent to the message bus
 class BusLogger : public etl::message_router<BusLogger, AmbientUpdate, CommentMessage, GpsMessage,
-                                             MotionUpdate, PressureUpdate> {
+                                             MotionUpdate, PressureUpdate, SDCardWriteMessage> {
  public:
   void setBus(etl::imessage_bus* bus) { bus_ = bus; }
   bool startLog();
@@ -20,6 +20,7 @@ class BusLogger : public etl::message_router<BusLogger, AmbientUpdate, CommentMe
   void on_receive(const GpsMessage& msg);
   void on_receive(const MotionUpdate& msg);
   void on_receive(const PressureUpdate& msg);
+  void on_receive(const SDCardWriteMessage& msg);
   void on_receive_unknown(const etl::imessage& msg) {}
 
  private:

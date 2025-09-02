@@ -73,6 +73,7 @@ void setup() {
 
   baro.subscribe(&bus);
   baro.publishTo(&bus);
+  Flight::publishTo(&bus);  // Flight singleton should publish stats to the bus
 
   // Initialize anything left over on the Task Manager System
   Serial.println("Initializing Taskman Service");

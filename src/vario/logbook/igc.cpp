@@ -57,6 +57,9 @@ void Igc::log(unsigned long durationSec) {
   // Short-circuit if we've not yet started a flight
   if (!started()) return;
 
+  // Record the time to write
+  unsigned long writeTime = micros();
+
   // Generate the time in HHMMSS
   char buf[8];
   tm cal;
@@ -67,6 +70,12 @@ void Igc::log(unsigned long durationSec) {
                       latDegreeToStr(gps.location.lat()), lngDegreeToStr(gps.location.lng()), true,
                       baro.alt() / 100,  // cm to meters
                       gps.altitude.meters(), toDigits((int)gps.fixInfo.error, 3));
+
+  // Write how long it took to write the data to the bus
+  if (bus_) {
+    writeTime = micros() - writeTime;
+    bus_->receive(SDCardWriteMessage(writeTime));
+  }
 }
 
 bool Igc::startFlight() {

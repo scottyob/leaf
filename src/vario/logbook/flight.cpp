@@ -7,6 +7,9 @@
 #include "storage/sd_card.h"
 #include "ui/display/pages/dialogs/page_flight_summary.h"
 
+// Initialize the message bus on the Flight to a nullptr.
+etl::imessage_bus* Flight::bus_ = nullptr;
+
 bool Flight::startFlight() {
   // Short circuit if the card is not mounted or reading properly
   if (!sdcard.isMounted()) return false;

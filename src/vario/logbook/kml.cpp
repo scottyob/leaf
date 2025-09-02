@@ -25,12 +25,21 @@ bool Kml::startFlight() {
 }
 
 void Kml::log(unsigned long durationSec) {
+  // Record the time to write
+  unsigned long writeTime = micros();
+
   String lonPoint = String(gps.location.lng(), 7);
   String latPoint = String(gps.location.lat(), 7);
   String altPoint = String(gps.altitude.meters(), 2);
   String logPointStr = lonPoint + "," + latPoint + "," + altPoint + "\n";
 
   file.println(logPointStr);
+
+  // Write how long it took to write the data to the bus
+  if (bus_) {
+    writeTime = micros() - writeTime;
+    bus_->receive(SDCardWriteMessage(writeTime));
+  }
 }
 
 void Kml::end(const FlightStats stats) {
